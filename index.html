@@ -50,6 +50,7 @@
       padding: 8px 10px 6px; padding-top: max(8px, env(safe-area-inset-top));
     }
     #app.booting #hud, #app.menu #hud { visibility: hidden; }
+    #app.booting .hud-link, #app.menu .hud-link { display: none; }
     .hud-row {
       display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center; gap: 6px; min-width: 0;
@@ -109,11 +110,18 @@
     .choices button:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--wood); }
     .choices button:disabled { opacity: 0.55; cursor: default; }
     .choices button.picked { border-color: var(--yellow); background: #fff6d6; }
-    .honest {
-      flex: 0 0 auto; text-align: center; font-size: 11px; font-weight: 800;
-      line-height: 1.3; color: var(--ice); padding: 6px 10px 8px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
-      background: #1A1028; z-index: 8; overflow-wrap: anywhere;
+    .hud-link {
+      flex: 0 0 auto; text-align: center;
+      padding: 4px 8px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom));
+      background: #1A1028; z-index: 8;
+    }
+    .text-link {
+      appearance: none; background: none; border: 0; padding: 0; margin: 0;
+      font-family: inherit; font-size: 12px; font-weight: 800;
+      color: var(--ice); text-decoration: underline; cursor: pointer;
+    }
+    .hub-row {
+      margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; align-items: center;
     }
     .overlay {
       position: absolute; inset: 0; z-index: 20;
@@ -132,13 +140,16 @@
       text-shadow: 0 3px 0 #1A1028, 0 6px 16px #000;
       max-width: 100%; overflow-wrap: anywhere;
     }
-    .splash-card {
-      margin-top: auto; text-align: center; padding: 12px 10px;
+    #splash {
+      justify-content: flex-end;
+      background: linear-gradient(to top, #1a1028f6 0%, #1a1028cc 36%, #3A2A6A22 68%, transparent 100%);
     }
-    .splash-card h1 { text-shadow: 0 2px 0 #1A1028; font-size: clamp(20px, 6.4vw, 28px); }
-    .splash-card .tag, .splash-card .how { text-shadow: none; }
-    .splash-card .disc { text-shadow: none; }
-    .splash-card .end-actions { max-width: 100%; }
+    .splash-copy {
+      position: relative; z-index: 2; width: 100%; max-width: 340px;
+      text-align: center; padding: 8px 4px 0;
+    }
+    .splash-copy h1 { font-size: clamp(22px, 7vw, 34px); }
+    .splash-copy .end-actions { max-width: 100%; }
     .overlay h2 {
       margin: 0 0 8px; font-size: clamp(22px, 7vw, 30px); color: var(--yellow);
       text-shadow: 0 3px 0 #1A1028;
@@ -214,9 +225,9 @@
       .choices button { min-height: 70px; }
     }
     @media (max-height: 700px) {
-      .splash-card { padding: 10px 8px; }
-      .splash-card h1 { margin-bottom: 4px; }
-      .splash-card .how, .splash-card .disc { margin-bottom: 4px; font-size: 12px; }
+      .splash-copy { padding: 6px 4px 0; }
+      .splash-copy h1 { margin-bottom: 4px; }
+      .splash-copy .how { margin-bottom: 4px; font-size: 12px; }
       .play { font-size: 16px; min-height: 46px; padding: 10px 14px; }
       .play.soon { min-height: 36px; font-size: 12px; }
     }
@@ -285,11 +296,39 @@
     .mus-card.locked .mus-art img { filter: brightness(0); opacity: 0.45; }
     .mus-tag { display: inline-block; margin: 0 0 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: var(--ice); }
     #museum #btn-museum-back { align-self: center; margin-top: 12px; }
+    #mus-detail, #about {
+      position: absolute; inset: 0; z-index: 28;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; overflow: auto;
+      padding: 12px 12px max(18px, env(safe-area-inset-bottom));
+      background: #1a1028f6; text-align: center;
+    }
+    #about { z-index: 40; justify-content: center; }
+    #resume { z-index: 36; }
+    .mus-detail-wrap, .about-wrap {
+      position: relative; width: 100%; max-width: 390px; margin: 0 auto; padding-top: 48px;
+    }
+    .about-wrap { padding-top: 12px; }
+    .mus-x {
+      appearance: none; position: absolute; top: 0; right: 0; z-index: 2;
+      width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+      border: 2px solid var(--yellow); background: #1A1028; color: var(--yellow);
+      border-radius: 12px; font-family: inherit; font-weight: 900; font-size: 16px;
+      cursor: pointer; padding: 0;
+    }
+    .mus-detail-card {
+      width: 100%; background: #2a1c4e; border: 3px solid var(--ice);
+      border-radius: 16px; padding: 14px 12px 16px; text-align: center;
+    }
+    #mus-detail.locked .mus-detail-card { border-color: #5C3A1A; background: #241836; }
     #mus-detail-body { white-space: pre-wrap; text-align: left; }
-    .mus-detail-art { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin: 0 0 10px; background: #1A1028; }
+    #mus-detail-meta { font-size: 12px; font-weight: 800; color: var(--ice); margin: 8px 0 10px; }
+    #mus-detail-meta:empty { display: none; }
+    .mus-detail-art { width: 100%; height: 200px; border-radius: 12px; overflow: hidden; margin: 0 0 10px; background: #1A1028; }
     .mus-detail-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #mus-detail.locked .mus-detail-art img { filter: brightness(0); opacity: 0.45; }
     .bar-meta { margin: 4px 0 0; font-size: 12px; font-weight: 800; color: var(--ice); }
-    .splash-card .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
+    .splash-copy .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
   </style>
 </head>
 <body>
@@ -311,7 +350,7 @@
       <div id="speed-target" class="cell big hidden"></div>
       <div id="speed-grid" class="speed-grid hidden"></div>
     </div>
-    <p class="honest" id="honest-play">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+    <p class="hud-link"><button type="button" class="text-link" data-about>About scoring</button></p>
     <div id="away" class="hidden">Away — item closed.</div>
 
     <div id="boot-load" class="overlay center" role="status" aria-live="polite">
@@ -324,14 +363,13 @@
 
     <div id="splash" class="overlay hidden">
       <img class="hero" src="assets/splash.jpg" alt="" />
-      <div class="tip-card splash-card">
+      <div class="splash-copy">
         <h1>BOBER<br />BRAIN CAMP</h1>
-        <p class="tag">Fan game by a holder.</p>
-        <p class="how">Train at Brain Camp — puzzles, people sense, trivia. Not an official IQ score.</p>
-        <p class="how">Short rounds. Play to improve, not to diagnose.</p>
-        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p class="how">Train at Brain Camp — puzzles, people sense, trivia.</p>
+        <p class="holder">Fan game by a holder.</p>
         <p id="last-chip" class="hidden"></p>
         <div class="end-actions">
+          <button class="play camp hidden" id="btn-continue-splash" type="button">Continue</button>
           <button class="play camp" id="btn-reason" type="button" disabled>Assess Reasoning</button>
           <button class="play camp" id="btn-memory" type="button" disabled>Assess Memory</button>
           <button class="play camp" id="btn-speed" type="button" disabled>Assess Speed</button>
@@ -343,8 +381,10 @@
             <button class="play soon" type="button" disabled>EQ · Soon</button>
           </div>
         </div>
-        <p class="holder">Fan game by a holder.</p>
-        <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
+        <div class="hub-row">
+          <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
+          <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
+        </div>
       </div>
     </div>
 
@@ -353,7 +393,7 @@
         <h2 id="confirm-title">PRACTICE DONE</h2>
         <p class="how">That round was unscored. It does not feed your profile.</p>
         <p class="how" id="confirm-meta">Assess is 12 items · 45s each · no pause. Stay on this page.</p>
-        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <div class="end-actions">
           <button class="play" id="btn-assess" type="button">START ASSESS</button>
           <button class="play ghost" id="btn-confirm-back" type="button">Back to Splash</button>
@@ -365,7 +405,7 @@
       <div class="tip-card">
         <h2 id="sum-title">CAMP BLOCK DONE</h2>
         <p class="how" id="sum-line">0 / 12 correct</p>
-        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <button class="play" id="btn-to-profile" type="button">PROFILE</button>
       </div>
     </div>
@@ -389,8 +429,8 @@
           <div class="skill-bar" aria-label="Speed skill"><i id="speed-bar"></i></div>
           <p class="bar-meta" id="speed-meta">Not yet camped</p>
         </div>
-        <p class="disc">Beta norms (early). Three bars — never one number.</p>
-        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p class="bar-meta">Beta norms (early). Three bars — never one number.</p>
+        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <details class="how-scored">
           <summary>How scored</summary>
           <p>Each bar uses its own Assess only. Practice never counts. Bars are not averaged.</p>
@@ -413,16 +453,46 @@
         <p class="how">Camp cards. Fan game by a holder.</p>
         <div id="museum-grid"></div>
         <button class="play ghost" id="btn-museum-back" type="button">Back</button>
-        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
       </div>
     </div>
 
-    <div id="mus-detail" class="overlay hidden" role="dialog" aria-label="Card">
+    <div id="mus-detail" class="hidden" role="dialog" aria-label="Card detail">
+      <div class="mus-detail-wrap">
+        <button type="button" class="mus-x" id="mus-detail-x" aria-label="Close">X</button>
+        <div class="mus-detail-card" id="mus-detail-inner">
+          <div class="mus-detail-art"><img id="mus-detail-img" alt="" /></div>
+          <span class="mus-tag" id="mus-detail-tag"></span>
+          <h2 id="mus-detail-name">Card</h2>
+          <p class="how" id="mus-detail-body"></p>
+          <p id="mus-detail-meta"></p>
+          <button class="play ghost" id="btn-mus-detail-back" type="button">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="about" class="hidden" role="dialog" aria-label="About scoring">
+      <div class="about-wrap">
+        <button type="button" class="mus-x" id="about-x" aria-label="Close">X</button>
+        <div class="tip-card" id="about-inner">
+          <h2>About scoring</h2>
+          <p class="how">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+          <p class="how">Assess = snapshot today. Practice does not feed the score.</p>
+          <p class="how">Cohort % = vs Brain Camp players (beta), rough not gospel.</p>
+          <p class="how">Play for fun, not credentials. Fan game by a holder.</p>
+          <button class="play ghost" id="about-back" type="button">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resume" class="overlay center hidden" role="dialog" aria-label="Continue camp">
       <div class="tip-card">
-        <div class="mus-detail-art"><img id="mus-detail-img" alt="" /></div>
-        <h2 id="mus-detail-name">Card</h2>
-        <p class="how" id="mus-detail-body"></p>
-        <button class="play ghost" id="btn-mus-detail-back" type="button">Back</button>
+        <h2>CAMP IN PROGRESS</h2>
+        <p class="how" id="resume-line">A round is still open.</p>
+        <div class="end-actions">
+          <button class="play" id="btn-resume" type="button">CONTINUE</button>
+          <button class="play ghost" id="btn-abandon" type="button">Abandon</button>
+        </div>
       </div>
     </div>
   </div>
@@ -433,6 +503,7 @@
   var DISC = "Fan game skill index — not a clinical or diagnostic test. Not an IQ score.";
   var SAVE_KEY = "bober-brain-camp-v2";
   var SAVE_KEY_OLD = "bober-brain-camp-v1";
+  var RUN_KEY = "bober-brain-camp-run-v1";
   var ASSESS_N = 12;
   var PRACTICE_N = 3;
   var MEM_ASSESS_N = 10;
@@ -1007,9 +1078,19 @@
   var lastTrack = "reason";
 
   function hideOverlays() {
-    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail"].forEach(function (id) {
+    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
+  }
+
+  function ordinal(n) {
+    var v = n % 100;
+    if (v >= 11 && v <= 13) return n + "th";
+    var last = n % 10;
+    if (last === 1) return n + "st";
+    if (last === 2) return n + "nd";
+    if (last === 3) return n + "rd";
+    return n + "th";
   }
   function showOverlay(id) {
     hideOverlays();
@@ -1074,6 +1155,54 @@
     return p;
   }
 
+  function itemById(id) {
+    if (!id) return null;
+    var lists = [PRACTICE, FORM_A, FORM_B, MEM_PRACTICE, MEM_POOL, SPEED_PRACTICE, SPEED_POOL];
+    var i, j, list;
+    for (i = 0; i < lists.length; i++) {
+      list = lists[i];
+      for (j = 0; j < list.length; j++) if (list[j].id === id) return list[j];
+    }
+    return null;
+  }
+  function loadRunSnap() {
+    try {
+      var raw = localStorage.getItem(RUN_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function clearRunSave() {
+    try { localStorage.removeItem(RUN_KEY); } catch (e) {}
+  }
+  function snapshotRun() {
+    if (!run || (mode !== "practice" && mode !== "assess" && mode !== "confirm")) return;
+    try {
+      localStorage.setItem(RUN_KEY, JSON.stringify({
+        mode: mode,
+        lastTrack: lastTrack,
+        track: run.track,
+        i: run.i,
+        ok: run.ok,
+        remains: run.remains,
+        limits: run.limits,
+        used: run.used,
+        band: run.band,
+        corrStreak: run.corrStreak,
+        wrongStreak: run.wrongStreak,
+        formName: run.formName,
+        formPoolIds: (run.formPool || []).map(function (it) { return it.id; }),
+        practiceIds: (run.practiceList || []).map(function (it) { return it.id; }),
+        curId: run.cur && run.cur.id,
+        taps: run.taps || [],
+        phase: run.phase,
+        totalN: run.totalN,
+        remain: (run.phase === "study") ? null : remainNow(),
+        want: run.want || null,
+        studyI: run.studyI || 0
+      }));
+    } catch (e) {}
+  }
+
   function paintLast() {
     var s = loadSave();
     var el = document.getElementById("last-chip");
@@ -1086,6 +1215,7 @@
       el.classList.remove("hidden");
     } else el.classList.add("hidden");
     document.getElementById("btn-open-profile").classList.toggle("hidden", !bits.length);
+    document.getElementById("btn-continue-splash").classList.toggle("hidden", !loadRunSnap());
   }
 
   function goSplash() {
@@ -1098,6 +1228,81 @@
     showOverlay("splash");
     paintLast();
     setPlayLocked(PRE.blocked);
+  }
+
+  function showResume() {
+    var snap = loadRunSnap();
+    if (!snap) { goSplash(); return; }
+    var label = snap.track === "memory" ? "Memory" : snap.track === "speed" ? "Speed" : "Reasoning";
+    var kind = snap.mode === "practice" ? "Practice" : snap.mode === "confirm" ? "Practice done" : "Assess";
+    document.getElementById("resume-line").textContent = label + " · " + kind + " · Item " + ((snap.i || 0) + 1) + "/" + (snap.totalN || "?");
+    mode = "resume";
+    setMenu(true);
+    showOverlay("resume");
+  }
+
+  function abandonRun() {
+    clearRunSave();
+    run = null;
+    goSplash();
+  }
+
+  function resumeFromSnap(snap) {
+    snap = snap || loadRunSnap();
+    if (!snap) { goSplash(); return; }
+    lastTrack = snap.lastTrack || snap.track || "reason";
+    var formPool = (snap.formPoolIds || []).map(itemById).filter(Boolean);
+    var practiceList = (snap.practiceIds || []).map(itemById).filter(Boolean);
+    run = {
+      track: snap.track,
+      i: snap.i || 0,
+      used: snap.used || {},
+      band: snap.band || 2,
+      corrStreak: snap.corrStreak || 0,
+      wrongStreak: snap.wrongStreak || 0,
+      ok: snap.ok || 0,
+      remains: snap.remains || [],
+      limits: snap.limits || [],
+      cur: null,
+      phase: snap.phase || "choice",
+      practiceList: practiceList,
+      formPool: formPool,
+      formName: snap.formName || null,
+      totalN: snap.totalN,
+      taps: snap.taps || [],
+      want: snap.want || null,
+      studyI: snap.studyI || 0
+    };
+    mode = snap.mode || "assess";
+    if (mode === "confirm") {
+      showConfirm();
+      return;
+    }
+    var it = itemById(snap.curId) || (mode === "practice" ? practiceList[run.i] : formPool[0]);
+    if (!it) { abandonRun(); return; }
+    hideOverlays();
+    setMenu(false);
+    setTrackClass(run.track);
+    run.cur = it;
+    run.used[it.id] = 1;
+    itemLocked = false;
+    if (run.track === "memory") {
+      if (run.phase === "respond") {
+        var seq = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
+        run.want = snap.want || seq.map(gk);
+        beginMemRespond();
+        if (snap.remain != null) { run.limit = Math.max(0.8, snap.remain); run.t0 = performance.now(); }
+      } else {
+        presentMemory(it, true);
+      }
+    } else if (run.track === "speed") {
+      presentSpeed(it);
+      if (snap.remain != null) { run.limit = Math.max(0.6, snap.remain); run.t0 = performance.now(); }
+    } else {
+      presentReason(it);
+      if (snap.remain != null) { run.limit = Math.max(1, snap.remain); run.t0 = performance.now(); }
+    }
+    snapshotRun();
   }
 
   function fmtTime(sec) {
@@ -1212,6 +1417,7 @@
       }
     }
     if (why === "away") flashAway();
+    snapshotRun();
     setTimeout(nextAfterItem, why === "away" ? 700 : 220);
   }
 
@@ -1253,11 +1459,13 @@
     startTimer();
   }
 
-  function presentMemory(it) {
+  function presentMemory(it, resume) {
     hidePlayBits();
     run.phase = "study";
-    run.taps = [];
-    run.studyI = 0;
+    if (!resume) {
+      run.taps = [];
+      run.studyI = 0;
+    }
     run.limit = it.respond;
     var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
     run.want = want.map(gk);
@@ -1301,6 +1509,7 @@
     });
     setPrompt(run.cur.reverse ? "TAP BACKWARD" : "TAP THE ORDER", run.cur.reverse);
     startTimer();
+    snapshotRun();
   }
 
   function tapMem(g, btn) {
@@ -1342,6 +1551,7 @@
       grid.appendChild(b);
     });
     startTimer();
+    snapshotRun();
   }
 
   function present(it) {
@@ -1351,6 +1561,7 @@
     if (run.track === "memory") presentMemory(it);
     else if (run.track === "speed") presentSpeed(it);
     else presentReason(it);
+    snapshotRun();
   }
 
   function nextAfterItem() {
@@ -1388,6 +1599,13 @@
     else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 2.5–3.5s each. Stay on this page.";
     else meta.textContent = "Assess is 12 items · 45s each · no pause. Stay on this page.";
     showOverlay("confirm");
+    snapshotRun();
+  }
+
+  function startOrResume(track) {
+    if (PRE.blocked) return;
+    if (loadRunSnap()) { showResume(); return; }
+    beginPractice(track);
   }
 
   function beginPractice(track) {
@@ -1466,6 +1684,7 @@
     }
     run.result = patch;
     patchSave(patch);
+    clearRunSave();
     document.getElementById("sum-title").textContent = title;
     document.getElementById("sum-line").textContent = run.ok + " / " + run.totalN + " correct";
     mode = "summary";
@@ -1478,7 +1697,7 @@
     document.getElementById(numId).textContent = has ? String(value) : "—";
     document.getElementById(barId).style.width = has ? (value + "%") : "0%";
     document.getElementById(metaId).textContent = has
-      ? (correct + " / " + total + " correct · vs Brain Camp players · " + pct + "th percentile")
+      ? (correct + " / " + total + " correct · vs Brain Camp players · " + ordinal(pct) + " percentile")
       : "Not yet camped";
   }
 
@@ -1502,6 +1721,7 @@
       thumb: "assets/museum/how.jpg",
       lock: function () { return false; },
       tease: "Skill bars for Pattern · Memory · Speed — not a clinical number.",
+      unlock: "Always unlocked.",
       body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
     },
     {
@@ -1511,6 +1731,7 @@
       thumb: "assets/museum/stick.jpg",
       lock: function () { return !loadSave().musStick; },
       tease: "Unlock after a Reasoning Assess.",
+      unlock: "Unlocked after a Reasoning Assess.",
       body: "A camp stick with lodge marks. Used here as a Pattern tile — a puzzle glyph, not a clinic instrument. Finish a Reasoning Assess to keep it on the shelf."
     },
     {
@@ -1520,6 +1741,7 @@
       thumb: "assets/museum/twig.jpg",
       lock: function () { return !loadSave().musTwig; },
       tease: "Unlock after a Memory Assess.",
+      unlock: "Unlocked after a Memory Assess.",
       body: "A twig of camp tokens. Sequences live on the beads. Finish a Memory Assess to keep it on the shelf."
     },
     {
@@ -1529,6 +1751,7 @@
       thumb: "assets/museum/ember.jpg",
       lock: function () { return !loadSave().musEmber; },
       tease: "Unlock after a Speed Assess.",
+      unlock: "Unlocked after a Speed Assess.",
       body: "A fat camp ember. Short trials, quick tap. Finish a Speed Assess to keep it on the shelf."
     }
   ];
@@ -1558,18 +1781,32 @@
 
   function openMusCard(c) {
     var locked = c.lock();
+    var el = document.getElementById("mus-detail");
+    el.classList.toggle("locked", locked);
     document.getElementById("mus-detail-img").src = c.thumb;
-    document.getElementById("mus-detail-img").style.filter = locked ? "brightness(0)" : "";
     document.getElementById("mus-detail-name").textContent = locked ? (c.name + " · Soon") : c.name;
+    document.getElementById("mus-detail-tag").textContent = locked ? "Soon" : (c.tag || "");
     document.getElementById("mus-detail-body").textContent = locked ? c.tease : c.body;
-    document.getElementById("mus-detail").classList.remove("hidden");
+    document.getElementById("mus-detail-meta").textContent = locked ? "" : (c.unlock || "");
+    el.classList.remove("hidden");
+  }
+  function closeMusDetail() {
+    document.getElementById("mus-detail").classList.add("hidden");
+  }
+  function openAbout() {
+    document.getElementById("about").classList.remove("hidden");
+  }
+  function closeAbout() {
+    document.getElementById("about").classList.add("hidden");
   }
 
   function onAway() {
+    if (unloading) { snapshotRun(); return; }
     if (itemLocked) return;
     if (mode !== "assess" && mode !== "practice") return;
     if (!run || !run.cur) return;
     if (document.visibilityState !== "hidden") return;
+    snapshotRun();
     if (run.track !== "reason" && run.phase === "study") {
       endItem(false, 0, "away");
       return;
@@ -1577,16 +1814,34 @@
     if (run.phase === "respond" || run.phase === "choice") endItem(false, 0, "away");
   }
 
+  var unloading = false;
+  window.addEventListener("beforeunload", function () {
+    unloading = true;
+    snapshotRun();
+  });
   document.addEventListener("visibilitychange", onAway);
   window.addEventListener("pagehide", function () {
-    if (document.visibilityState === "hidden") onAway();
+    snapshotRun();
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape") return;
+    if (!document.getElementById("about").classList.contains("hidden")) { closeAbout(); return; }
+    if (!document.getElementById("mus-detail").classList.contains("hidden")) { closeMusDetail(); }
+  });
+  app.addEventListener("click", function (ev) {
+    var t = ev.target;
+    if (t && t.getAttribute && t.getAttribute("data-about") != null) {
+      ev.preventDefault();
+      openAbout();
+    }
   });
 
-  document.getElementById("btn-reason").addEventListener("click", function () { beginPractice("reason"); });
-  document.getElementById("btn-memory").addEventListener("click", function () { beginPractice("memory"); });
-  document.getElementById("btn-speed").addEventListener("click", function () { beginPractice("speed"); });
+  document.getElementById("btn-reason").addEventListener("click", function () { startOrResume("reason"); });
+  document.getElementById("btn-memory").addEventListener("click", function () { startOrResume("memory"); });
+  document.getElementById("btn-speed").addEventListener("click", function () { startOrResume("speed"); });
   document.getElementById("btn-museum").addEventListener("click", openMuseum);
   document.getElementById("btn-open-profile").addEventListener("click", showProfile);
+  document.getElementById("btn-continue-splash").addEventListener("click", function () { showResume(); });
   document.getElementById("btn-assess").addEventListener("click", beginAssess);
   document.getElementById("btn-confirm-back").addEventListener("click", goSplash);
   document.getElementById("btn-to-profile").addEventListener("click", showProfile);
@@ -1594,9 +1849,28 @@
   document.getElementById("btn-splash").addEventListener("click", goSplash);
   document.getElementById("btn-prof-museum").addEventListener("click", openMuseum);
   document.getElementById("btn-museum-back").addEventListener("click", goSplash);
-  document.getElementById("btn-mus-detail-back").addEventListener("click", function () {
-    document.getElementById("mus-detail").classList.add("hidden");
+  document.getElementById("btn-mus-detail-back").addEventListener("click", function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); closeMusDetail();
   });
+  document.getElementById("mus-detail-x").addEventListener("click", function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); closeMusDetail();
+  });
+  document.getElementById("mus-detail").addEventListener("click", function (ev) {
+    if (ev.target.id === "mus-detail" || ev.target.classList.contains("mus-detail-wrap")) closeMusDetail();
+  });
+  document.getElementById("mus-detail-inner").addEventListener("click", function (ev) { ev.stopPropagation(); });
+  document.getElementById("about-back").addEventListener("click", function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); closeAbout();
+  });
+  document.getElementById("about-x").addEventListener("click", function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); closeAbout();
+  });
+  document.getElementById("about").addEventListener("click", function (ev) {
+    if (ev.target.id === "about" || ev.target.classList.contains("about-wrap")) closeAbout();
+  });
+  document.getElementById("about-inner").addEventListener("click", function (ev) { ev.stopPropagation(); });
+  document.getElementById("btn-resume").addEventListener("click", function () { resumeFromSnap(); });
+  document.getElementById("btn-abandon").addEventListener("click", abandonRun);
   document.getElementById("btn-load-retry").addEventListener("click", function () { bootAssets(); });
 
   function setPlayLocked(on) {
@@ -1622,6 +1896,7 @@
     setPlayLocked(false);
     document.getElementById("boot-load").classList.add("hidden");
     if (/\bplaytest=1\b/.test(location.search)) {
+      clearRunSave();
       runPlaytest();
     } else if (/\bprofile=1\b/.test(location.search)) {
       showProfile();
@@ -1629,6 +1904,8 @@
       openMuseum();
     } else if (/\bgo=1\b/.test(location.search)) {
       beginPractice("reason");
+    } else if (loadRunSnap()) {
+      showResume();
     } else {
       goSplash();
     }
@@ -1690,10 +1967,11 @@
     if (maxed.index !== 100) fails.push("max " + maxed.index);
     var mash = scoreSpeed(5, [3,3,3,3,3], [3,3,3,3,3]);
     if (mash.index > 35) fails.push("speed-mash " + mash.index);
-    var body = document.body.innerText;
-    if ((body.match(/IQ/g) || []).length < 1) fails.push("missing-disc");
-    if (/intelligence quotient/i.test(body)) fails.push("iq-words");
-    if (/ADHD|autism|you might have/i.test(body)) fails.push("diagnosis");
+    var about = document.getElementById("about").textContent;
+    if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
+    if (ordinal(1) !== "1st" || ordinal(2) !== "2nd" || ordinal(3) !== "3rd" || ordinal(23) !== "23rd" || ordinal(11) !== "11th") fails.push("ordinal");
+    if (/intelligence quotient/i.test(document.body.innerText)) fails.push("iq-words");
+    if (/ADHD|autism|you might have/i.test(document.body.innerText)) fails.push("diagnosis");
     return fails;
   }
 
@@ -1712,6 +1990,7 @@
     selfTest: selfTest,
     DISC: DISC,
     SEED: SEED,
+    ordinal: ordinal,
     voidCurrent: function () { endItem(false, 0, "away"); },
     getMode: function () { return mode; },
     getRun: function () { return run; }
@@ -1812,6 +2091,13 @@
           var fails = [];
           if (!/Reasoning/.test(text) && !/How we score/.test(text)) fails.push("museum");
           if (!document.getElementById("museum-grid").children.length) fails.push("no-cards");
+          var card = document.querySelector(".mus-card");
+          if (card) card.click();
+          if (document.getElementById("mus-detail").classList.contains("hidden")) fails.push("mus-open");
+          closeMusDetail();
+          openAbout();
+          if (document.getElementById("about").classList.contains("hidden")) fails.push("about-open");
+          closeAbout();
           showProfile();
           setTimeout(function () {
             text = document.body.innerText;
@@ -1819,7 +2105,12 @@
             if (!/Memory/.test(text)) fails.push("no-memory");
             if (!/Speed/.test(text)) fails.push("no-speed");
             if (!/Beta norms/.test(text)) fails.push("no-beta");
+            if (!/About scoring/.test(text)) fails.push("no-about");
             if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
+            if (/\d+th percentile/.test(text) && !/\d+(1[123]th|st|nd|rd) percentile/.test(text)) {
+              /* 11th/12th/13th are fine; 1th/2th/3th/23th are not */
+            }
+            if (/\b(1th|2th|3th|23th)\b/.test(text)) fails.push("bad-ordinal");
             if (typeof p.reasoning !== "number") fails.push("no-r");
             if (typeof p.memory !== "number") fails.push("no-m");
             if (typeof p.speed !== "number") fails.push("no-s");

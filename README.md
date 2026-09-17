@@ -20,13 +20,13 @@ Run `START.bat` or open `index.html` in a browser.
 
 ## How to play
 
-1. **Splash** — art preloads, then pick **Assess Reasoning**, **Assess Memory**, or **Assess Speed**. **Museum** is open. Train / Trivia / EQ stay **Soon**.
+1. **Splash** — art preloads (Bober stays visible). Pick **Assess Reasoning**, **Assess Memory**, or **Assess Speed**. **Museum** is open. **About scoring** opens the honesty popup (not draped on the art). Train / Trivia / EQ stay **Soon**. A camp in progress offers **Continue** / **Abandon**.
 2. Each Assess starts with a short **Practice** (unscored), then **Start Assess**.
 3. **Reasoning** — 3 practice + 12 matrix items (Form A or B). 45s each. Leaving the tab mid-item closes that item as missed. Retry flips Form A ↔ Form B.
 4. **Memory** — 2 warmups + 10 sequences. Watch lodge icons, then tap the same order (some items say TAP BACKWARD). Blur during the response closes the item.
 5. **Speed** — 5 warmups + 20 short trials. Four tiles: tap the odd one, or match the target. About 3s each. Miss / timeout / leave-tab = missed.
-6. **Profile** — three bars: Reasoning · Memory · Speed, last correct counts, **Beta norms (early).** Open **How scored** for the three formulas. Last profile soft-saves in this browser.
-7. **Museum** — How we score (always). Pattern Stick / Memory Twig / Speed Ember unlock after those Assess blocks.
+6. **Profile** — three bars: Reasoning · Memory · Speed, last correct counts, **Beta norms (early).** Open **How scored** for the formulas and **About scoring** for honesty. Last profile soft-saves. Refresh mid-Assess can **Continue**.
+7. **Museum** — tap a card for detail (large art if unlocked, silhouette tease if locked). Close with Back, X, or tap outside. How we score (always). Pattern Stick / Memory Twig / Speed Ember unlock after those Assess blocks.
 
 Original camp tiles (sticks, dams, snow, lodge marks, beaver silhouettes). Not a clinical plate.
 

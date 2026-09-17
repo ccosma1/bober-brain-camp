@@ -55,6 +55,12 @@ if "Assess Speed" not in html:
     fails.append("missing Assess Speed")
 if "How we score" not in html:
     fails.append("missing How we score")
+if "About scoring" not in html:
+    fails.append("missing About scoring")
+if "bober-brain-camp-run-v1" not in html:
+    fails.append("missing run save key")
+if "function ordinal" not in html:
+    fails.append("missing ordinal helper")
 for stub in ("Train · Soon", "Trivia · Soon", "EQ · Soon"):
     if stub not in html:
         fails.append(f"missing stub {stub}")
