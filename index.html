@@ -385,11 +385,14 @@
     #trivia-choices button.ok { border-color: #3D6B38; background: #d7efc8; }
     #trivia-choices button.bad { border-color: var(--danger); background: #f6d0c8; }
     #social-box {
-      display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1 1 auto;
-      overflow: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px;
+      display: flex; flex-direction: column; gap: 6px; min-height: 0; flex: 1 1 auto;
+    }
+    #social-scroll {
+      flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column; gap: 8px;
     }
     #social-art {
-      width: 100%; max-height: 38vh; object-fit: cover; border-radius: 14px;
+      width: 100%; max-height: 28vh; object-fit: cover; border-radius: 14px;
       border: 3px solid var(--wood); background: #1A1028; flex: 0 0 auto;
     }
     #social-title {
@@ -406,11 +409,13 @@
       font-weight: 800; font-size: 15px; text-align: left; cursor: pointer; box-shadow: 0 3px 0 var(--wood);
     }
     #social-choices button.picked { border-color: var(--yellow); background: #fff6d6; }
+    #social-choices button:disabled { opacity: 0.85; cursor: default; }
+    #social-dock { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; }
     #social-fb {
       margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--yellow);
       text-align: center; min-height: 1.4em;
     }
-    #social-next { align-self: center; }
+    #social-next { min-height: 48px; width: min(100%, 220px); }
   </style>
 </head>
 <body>
@@ -436,12 +441,16 @@
       <p id="trivia-q" class="hidden"></p>
       <div id="trivia-choices" class="hidden"></div>
       <div id="social-box" class="hidden">
-        <img id="social-art" alt="" />
-        <h3 id="social-title"></h3>
-        <p id="social-scene"></p>
-        <div id="social-choices"></div>
-        <p id="social-fb" class="hidden"></p>
-        <button type="button" class="play hidden" id="social-next">Next</button>
+        <div id="social-scroll">
+          <img id="social-art" alt="" />
+          <h3 id="social-title"></h3>
+          <p id="social-scene"></p>
+          <div id="social-choices"></div>
+        </div>
+        <div id="social-dock">
+          <p id="social-fb" class="hidden"></p>
+          <button type="button" class="play hidden" id="social-next">Next</button>
+        </div>
       </div>
     </div>
     <div id="train-fb" class="hidden"></div>
@@ -539,7 +548,7 @@
           <p><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p>Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
           <p>Train (drills and trivia) never feeds these bars or the cohort line.</p>
-          <p><b>Social Read:</b> practice index from 8 lodge scenarios. Preferred (kind-effective) choice × 10 (max 80). Other choices still count 3. Consistency bonus: +20 if 6+ preferred, +10 if 4–5. Not an EQ score. Does not change Reasoning, Memory, or Speed.</p>
+          <p><b>Social Read:</b> practice index from 10 lodge scenarios. Preferred (kind-effective) choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6. Not an EQ score. Does not change Reasoning, Memory, or Speed.</p>
         </details>
         <div class="end-actions">
           <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
@@ -1210,120 +1219,121 @@
     { id: "TQ42", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "Snow hat. Then it melts." }
   ];
 
-  var SOCIAL_N = 8;
+  var SOCIAL_N = 10;
+  var SOCIAL_LAST_KEY = "bober-brain-camp-social-last";
   var SOCIAL = [
-    { id: "SR01", art: "assets/social/sr01.jpg", title: "Ice on the hole",
-      scene: "Nib stands at the frozen fishing hole with a stick and a frown. The freeze came overnight. Twig is already stacking wood. Lodge dinner is still a maybe.",
+    { id: "SR01", core: true, art: "assets/social/sr01.jpg", title: "Frozen Nib",
+      scene: "The hole iced over in the night. Nib stands there with a fishing stick and will not drop the line. Twig is already stacking wood. Lodge dinner is still a maybe.",
       choices: [
-        { t: "Push Nib to drop the line anyway", fb: "The ice heard that. Nib heard it more." },
-        { t: "Wait with tea and try at thaw-light", fb: "Tea first. Fish later. Lodge stays kind." },
-        { t: "Ask Twig to take the hole today", fb: "Twig can fish. Nib can thaw. Fair swap." }
+        { t: "Push Nib to fish now", fb: "Push shuts Nib down harder. The ice did not blink." },
+        { t: "Sit with tea and wait for thaw-light", fb: "Warmth first, then the hole. Nib moves when the tea is gone." },
+        { t: "Send Twig to the hole instead", fb: "Twig can fish. It works. Nib gets sidelined and knows it." }
       ], prefer: 1 },
-    { id: "SR02", art: "assets/social/sr02.jpg", title: "Credit on the chop",
+    { id: "SR02", core: true, art: "assets/social/sr02.jpg", title: "Credit Chop",
       scene: "You split the morning wood. Puddle poses on the pile like it was all their work. The lodge is watching. Your paws still sting.",
       choices: [
-        { t: "Call Puddle out loud in front of everyone", fb: "True, and loud. The pile got quieter than it needed." },
-        { t: "Joke now, claim the chop later with a grin", fb: "The lodge laughs. The record stays honest. Nice." },
+        { t: "Call Puddle out loud", fb: "True, and loud. The pile got quieter than it needed." },
+        { t: "Joke now, claim the chop later", fb: "The lodge laughs. The record stays honest. Nice." },
         { t: "Let it go today", fb: "Peace today. The pile still knows whose paws did it." }
       ], prefer: 1 },
-    { id: "SR03", art: "assets/social/sr03.jpg", title: "Guest and the Lodge Fire",
-      scene: "A guest snorts at the hearth. “Just sticks.” The Lodge Fire is the house. Bober is nearest the poker.",
+    { id: "SR03", core: true, art: "assets/social/sr03.jpg", title: "Guest Roast",
+      scene: "A guest snorts at the hearth. “Just sticks.” The Lodge Fire is the house. You are nearest the poker.",
       choices: [
-        { t: "Roast them until they shrink", fb: "They shrank. The fire did not feel safer." },
-        { t: "Protect the hearth first, then talk", fb: "Screen the flame. Then words. Lodge first." },
-        { t: "Walk them to the door, kind but done", fb: "Kind door. Cold night. The fire keeps its job." }
+        { t: "Roast them harder", fb: "They shrank. The fire did not feel safer." },
+        { t: "Guard the hearth first, then talk", fb: "Screen the flame. Then words. Lodge first." },
+        { t: "Kindly walk them to the door", fb: "Kind door. Cold night. The fire keeps its job." }
       ], prefer: 1 },
-    { id: "SR04", art: "assets/social/sr04.jpg", title: "Twig walks off",
-      scene: "You and Twig were weaving a wall. Mid-row, Twig spots a better job and leaves you holding a half-woven stick.",
+    { id: "SR04", core: true, art: "assets/social/sr04.jpg", title: "Twig Switch",
+      scene: "You and Twig were on the wood pile. Mid-chop, Twig flips to a new job and leaves the stalling stack in your paws.",
       choices: [
-        { t: "Snap. Loud.", fb: "Twig froze. The wall did not get kinder." },
-        { t: "Ask why, then finish the plan together", fb: "Twig had a reason. Now the wall has two paws again." },
-        { t: "Cover the row, talk after supper", fb: "The wall holds. Talk still needs a seat later." }
+        { t: "Snap. Pick one job and bark it.", fb: "Twig froze. The wood still stalls." },
+        { t: "Short list: chop this, then tend that", fb: "Two beats, one order. Wood moves. Twig stays." },
+        { t: "Let Twig bounce", fb: "Twig bounces. The pile does not." }
       ], prefer: 1 },
-    { id: "SR05", art: "assets/social/sr05.jpg", title: "Noise and the tired one",
-      scene: "The celebration is drums and stomps. In the corner a tired beaver covers their ears. Soft Den is empty and warm.",
+    { id: "SR05", core: true, art: "assets/social/sr05.jpg", title: "Quiet Table",
+      scene: "Dinner is loud. One camper at the end of the table has not said a word. A talking-stick sits in the bread bowl.",
       choices: [
-        { t: "Keep the party right here", fb: "The drums won. The tired ears did not." },
-        { t: "Move the noise down the bank", fb: "Party walks. Quiet stays. Both get a night." },
-        { t: "Offer Soft Den and a quiet escort", fb: "Soft Den, door cracked. Kind and easy." }
-      ], prefer: 2 },
-    { id: "SR06", art: "assets/social/sr06.jpg", title: "The last stick",
-      scene: "Two friends tug one last good stick. Both need it. You are in the middle with empty paws.",
+        { t: "Put them on the spot", fb: "The table stared. The quiet got louder." },
+        { t: "Pass the stick — talk is optional", fb: "Offer, not a trap. They can hold it or pass." },
+        { t: "Leave them alone all night", fb: "Space is kind. A tiny invite would still have fit." }
+      ], prefer: 1 },
+    { id: "SR06", core: true, art: "assets/social/sr08.jpg", title: "Sap Spill",
+      scene: "The sap jug is on its side. Sticky everywhere. Blame is already floating around the room like steam.",
       choices: [
-        { t: "Pick a side out loud", fb: "One friend glows. The other goes quiet." },
-        { t: "Split it down the grain", fb: "Two shorter sticks. Two shorter frowns." },
-        { t: "Invent a third option — swap chores for the stick", fb: "New deal. Nobody loses the night." }
-      ], prefer: 2 },
-    { id: "SR07", art: "assets/social/sr07.jpg", title: "Frozen in the doorway",
-      scene: "A newcomer freezes at the lodge door, shy as ice. Inside is stew and noise. You have a small sorting job that needs a pair of paws.",
+        { t: "Hunt who knocked it", fb: "Hunt first, mop never. The floor stays sticky." },
+        { t: "Grab rags. Clean first.", fb: "Rags, then talk. Lodge floor first." },
+        { t: "Joke until someone else cleans", fb: "Funny. The sap still wins." }
+      ], prefer: 1 },
+    { id: "SR07", core: true, art: "assets/social/sr14.jpg", title: "Night Watch",
+      scene: "Two campers want the same night-watch slot. Both look tired. The path is quiet. Someone has to stand it.",
       choices: [
-        { t: "Ignore them. They'll come in.", fb: "They might. The stew got colder." },
-        { t: "Drag them in with a cheer", fb: "They're in. They're also twice as shy." },
-        { t: "Greet soft and hand a small job", fb: "A hello and a task. Door becomes a seat." }
-      ], prefer: 2 },
-    { id: "SR08", art: "assets/social/sr08.jpg", title: "The spilled pile",
-      scene: "You were stacking the shared evening wood. It slumps. Sticks everywhere. The lodge will notice in a minute.",
+        { t: "Coin flip. Done.", fb: "Fair-ish. Nobody asked how they slept." },
+        { t: "Ask who slept worse. Give it to them.", fb: "The worse-slept one sits. The other gets a real night." },
+        { t: "Split the night in half", fb: "Two short watches. Works, if both can wake." }
+      ], prefer: 1 },
+    { id: "SR08", core: true, art: "assets/social/sr10.jpg", title: "Broken Tool",
+      scene: "Nib’s tapper snaps on a knot. Nib is spiraling — it was the good one. Spare tools sit in the crate.",
       choices: [
-        { t: "Hide it under a tarp and hope", fb: "The tarp knows. So will they." },
-        { t: "Blame the ice", fb: "Ice takes a lot of blame. The pile still needs paws." },
-        { t: "Own it and restack before supper", fb: "Mess, then mend. Lodge likes that song." }
-      ], prefer: 2 },
-    { id: "SR09", art: "assets/social/sr09.jpg", title: "One bowl left",
+        { t: "Say it’s just a tool", fb: "True. Nib did not hear “just.”" },
+        { t: "Fix it, or find a spare, together", fb: "Two paws on the crate. The spiral slows." },
+        { t: "Hand over yours and walk off", fb: "Nib has a tool. You have a cold walk." }
+      ], prefer: 1 },
+    { id: "SR09", core: true, art: "assets/social/sr07.jpg", title: "Whiteout Vote",
+      scene: "Whiteout at the tree line. Half the lodge wants to haul wood now. Half wants to lock in. Voices stack.",
+      choices: [
+        { t: "Boss the haul. Go now.", fb: "You won the room. The weather did not vote." },
+        { t: "Name the risk, vote once, stick", fb: "One vote, named risk, then you stick. Lodge can move." },
+        { t: "Wait until panic decides", fb: "Panic is a voter. Not a kind one." }
+      ], prefer: 1 },
+    { id: "SR10", core: true, art: "assets/social/sr12.jpg", title: "Soft Win",
+      scene: "The shy camper just landed a quiet streak at the slate table. Nobody clapped. They look at the floor like it might clap.",
+      choices: [
+        { t: "Big public cheer", fb: "The room roared. They shrank into the bench." },
+        { t: "Quiet nod and one specific praise", fb: "A nod and the exact move. They sit taller." },
+        { t: "Say nothing", fb: "The streak happened. So did the silence." }
+      ], prefer: 1 },
+    { id: "SR11", core: false, art: "assets/social/sr09.jpg", title: "One bowl left",
       scene: "Supper is thin. One bowl of stew remains. A smaller beaver looks at it like it is a whole summer.",
       choices: [
         { t: "Take the bowl. You chopped all day.", fb: "True chop. Thin night for them." },
         { t: "Split the bowl, extra bread for both", fb: "Half stew, whole lodge. That's camp." },
         { t: "Give the whole bowl and eat later", fb: "Kind to a fault. Eat something, friend." }
       ], prefer: 1 },
-    { id: "SR10", art: "assets/social/sr10.jpg", title: "Hat on the path",
-      scene: "A yellow hat sits on the snow path. You know whose. They are already far toward the river.",
-      choices: [
-        { t: "Keep it. Cute hat.", fb: "Cute, and not yours." },
-        { t: "Leave it. They'll loop back.", fb: "Maybe. The wind has opinions." },
-        { t: "Scoop it and jog it home", fb: "Hat, paws, door. Easy good." }
-      ], prefer: 2 },
-    { id: "SR11", art: "assets/social/sr11.jpg", title: "Puddle after the slip",
+    { id: "SR12", core: false, art: "assets/social/sr11.jpg", title: "Puddle after the slip",
       scene: "Puddle went in the river. They are soaked, shaking, and trying to laugh it off. You have a dry blanket.",
       choices: [
         { t: "Laugh along and keep walking", fb: "They laughed. Their teeth did not." },
         { t: "Wrap the blanket, then the joke", fb: "Warm first. Joke second. Lodge order." },
         { t: "Lecture about river banks", fb: "True banks. Cold Puddle." }
       ], prefer: 1 },
-    { id: "SR12", art: "assets/social/sr12.jpg", title: "Nib's long story",
-      scene: "Nib is telling the freeze story for the third loop. The fire circle is waiting on a plan. Nib is happy.",
-      choices: [
-        { t: "Cut them off sharp", fb: "Story stopped. Warmth dropped." },
-        { t: "Smile, time-box, then the plan", fb: "One more beat, then work. Kind clock." },
-        { t: "Let the loop run till morning", fb: "Nib glows. The plan waits in the cold." }
-      ], prefer: 1 },
-    { id: "SR13", art: "assets/social/sr13.jpg", title: "Last berry cake",
+    { id: "SR13", core: false, art: "assets/social/sr13.jpg", title: "Last berry cake",
       scene: "Night kitchen. You and a guest both reach for the last berry cake. Hands hover. The cake is small and perfect.",
       choices: [
         { t: "Grab it. Host rules.", fb: "Host ate. Guest remembered." },
         { t: "Split it with a clean cut", fb: "Two halves. Two smiles. Cake math." },
         { t: "Insist they take all of it", fb: "Polite duel. Someone still goes hungry." }
       ], prefer: 1 },
-    { id: "SR14", art: "assets/social/sr14.jpg", title: "Snore on watch",
-      scene: "Night watch. Your partner is snoring at the post. The path is quiet. You are tired too.",
-      choices: [
-        { t: "Kick the post and scold", fb: "They woke. Nobody felt braver." },
-        { t: "Swap: you take this hour, they take dawn", fb: "A deal. Two shorter watches. Lodge holds." },
-        { t: "Let them sleep and suffer alone", fb: "Heroic, and you'll be mush by dawn." }
-      ], prefer: 1 },
-    { id: "SR15", art: "assets/social/sr15.jpg", title: "A leak in the dam",
+    { id: "SR14", core: false, art: "assets/social/sr15.jpg", title: "A leak in the dam",
       scene: "A hiss in the dam. Twig found it. You both have mud. The pond is watching.",
       choices: [
         { t: "Bark orders and take the glory hole", fb: "Hole plugged. Twig went quiet." },
         { t: "Plug it together, count out loud", fb: "Two paws, one leak, zero fuss." },
         { t: "Go fetch Nib and lose the minute", fb: "Help is coming. The hiss is not waiting." }
       ], prefer: 1 },
-    { id: "SR16", art: "assets/social/sr16.jpg", title: "Seat by the fire",
+    { id: "SR15", core: false, art: "assets/social/sr16.jpg", title: "Seat by the fire",
       scene: "Your usual hearth seat is taken by a tired guest. You have a mug. They have sore paws. The bench is almost wide enough.",
       choices: [
         { t: "Ask them to move. That's your seat.", fb: "Seat reclaimed. Guest felt the draft." },
         { t: "Share the bench and the mug-warmth", fb: "Two on a bench. Fire does the rest." },
         { t: "Stand in the cold to make a point", fb: "Point made. Toes lost." }
-      ], prefer: 1 }
+      ], prefer: 1 },
+    { id: "SR16", core: false, art: "assets/social/sr06.jpg", title: "The last stick",
+      scene: "Two friends tug one last good stick. Both need it. You are in the middle with empty paws.",
+      choices: [
+        { t: "Pick a side out loud", fb: "One friend glows. The other goes quiet." },
+        { t: "Split it down the grain", fb: "Two shorter sticks. Two shorter frowns." },
+        { t: "Invent a third option — swap chores for the stick", fb: "New deal. Nobody loses the night." }
+      ], prefer: 2 }
   ];
 
   function shuffle(arr) {
@@ -1515,6 +1525,7 @@
     stopTimer();
     clearTimeout(studyTimer);
     run = null;
+    if (social && social.advTimer) clearTimeout(social.advTimer);
     social = null;
     clearRunSave();
     document.getElementById("leave-assess").classList.add("hidden");
@@ -1538,7 +1549,7 @@
       reasoning: null, rCorrect: 0, rTotal: 12, rPct: null, rForm: null,
       memory: null, mCorrect: 0, mTotal: 10, mPct: null,
       speed: null, sCorrect: 0, sTotal: 20, sPct: null,
-      social: null, soCorrect: 0, soTotal: 8, soPct: null,
+      social: null, soCorrect: 0, soTotal: 10, soPct: null,
       musStick: false, musTwig: false, musEmber: false, musWord: false,
       at: 0
     };
@@ -1569,7 +1580,7 @@
       if (s.musTwig) p.musTwig = true;
       if (s.musEmber) p.musEmber = true;
       if (typeof s.social === "number") {
-        p.social = s.social; p.soCorrect = s.soCorrect || 0; p.soTotal = s.soTotal || 8; p.soPct = s.soPct;
+        p.social = s.social; p.soCorrect = s.soCorrect || 0; p.soTotal = s.soTotal || 10; p.soPct = s.soPct;
         p.musWord = true;
       }
       if (s.musWord) p.musWord = true;
@@ -1670,6 +1681,7 @@
   function goSplash() {
     stopTimer();
     clearTimeout(studyTimer);
+    if (social && social.advTimer) clearTimeout(social.advTimer);
     mode = "splash";
     run = null;
     train = null;
@@ -1835,9 +1847,9 @@
     if (mode === "social") {
       chip.textContent = "PRACTICE";
       chip.classList.add("practice");
-      var n = social ? (social.pool.length) : 9;
+      var n = social ? social.pool.length : SOCIAL_N;
       document.getElementById("chip-item").textContent = "Social Read " + ((social && social.i) + 1) + "/" + n;
-      document.getElementById("chip-time").textContent = social && social.i === 0 ? "Warmup" : "Lodge";
+      document.getElementById("chip-time").textContent = "Lodge";
       return;
     }
     var practice = mode === "practice";
@@ -2197,7 +2209,7 @@
     document.getElementById("social-num").textContent = soHas ? String(p.social) : "—";
     document.getElementById("social-bar").style.width = soHas ? (p.social + "%") : "0%";
     document.getElementById("social-meta").textContent = soHas
-      ? (p.soCorrect + " / " + (p.soTotal || 8) + " preferred · practice · lodge scenarios · vs Brain Camp players · " + ordinal(p.soPct) + " percentile")
+      ? (p.soCorrect + " / " + (p.soTotal || 10) + " preferred · practice · lodge scenarios · vs Brain Camp players · " + ordinal(p.soPct) + " percentile")
       : "Practice · lodge scenarios. Not an EQ score.";
     var retry = document.getElementById("btn-retry");
     retry.textContent = lastTrack === "memory" ? "RETRY MEMORY" : lastTrack === "speed" ? "RETRY SPEED" : "RETRY REASONING";
@@ -2504,16 +2516,26 @@
   }
 
   function scoreSocial(pref, other) {
-    var acc = pref * 10 + other * 3;
+    var acc = pref * 8 + other * 2;
     var bonus = 0;
-    if (pref >= 6) bonus = 20;
-    else if (pref >= 4) bonus = 10;
+    if (pref >= 7) bonus = 20;
+    else if (pref >= 5) bonus = 10;
     return Math.round(Math.max(0, Math.min(100, acc + bonus)));
+  }
+  function pickSocialRun() {
+    var last = [];
+    try { last = JSON.parse(localStorage.getItem(SOCIAL_LAST_KEY) || "[]"); } catch (e) { last = []; }
+    var pool = shuffle(SOCIAL.slice());
+    pool.sort(function (a, b) {
+      return (last.indexOf(a.id) >= 0 ? 1 : 0) - (last.indexOf(b.id) >= 0 ? 1 : 0);
+    });
+    var run = pool.slice(0, SOCIAL_N);
+    try { localStorage.setItem(SOCIAL_LAST_KEY, JSON.stringify(run.map(function (x) { return x.id; }))); } catch (e) {}
+    return run;
   }
   function beginSocial() {
     if (PRE.blocked) return;
-    var pool = shuffle(SOCIAL);
-    social = { pool: pool.slice(0, 1 + SOCIAL_N), i: 0, pref: 0, other: 0, scored: 0, waiting: false };
+    social = { pool: pickSocialRun(), i: 0, pref: 0, other: 0, scored: 0, waiting: false, advTimer: 0 };
     mode = "social";
     setMenu(false);
     hideOverlays();
@@ -2532,7 +2554,8 @@
     document.getElementById("social-fb").classList.add("hidden");
     document.getElementById("social-next").classList.add("hidden");
     social.waiting = false;
-    setPrompt(social.i === 0 ? "PRACTICE — reading lodge situations. Not an EQ score." : "Social Read practice — not an EQ score.", false);
+    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
+    setPrompt("PRACTICE — reading lodge situations. Not an EQ score.", false);
     hudFor();
     var box = document.getElementById("social-choices");
     box.innerHTML = "";
@@ -2549,29 +2572,35 @@
   function pickSocial(idx, btn) {
     if (!social || social.waiting) return;
     var it = social.pool[social.i];
+    if (!it) { finishSocial(); return; }
     social.waiting = true;
     Array.prototype.forEach.call(document.querySelectorAll("#social-choices button"), function (x) { x.disabled = true; });
     if (btn) btn.classList.add("picked");
-    var scored = social.i > 0;
-    if (scored) {
-      if (idx === it.prefer) social.pref += 1;
-      else social.other += 1;
-      social.scored += 1;
-    }
+    if (idx === it.prefer) social.pref += 1;
+    else social.other += 1;
+    social.scored += 1;
     var fb = document.getElementById("social-fb");
     fb.textContent = it.choices[idx].fb;
     fb.classList.remove("hidden");
-    document.getElementById("social-next").classList.remove("hidden");
+    var nextBtn = document.getElementById("social-next");
+    nextBtn.textContent = social.i >= social.pool.length - 1 ? "Done" : "Next";
+    nextBtn.classList.remove("hidden");
     snapshotRun();
+    if (social.advTimer) clearTimeout(social.advTimer);
+    social.advTimer = setTimeout(function () { nextSocial(); }, 1200);
   }
   function nextSocial() {
     if (!social) return;
+    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
+    if (!social.waiting) return;
     social.i += 1;
+    social.waiting = false;
     if (social.i >= social.pool.length) finishSocial();
     else presentSocial();
   }
   function finishSocial() {
     if (!social) return;
+    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
     var idx = scoreSocial(social.pref, social.other);
     var pct = percentile(idx, SEED.social);
     patchSave({

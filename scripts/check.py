@@ -69,6 +69,10 @@ if "not an EQ score" not in html:
     fails.append("missing Social Read honesty")
 if html.count('id: "SR') < 16:
     fails.append("social pool too small")
+if "SOCIAL_N = 10" not in html:
+    fails.append("social run must be 10")
+if "Frozen Nib" not in html or "Soft Win" not in html:
+    fails.append("missing core Social Read stories")
 if "Warm Word" not in html:
     fails.append("missing Warm Word")
 if "TRAIN_KEY" not in html:
