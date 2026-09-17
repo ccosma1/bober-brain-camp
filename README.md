@@ -27,7 +27,8 @@ Run `START.bat` or open `index.html` in a browser.
 5. **Speed** — 5 warmups + 20 short trials. Four tiles: tap the odd one, or match the target. About 3s each. Miss / timeout / leave-tab = missed.
 6. **Profile** — three bars: Reasoning · Memory · Speed, last correct counts, **Beta norms (early).** Open **How scored** for the formulas and **About scoring** for honesty. Last profile soft-saves. Refresh mid-Assess can **Continue**.
 7. **Museum** — tap a card for detail (large art if unlocked, silhouette tease if locked). Close with Back, X, or tap outside. How we score (always). Pattern Stick / Memory Twig / Speed Ember unlock after those Assess blocks. **Train Badge** unlocks after a Train session.
-8. **Train** — PRACTICE ONLY. Drills (Pattern / Memory / Speed warmups with feedback) and Trivia (≥40 lodge/camp/pattern questions). XP and streaks save separately. Train never changes Assess bars or cohort %. Blur pauses Train. Back to Train always works.
+8. **Train** — PRACTICE ONLY. Drills (Pattern / Memory / Speed warmups with feedback) and Trivia (≥40 lodge/camp/pattern questions). XP and streaks save separately. Train never changes Assess bars or cohort %. Blur pauses Train. **Leave** (top-left) returns to the Train hub from a drill/trivia, or to Splash from the hub.
+9. **Leave** on Assess (practice or scored) asks once, then abandons the run without writing Profile bars. Museum card detail closes on tap outside the card (also Back and X).
 
 Original camp tiles (sticks, dams, snow, lodge marks, beaver silhouettes). Not a clinical plate.
 

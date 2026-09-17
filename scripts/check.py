@@ -69,6 +69,10 @@ if "TRAIN_KEY" not in html:
     fails.append("missing train save key")
 if "PRACTICE ONLY" not in html:
     fails.append("missing practice-only chip")
+if 'id="btn-leave"' not in html:
+    fails.append("missing Leave control")
+if "leave-assess" not in html:
+    fails.append("missing Leave Assess confirm")
 if html.count('TQ') < 40:
     fails.append("trivia pool too small")
 if re.search(r"connect wallet|wallet connect", html, re.I):

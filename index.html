@@ -54,7 +54,19 @@
     .hud-row {
       display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center; gap: 6px; min-width: 0;
+      padding-left: 62px;
     }
+    #btn-leave {
+      position: absolute; z-index: 32;
+      top: max(8px, env(safe-area-inset-top));
+      left: max(8px, env(safe-area-inset-left));
+      appearance: none; min-width: 56px; min-height: 44px; padding: 8px 14px;
+      border: 2px solid var(--cream); background: #1A1028; color: var(--cream);
+      font-family: inherit; font-weight: 900; font-size: 14px; letter-spacing: 0.04em;
+      border-radius: 12px; cursor: pointer; box-shadow: 0 3px 0 #0006;
+    }
+    #btn-leave:active { transform: translateY(1px); }
+    #app.booting #btn-leave { display: none; }
     .chip {
       background: #2a1c4e; border: 2px solid var(--yellow); color: var(--cream);
       border-radius: 999px; padding: 4px 8px; font-weight: 800; font-size: 12px;
@@ -305,8 +317,10 @@
     }
     #about { z-index: 40; justify-content: center; }
     #resume { z-index: 36; }
+    #leave-assess { z-index: 37; }
     .mus-detail-wrap, .about-wrap {
-      position: relative; width: 100%; max-width: 390px; margin: 0 auto; padding-top: 48px;
+      position: relative; width: 100%; max-width: 390px; margin: 0 auto;
+      padding: 56px 18px 24px; min-height: 100%; box-sizing: border-box;
     }
     .about-wrap { padding-top: 12px; }
     .mus-x {
@@ -370,18 +384,16 @@
     }
     #trivia-choices button.ok { border-color: #3D6B38; background: #d7efc8; }
     #trivia-choices button.bad { border-color: var(--danger); background: #f6d0c8; }
-    #btn-train-exit { display: none; }
-    #app.train #btn-train-exit { display: inline-block; }
   </style>
 </head>
 <body>
   <div id="app" class="booting menu">
+    <button type="button" id="btn-leave" class="hidden">Leave</button>
     <div id="hud">
       <div class="hud-row">
         <div class="chip mode" id="chip-mode">PRACTICE</div>
         <div class="chip item" id="chip-item">Item 1/3</div>
         <div class="chip time" id="chip-time">1:00</div>
-        <button class="chip" id="btn-train-exit" type="button">Back to Train</button>
       </div>
       <div id="time-bar" aria-hidden="true"><i id="time-fill"></i></div>
     </div>
@@ -559,7 +571,7 @@
             <button class="play camp" id="btn-play-trivia" type="button">Play Trivia</button>
           </div>
         </div>
-        <button class="play ghost" id="btn-train-hub-back" type="button">Back to Splash</button>
+        <button class="play ghost" id="btn-train-hub-back" type="button">Leave</button>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
       </div>
     </div>
@@ -572,6 +584,17 @@
         <div class="end-actions">
           <button class="play" id="btn-train-unpause" type="button">CONTINUE</button>
           <button class="play ghost" id="btn-train-pause-hub" type="button">Back to Train</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="leave-assess" class="overlay center hidden" role="dialog" aria-label="Leave Assess">
+      <div class="tip-card" id="leave-assess-inner">
+        <h2>LEAVE ASSESS?</h2>
+        <p class="how">Progress for this run is abandoned.</p>
+        <div class="end-actions">
+          <button class="play" id="btn-leave-yes" type="button">Yes, leave</button>
+          <button class="play ghost" id="btn-leave-no" type="button">No, stay</button>
         </div>
       </div>
     </div>
@@ -1280,7 +1303,7 @@
   var trainFbTimer = 0;
 
   function hideOverlays() {
-    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume", "train-hub", "train-pause"].forEach(function (id) {
+    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume", "train-hub", "train-pause", "leave-assess"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -1297,6 +1320,38 @@
   function showOverlay(id) {
     hideOverlays();
     document.getElementById(id).classList.remove("hidden");
+    updateLeave();
+  }
+  function updateLeave() {
+    var show = mode === "practice" || mode === "assess" || mode === "confirm" || mode === "train" || mode === "train-hub" || mode === "train-pause";
+    document.getElementById("btn-leave").classList.toggle("hidden", !show);
+  }
+  function requestLeave() {
+    if (mode === "train" || mode === "train-pause") {
+      document.getElementById("train-pause").classList.add("hidden");
+      if (raf) cancelAnimationFrame(raf);
+      clearTimeout(studyTimer);
+      openTrainHub(train && train.kind === "trivia" ? "trivia" : "drills");
+      return;
+    }
+    if (mode === "train-hub") { goSplash(); return; }
+    if (mode === "practice" || mode === "assess" || mode === "confirm") {
+      document.getElementById("leave-assess").classList.remove("hidden");
+      document.getElementById("btn-leave").classList.add("hidden");
+      return;
+    }
+  }
+  function confirmLeaveAssess() {
+    stopTimer();
+    clearTimeout(studyTimer);
+    run = null;
+    clearRunSave();
+    document.getElementById("leave-assess").classList.add("hidden");
+    goSplash();
+  }
+  function cancelLeaveAssess() {
+    document.getElementById("leave-assess").classList.add("hidden");
+    updateLeave();
   }
   function setMenu(on) {
     app.classList.toggle("menu", on);
@@ -1507,6 +1562,7 @@
       if (snap.remain != null) { run.limit = Math.max(1, snap.remain); run.t0 = performance.now(); }
     }
     snapshotRun();
+    updateLeave();
   }
 
   function fmtTime(sec) {
@@ -1850,6 +1906,7 @@
       totalN: totalN
     };
     present(practiceList[0]);
+    updateLeave();
   }
 
   function nextReasonForm() {
@@ -1869,6 +1926,7 @@
     run.totalN = run.track === "memory" ? MEM_ASSESS_N : run.track === "speed" ? SPD_ASSESS_N : ASSESS_N;
     var it = nextAssessItem();
     present(it);
+    updateLeave();
   }
 
   function finishAssess() {
@@ -2038,6 +2096,7 @@
     setMenu(false);
     hideOverlays();
     presentTrain();
+    updateLeave();
   }
   function presentTrain() {
     if (!train) return;
@@ -2346,8 +2405,10 @@
   document.addEventListener("keydown", function (ev) {
     if (ev.key !== "Escape") return;
     if (!document.getElementById("about").classList.contains("hidden")) { closeAbout(); return; }
+    if (!document.getElementById("leave-assess").classList.contains("hidden")) { cancelLeaveAssess(); return; }
     if (!document.getElementById("mus-detail").classList.contains("hidden")) { closeMusDetail(); return; }
-    if (!document.getElementById("train-pause").classList.contains("hidden")) { unpauseTrain(); }
+    if (!document.getElementById("train-pause").classList.contains("hidden")) { unpauseTrain(); return; }
+    requestLeave();
   });
   app.addEventListener("click", function (ev) {
     var t = ev.target;
@@ -2369,7 +2430,23 @@
   document.getElementById("btn-drill-speed").addEventListener("click", function () { beginTrain("speed"); });
   document.getElementById("btn-play-trivia").addEventListener("click", function () { beginTrain("trivia"); });
   document.getElementById("btn-train-hub-back").addEventListener("click", goSplash);
-  document.getElementById("btn-train-exit").addEventListener("click", function () { openTrainHub(train && train.kind === "trivia" ? "trivia" : "drills"); });
+  document.getElementById("btn-leave").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    requestLeave();
+  });
+  document.getElementById("btn-leave-yes").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    confirmLeaveAssess();
+  });
+  document.getElementById("btn-leave-no").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    cancelLeaveAssess();
+  });
+  document.getElementById("leave-assess").addEventListener("click", function (ev) {
+    if (ev.target.id === "leave-assess") cancelLeaveAssess();
+  });
+  document.getElementById("leave-assess-inner").addEventListener("click", function (ev) { ev.stopPropagation(); });
   document.getElementById("btn-train-unpause").addEventListener("click", unpauseTrain);
   document.getElementById("btn-train-pause-hub").addEventListener("click", function () {
     document.getElementById("train-pause").classList.add("hidden");
@@ -2392,7 +2469,9 @@
     ev.preventDefault(); ev.stopPropagation(); closeMusDetail();
   });
   document.getElementById("mus-detail").addEventListener("click", function (ev) {
-    if (ev.target.id === "mus-detail" || ev.target.classList.contains("mus-detail-wrap")) closeMusDetail();
+    var inner = document.getElementById("mus-detail-inner");
+    if (inner && inner.contains(ev.target)) return;
+    closeMusDetail();
   });
   document.getElementById("mus-detail-inner").addEventListener("click", function (ev) { ev.stopPropagation(); });
   document.getElementById("about-back").addEventListener("click", function (ev) {
@@ -2635,6 +2714,8 @@
           var card = document.querySelector(".mus-card");
           if (card) card.click();
           if (document.getElementById("mus-detail").classList.contains("hidden")) fails.push("mus-open");
+          document.getElementById("mus-detail").click();
+          if (!document.getElementById("mus-detail").classList.contains("hidden")) fails.push("mus-away");
           closeMusDetail();
           openAbout();
           if (document.getElementById("about").classList.contains("hidden")) fails.push("about-open");
@@ -2655,7 +2736,7 @@
             if (typeof p.reasoning !== "number") fails.push("no-r");
             if (typeof p.memory !== "number") fails.push("no-m");
             if (typeof p.speed !== "number") fails.push("no-s");
-            var r0 = p.reasoning, m0 = p.memory, s0 = p.speed;
+            var bars0 = { r: p.reasoning, m: p.memory, s: p.speed };
             openTrainHub("trivia");
             beginTrain("trivia");
             setTimeout(function () {
@@ -2664,10 +2745,18 @@
               setTimeout(function () {
                 var p2 = loadSave();
                 var tr = loadTrain();
-                if (p2.reasoning !== r0 || p2.memory !== m0 || p2.speed !== s0) fails.push("train-leaked");
+                if (p2.reasoning !== bars0.r || p2.memory !== bars0.m || p2.speed !== bars0.s) fails.push("train-leaked");
                 if (!tr.played) fails.push("train-not-played");
                 if (document.getElementById("chip-mode").textContent !== "TRAIN") fails.push("no-train-chip");
-                reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p2.reasoning + " M" + p2.memory + " S" + p2.speed + " XP" + tr.xp));
+                if (document.getElementById("btn-leave").classList.contains("hidden")) fails.push("no-leave-train");
+                beginPractice("reason");
+                requestLeave();
+                if (document.getElementById("leave-assess").classList.contains("hidden")) fails.push("no-leave-confirm");
+                confirmLeaveAssess();
+                var p3 = loadSave();
+                if (p3.reasoning !== bars0.r || p3.memory !== bars0.m || p3.speed !== bars0.s) fails.push("leave-wrote-bars");
+                if (loadRunSnap()) fails.push("leave-kept-run");
+                reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p3.reasoning + " M" + p3.memory + " S" + p3.speed + " XP" + tr.xp));
               }, 200);
             }, 120);
           }, 80);
