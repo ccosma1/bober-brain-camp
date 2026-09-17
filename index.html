@@ -384,6 +384,33 @@
     }
     #trivia-choices button.ok { border-color: #3D6B38; background: #d7efc8; }
     #trivia-choices button.bad { border-color: var(--danger); background: #f6d0c8; }
+    #social-box {
+      display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1 1 auto;
+      overflow: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px;
+    }
+    #social-art {
+      width: 100%; max-height: 38vh; object-fit: cover; border-radius: 14px;
+      border: 3px solid var(--wood); background: #1A1028; flex: 0 0 auto;
+    }
+    #social-title {
+      margin: 0; font-size: 18px; font-weight: 900; color: var(--yellow);
+      text-shadow: 0 2px 0 #1A1028; text-align: center;
+    }
+    #social-scene {
+      margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--cream); text-align: left;
+    }
+    #social-choices { display: flex; flex-direction: column; gap: 8px; }
+    #social-choices button {
+      appearance: none; min-height: 52px; border: 3px solid var(--wood); background: var(--cream);
+      color: var(--ink); border-radius: 14px; padding: 10px 12px; font-family: inherit;
+      font-weight: 800; font-size: 15px; text-align: left; cursor: pointer; box-shadow: 0 3px 0 var(--wood);
+    }
+    #social-choices button.picked { border-color: var(--yellow); background: #fff6d6; }
+    #social-fb {
+      margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--yellow);
+      text-align: center; min-height: 1.4em;
+    }
+    #social-next { align-self: center; }
   </style>
 </head>
 <body>
@@ -408,6 +435,14 @@
       <div id="trivia-illu" class="cell big hidden"></div>
       <p id="trivia-q" class="hidden"></p>
       <div id="trivia-choices" class="hidden"></div>
+      <div id="social-box" class="hidden">
+        <img id="social-art" alt="" />
+        <h3 id="social-title"></h3>
+        <p id="social-scene"></p>
+        <div id="social-choices"></div>
+        <p id="social-fb" class="hidden"></p>
+        <button type="button" class="play hidden" id="social-next">Next</button>
+      </div>
     </div>
     <div id="train-fb" class="hidden"></div>
     <p class="hud-link"><button type="button" class="text-link" data-about>About scoring</button></p>
@@ -438,7 +473,7 @@
           <button class="play camp" id="btn-train" type="button" disabled>Train</button>
           <div class="ghost-row">
             <button class="play ghost" id="btn-trivia" type="button" disabled>Trivia</button>
-            <button class="play soon" type="button" disabled>EQ · Soon</button>
+            <button class="play ghost" id="btn-social" type="button" disabled>Social Read</button>
           </div>
         </div>
         <div class="hub-row">
@@ -489,7 +524,12 @@
           <div class="skill-bar" aria-label="Speed skill"><i id="speed-bar"></i></div>
           <p class="bar-meta" id="speed-meta">Not yet camped</p>
         </div>
-        <p class="bar-meta">Beta norms (early). Three bars — never one number.</p>
+        <div class="bar-wrap">
+          <div class="bar-lab"><span>Social Read</span><span id="social-num">—</span></div>
+          <div class="skill-bar" aria-label="Social Read practice"><i id="social-bar"></i></div>
+          <p class="bar-meta" id="social-meta">Not yet camped</p>
+        </div>
+        <p class="bar-meta">Beta norms (early). Assess bars stay separate. Social Read is practice only.</p>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <details class="how-scored">
           <summary>How scored</summary>
@@ -499,6 +539,7 @@
           <p><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p>Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
           <p>Train (drills and trivia) never feeds these bars or the cohort line.</p>
+          <p><b>Social Read:</b> practice index from 8 lodge scenarios. Preferred (kind-effective) choice × 10 (max 80). Other choices still count 3. Consistency bonus: +20 if 6+ preferred, +10 if 4–5. Not an EQ score. Does not change Reasoning, Memory, or Speed.</p>
         </details>
         <div class="end-actions">
           <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
@@ -542,6 +583,7 @@
           <p class="how">Cohort % = vs Brain Camp players (beta), rough not gospel.</p>
           <p class="how">Play for fun, not credentials. Fan game by a holder.</p>
           <p class="how">Train does not feed Assess bars or cohort %.</p>
+          <p class="how">Social Read is lodge-scenario practice — not an EQ score. It does not change Assess bars.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
         </div>
       </div>
@@ -631,7 +673,8 @@
   var SEED = {
     reason: { mean: 52, sd: 16 },
     memory: { mean: 48, sd: 15 },
-    speed: { mean: 55, sd: 14 }
+    speed: { mean: 55, sd: 14 },
+    social: { mean: 56, sd: 14 }
   };
 
   var TINT = {
@@ -1167,6 +1210,122 @@
     { id: "TQ42", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "Snow hat. Then it melts." }
   ];
 
+  var SOCIAL_N = 8;
+  var SOCIAL = [
+    { id: "SR01", art: "assets/social/sr01.jpg", title: "Ice on the hole",
+      scene: "Nib stands at the frozen fishing hole with a stick and a frown. The freeze came overnight. Twig is already stacking wood. Lodge dinner is still a maybe.",
+      choices: [
+        { t: "Push Nib to drop the line anyway", fb: "The ice heard that. Nib heard it more." },
+        { t: "Wait with tea and try at thaw-light", fb: "Tea first. Fish later. Lodge stays kind." },
+        { t: "Ask Twig to take the hole today", fb: "Twig can fish. Nib can thaw. Fair swap." }
+      ], prefer: 1 },
+    { id: "SR02", art: "assets/social/sr02.jpg", title: "Credit on the chop",
+      scene: "You split the morning wood. Puddle poses on the pile like it was all their work. The lodge is watching. Your paws still sting.",
+      choices: [
+        { t: "Call Puddle out loud in front of everyone", fb: "True, and loud. The pile got quieter than it needed." },
+        { t: "Joke now, claim the chop later with a grin", fb: "The lodge laughs. The record stays honest. Nice." },
+        { t: "Let it go today", fb: "Peace today. The pile still knows whose paws did it." }
+      ], prefer: 1 },
+    { id: "SR03", art: "assets/social/sr03.jpg", title: "Guest and the Lodge Fire",
+      scene: "A guest snorts at the hearth. “Just sticks.” The Lodge Fire is the house. Bober is nearest the poker.",
+      choices: [
+        { t: "Roast them until they shrink", fb: "They shrank. The fire did not feel safer." },
+        { t: "Protect the hearth first, then talk", fb: "Screen the flame. Then words. Lodge first." },
+        { t: "Walk them to the door, kind but done", fb: "Kind door. Cold night. The fire keeps its job." }
+      ], prefer: 1 },
+    { id: "SR04", art: "assets/social/sr04.jpg", title: "Twig walks off",
+      scene: "You and Twig were weaving a wall. Mid-row, Twig spots a better job and leaves you holding a half-woven stick.",
+      choices: [
+        { t: "Snap. Loud.", fb: "Twig froze. The wall did not get kinder." },
+        { t: "Ask why, then finish the plan together", fb: "Twig had a reason. Now the wall has two paws again." },
+        { t: "Cover the row, talk after supper", fb: "The wall holds. Talk still needs a seat later." }
+      ], prefer: 1 },
+    { id: "SR05", art: "assets/social/sr05.jpg", title: "Noise and the tired one",
+      scene: "The celebration is drums and stomps. In the corner a tired beaver covers their ears. Soft Den is empty and warm.",
+      choices: [
+        { t: "Keep the party right here", fb: "The drums won. The tired ears did not." },
+        { t: "Move the noise down the bank", fb: "Party walks. Quiet stays. Both get a night." },
+        { t: "Offer Soft Den and a quiet escort", fb: "Soft Den, door cracked. Kind and easy." }
+      ], prefer: 2 },
+    { id: "SR06", art: "assets/social/sr06.jpg", title: "The last stick",
+      scene: "Two friends tug one last good stick. Both need it. You are in the middle with empty paws.",
+      choices: [
+        { t: "Pick a side out loud", fb: "One friend glows. The other goes quiet." },
+        { t: "Split it down the grain", fb: "Two shorter sticks. Two shorter frowns." },
+        { t: "Invent a third option — swap chores for the stick", fb: "New deal. Nobody loses the night." }
+      ], prefer: 2 },
+    { id: "SR07", art: "assets/social/sr07.jpg", title: "Frozen in the doorway",
+      scene: "A newcomer freezes at the lodge door, shy as ice. Inside is stew and noise. You have a small sorting job that needs a pair of paws.",
+      choices: [
+        { t: "Ignore them. They'll come in.", fb: "They might. The stew got colder." },
+        { t: "Drag them in with a cheer", fb: "They're in. They're also twice as shy." },
+        { t: "Greet soft and hand a small job", fb: "A hello and a task. Door becomes a seat." }
+      ], prefer: 2 },
+    { id: "SR08", art: "assets/social/sr08.jpg", title: "The spilled pile",
+      scene: "You were stacking the shared evening wood. It slumps. Sticks everywhere. The lodge will notice in a minute.",
+      choices: [
+        { t: "Hide it under a tarp and hope", fb: "The tarp knows. So will they." },
+        { t: "Blame the ice", fb: "Ice takes a lot of blame. The pile still needs paws." },
+        { t: "Own it and restack before supper", fb: "Mess, then mend. Lodge likes that song." }
+      ], prefer: 2 },
+    { id: "SR09", art: "assets/social/sr09.jpg", title: "One bowl left",
+      scene: "Supper is thin. One bowl of stew remains. A smaller beaver looks at it like it is a whole summer.",
+      choices: [
+        { t: "Take the bowl. You chopped all day.", fb: "True chop. Thin night for them." },
+        { t: "Split the bowl, extra bread for both", fb: "Half stew, whole lodge. That's camp." },
+        { t: "Give the whole bowl and eat later", fb: "Kind to a fault. Eat something, friend." }
+      ], prefer: 1 },
+    { id: "SR10", art: "assets/social/sr10.jpg", title: "Hat on the path",
+      scene: "A yellow hat sits on the snow path. You know whose. They are already far toward the river.",
+      choices: [
+        { t: "Keep it. Cute hat.", fb: "Cute, and not yours." },
+        { t: "Leave it. They'll loop back.", fb: "Maybe. The wind has opinions." },
+        { t: "Scoop it and jog it home", fb: "Hat, paws, door. Easy good." }
+      ], prefer: 2 },
+    { id: "SR11", art: "assets/social/sr11.jpg", title: "Puddle after the slip",
+      scene: "Puddle went in the river. They are soaked, shaking, and trying to laugh it off. You have a dry blanket.",
+      choices: [
+        { t: "Laugh along and keep walking", fb: "They laughed. Their teeth did not." },
+        { t: "Wrap the blanket, then the joke", fb: "Warm first. Joke second. Lodge order." },
+        { t: "Lecture about river banks", fb: "True banks. Cold Puddle." }
+      ], prefer: 1 },
+    { id: "SR12", art: "assets/social/sr12.jpg", title: "Nib's long story",
+      scene: "Nib is telling the freeze story for the third loop. The fire circle is waiting on a plan. Nib is happy.",
+      choices: [
+        { t: "Cut them off sharp", fb: "Story stopped. Warmth dropped." },
+        { t: "Smile, time-box, then the plan", fb: "One more beat, then work. Kind clock." },
+        { t: "Let the loop run till morning", fb: "Nib glows. The plan waits in the cold." }
+      ], prefer: 1 },
+    { id: "SR13", art: "assets/social/sr13.jpg", title: "Last berry cake",
+      scene: "Night kitchen. You and a guest both reach for the last berry cake. Hands hover. The cake is small and perfect.",
+      choices: [
+        { t: "Grab it. Host rules.", fb: "Host ate. Guest remembered." },
+        { t: "Split it with a clean cut", fb: "Two halves. Two smiles. Cake math." },
+        { t: "Insist they take all of it", fb: "Polite duel. Someone still goes hungry." }
+      ], prefer: 1 },
+    { id: "SR14", art: "assets/social/sr14.jpg", title: "Snore on watch",
+      scene: "Night watch. Your partner is snoring at the post. The path is quiet. You are tired too.",
+      choices: [
+        { t: "Kick the post and scold", fb: "They woke. Nobody felt braver." },
+        { t: "Swap: you take this hour, they take dawn", fb: "A deal. Two shorter watches. Lodge holds." },
+        { t: "Let them sleep and suffer alone", fb: "Heroic, and you'll be mush by dawn." }
+      ], prefer: 1 },
+    { id: "SR15", art: "assets/social/sr15.jpg", title: "A leak in the dam",
+      scene: "A hiss in the dam. Twig found it. You both have mud. The pond is watching.",
+      choices: [
+        { t: "Bark orders and take the glory hole", fb: "Hole plugged. Twig went quiet." },
+        { t: "Plug it together, count out loud", fb: "Two paws, one leak, zero fuss." },
+        { t: "Go fetch Nib and lose the minute", fb: "Help is coming. The hiss is not waiting." }
+      ], prefer: 1 },
+    { id: "SR16", art: "assets/social/sr16.jpg", title: "Seat by the fire",
+      scene: "Your usual hearth seat is taken by a tired guest. You have a mug. They have sore paws. The bench is almost wide enough.",
+      choices: [
+        { t: "Ask them to move. That's your seat.", fb: "Seat reclaimed. Guest felt the draft." },
+        { t: "Share the bench and the mug-warmth", fb: "Two on a bench. Fire does the rest." },
+        { t: "Stand in the cold to make a point", fb: "Point made. Toes lost." }
+      ], prefer: 1 }
+  ];
+
   function shuffle(arr) {
     var a = arr.slice(), i, j, t;
     for (i = a.length - 1; i > 0; i--) {
@@ -1222,6 +1381,7 @@
     if (SPEED_POOL.length < 60) ok = false;
     if (TRAIN_PATTERN.length < 20 || TRAIN_MEMORY.length < 20 || TRAIN_SPEED.length < 20) ok = false;
     if (TRIVIA.length < 40) ok = false;
+    if (SOCIAL.length < 16) ok = false;
     return ok;
   }
 
@@ -1301,6 +1461,7 @@
   var lastTrack = "reason";
   var train = null;
   var trainFbTimer = 0;
+  var social = null;
 
   function hideOverlays() {
     ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume", "train-hub", "train-pause", "leave-assess"].forEach(function (id) {
@@ -1323,7 +1484,7 @@
     updateLeave();
   }
   function updateLeave() {
-    var show = mode === "practice" || mode === "assess" || mode === "confirm" || mode === "train" || mode === "train-hub" || mode === "train-pause";
+    var show = mode === "practice" || mode === "assess" || mode === "confirm" || mode === "train" || mode === "train-hub" || mode === "train-pause" || mode === "social";
     document.getElementById("btn-leave").classList.toggle("hidden", !show);
   }
   function requestLeave() {
@@ -1335,9 +1496,18 @@
       return;
     }
     if (mode === "train-hub") { goSplash(); return; }
-    if (mode === "practice" || mode === "assess" || mode === "confirm") {
+    if (mode === "practice" || mode === "assess" || mode === "confirm" || mode === "social") {
       document.getElementById("leave-assess").classList.remove("hidden");
       document.getElementById("btn-leave").classList.add("hidden");
+      var h = document.querySelector("#leave-assess h2");
+      var p = document.querySelector("#leave-assess .how");
+      if (mode === "social") {
+        if (h) h.textContent = "LEAVE SOCIAL READ?";
+        if (p) p.textContent = "Progress for this run is abandoned. Practice bar will not update.";
+      } else {
+        if (h) h.textContent = "LEAVE ASSESS?";
+        if (p) p.textContent = "Progress for this run is abandoned.";
+      }
       return;
     }
   }
@@ -1345,6 +1515,7 @@
     stopTimer();
     clearTimeout(studyTimer);
     run = null;
+    social = null;
     clearRunSave();
     document.getElementById("leave-assess").classList.add("hidden");
     goSplash();
@@ -1367,7 +1538,8 @@
       reasoning: null, rCorrect: 0, rTotal: 12, rPct: null, rForm: null,
       memory: null, mCorrect: 0, mTotal: 10, mPct: null,
       speed: null, sCorrect: 0, sTotal: 20, sPct: null,
-      musStick: false, musTwig: false, musEmber: false,
+      social: null, soCorrect: 0, soTotal: 8, soPct: null,
+      musStick: false, musTwig: false, musEmber: false, musWord: false,
       at: 0
     };
   }
@@ -1396,6 +1568,11 @@
       if (s.musStick) p.musStick = true;
       if (s.musTwig) p.musTwig = true;
       if (s.musEmber) p.musEmber = true;
+      if (typeof s.social === "number") {
+        p.social = s.social; p.soCorrect = s.soCorrect || 0; p.soTotal = s.soTotal || 8; p.soPct = s.soPct;
+        p.musWord = true;
+      }
+      if (s.musWord) p.musWord = true;
       p.at = s.at || 0;
       return p;
     } catch (e) { return p; }
@@ -1432,6 +1609,20 @@
     try { localStorage.removeItem(RUN_KEY); } catch (e) {}
   }
   function snapshotRun() {
+    if (mode === "social" && social) {
+      try {
+        localStorage.setItem(RUN_KEY, JSON.stringify({
+          mode: "social",
+          track: "social",
+          i: social.i,
+          poolIds: social.pool.map(function (it) { return it.id; }),
+          pref: social.pref,
+          other: social.other,
+          scored: social.scored
+        }));
+      } catch (e) {}
+      return;
+    }
     if (!run || (mode !== "practice" && mode !== "assess" && mode !== "confirm")) return;
     try {
       localStorage.setItem(RUN_KEY, JSON.stringify({
@@ -1467,6 +1658,7 @@
     if (typeof s.reasoning === "number") bits.push("Pattern " + s.reasoning);
     if (typeof s.memory === "number") bits.push("Memory " + s.memory);
     if (typeof s.speed === "number") bits.push("Speed " + s.speed);
+    if (typeof s.social === "number") bits.push("Social Read " + s.social);
     if (bits.length) {
       el.textContent = "Last camp · " + bits.join(" · ");
       el.classList.remove("hidden");
@@ -1481,6 +1673,7 @@
     mode = "splash";
     run = null;
     train = null;
+    social = null;
     app.classList.remove("train");
     setTrackClass(null);
     setMenu(true);
@@ -1492,7 +1685,7 @@
   function showResume() {
     var snap = loadRunSnap();
     if (!snap) { goSplash(); return; }
-    var label = snap.track === "memory" ? "Memory" : snap.track === "speed" ? "Speed" : "Reasoning";
+    var label = snap.track === "memory" ? "Memory" : snap.track === "speed" ? "Speed" : snap.track === "social" ? "Social Read" : "Reasoning";
     var kind = snap.mode === "practice" ? "Practice" : snap.mode === "confirm" ? "Practice done" : "Assess";
     document.getElementById("resume-line").textContent = label + " · " + kind + " · Item " + ((snap.i || 0) + 1) + "/" + (snap.totalN || "?");
     mode = "resume";
@@ -1509,6 +1702,21 @@
   function resumeFromSnap(snap) {
     snap = snap || loadRunSnap();
     if (!snap) { goSplash(); return; }
+    if (snap.mode === "social" || snap.track === "social") {
+      var pool = (snap.poolIds || []).map(function (id) {
+        var i;
+        for (i = 0; i < SOCIAL.length; i++) if (SOCIAL[i].id === id) return SOCIAL[i];
+        return null;
+      }).filter(Boolean);
+      if (!pool.length) { abandonRun(); return; }
+      social = { pool: pool, i: snap.i || 0, pref: snap.pref || 0, other: snap.other || 0, scored: snap.scored || 0, waiting: false };
+      mode = "social";
+      setMenu(false);
+      hideOverlays();
+      presentSocial();
+      updateLeave();
+      return;
+    }
     lastTrack = snap.lastTrack || snap.track || "reason";
     var formPool = (snap.formPoolIds || []).map(itemById).filter(Boolean);
     var practiceList = (snap.practiceIds || []).map(itemById).filter(Boolean);
@@ -1602,7 +1810,7 @@
   }
 
   function hidePlayBits() {
-    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices"].forEach(function (id) {
+    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices", "social-box"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
     document.getElementById("matrix").innerHTML = "";
@@ -1622,6 +1830,14 @@
       chip.textContent = "TRAIN";
       chip.classList.add("practice");
       document.getElementById("chip-item").textContent = "PRACTICE ONLY";
+      return;
+    }
+    if (mode === "social") {
+      chip.textContent = "PRACTICE";
+      chip.classList.add("practice");
+      var n = social ? (social.pool.length) : 9;
+      document.getElementById("chip-item").textContent = "Social Read " + ((social && social.i) + 1) + "/" + n;
+      document.getElementById("chip-time").textContent = social && social.i === 0 ? "Warmup" : "Lodge";
       return;
     }
     var practice = mode === "practice";
@@ -1977,6 +2193,12 @@
     fillBar("reason-num", "reason-bar", "reason-meta", p.reasoning, p.rCorrect, p.rTotal, p.rPct);
     fillBar("memory-num", "memory-bar", "memory-meta", p.memory, p.mCorrect, p.mTotal, p.mPct);
     fillBar("speed-num", "speed-bar", "speed-meta", p.speed, p.sCorrect, p.sTotal, p.sPct);
+    var soHas = typeof p.social === "number";
+    document.getElementById("social-num").textContent = soHas ? String(p.social) : "—";
+    document.getElementById("social-bar").style.width = soHas ? (p.social + "%") : "0%";
+    document.getElementById("social-meta").textContent = soHas
+      ? (p.soCorrect + " / " + (p.soTotal || 8) + " preferred · practice · lodge scenarios · vs Brain Camp players · " + ordinal(p.soPct) + " percentile")
+      : "Practice · lodge scenarios. Not an EQ score.";
     var retry = document.getElementById("btn-retry");
     retry.textContent = lastTrack === "memory" ? "RETRY MEMORY" : lastTrack === "speed" ? "RETRY SPEED" : "RETRY REASONING";
     mode = "profile";
@@ -2281,6 +2503,89 @@
     }
   }
 
+  function scoreSocial(pref, other) {
+    var acc = pref * 10 + other * 3;
+    var bonus = 0;
+    if (pref >= 6) bonus = 20;
+    else if (pref >= 4) bonus = 10;
+    return Math.round(Math.max(0, Math.min(100, acc + bonus)));
+  }
+  function beginSocial() {
+    if (PRE.blocked) return;
+    var pool = shuffle(SOCIAL);
+    social = { pool: pool.slice(0, 1 + SOCIAL_N), i: 0, pref: 0, other: 0, scored: 0, waiting: false };
+    mode = "social";
+    setMenu(false);
+    hideOverlays();
+    presentSocial();
+    updateLeave();
+  }
+  function presentSocial() {
+    if (!social) return;
+    var it = social.pool[social.i];
+    if (!it) { finishSocial(); return; }
+    hidePlayBits();
+    document.getElementById("social-box").classList.remove("hidden");
+    document.getElementById("social-art").src = it.art;
+    document.getElementById("social-title").textContent = it.title;
+    document.getElementById("social-scene").textContent = it.scene;
+    document.getElementById("social-fb").classList.add("hidden");
+    document.getElementById("social-next").classList.add("hidden");
+    social.waiting = false;
+    setPrompt(social.i === 0 ? "PRACTICE — reading lodge situations. Not an EQ score." : "Social Read practice — not an EQ score.", false);
+    hudFor();
+    var box = document.getElementById("social-choices");
+    box.innerHTML = "";
+    var order = [0, 1, 2];
+    shuffle(order).forEach(function (idx) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = it.choices[idx].t;
+      b.addEventListener("click", function () { pickSocial(idx, b); });
+      box.appendChild(b);
+    });
+    snapshotRun();
+  }
+  function pickSocial(idx, btn) {
+    if (!social || social.waiting) return;
+    var it = social.pool[social.i];
+    social.waiting = true;
+    Array.prototype.forEach.call(document.querySelectorAll("#social-choices button"), function (x) { x.disabled = true; });
+    if (btn) btn.classList.add("picked");
+    var scored = social.i > 0;
+    if (scored) {
+      if (idx === it.prefer) social.pref += 1;
+      else social.other += 1;
+      social.scored += 1;
+    }
+    var fb = document.getElementById("social-fb");
+    fb.textContent = it.choices[idx].fb;
+    fb.classList.remove("hidden");
+    document.getElementById("social-next").classList.remove("hidden");
+    snapshotRun();
+  }
+  function nextSocial() {
+    if (!social) return;
+    social.i += 1;
+    if (social.i >= social.pool.length) finishSocial();
+    else presentSocial();
+  }
+  function finishSocial() {
+    if (!social) return;
+    var idx = scoreSocial(social.pref, social.other);
+    var pct = percentile(idx, SEED.social);
+    patchSave({
+      social: idx, soCorrect: social.pref, soTotal: SOCIAL_N, soPct: pct, musWord: true
+    });
+    social = null;
+    clearRunSave();
+    document.getElementById("sum-title").textContent = "SOCIAL READ DONE";
+    document.getElementById("sum-line").textContent = "Practice · lodge scenarios. Not an EQ score.";
+    mode = "summary";
+    setMenu(true);
+    showOverlay("summary");
+  }
+
   var MUS_CARDS = [
     {
       id: "how",
@@ -2290,7 +2595,7 @@
       lock: function () { return false; },
       tease: "Skill bars for Pattern · Memory · Speed — not a clinical number.",
       unlock: "Always unlocked.",
-      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nTrain (drills and trivia) never feeds those bars or cohort %.\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
+      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nSocial Read is lodge-scenario practice — not an EQ score — and never changes Assess.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nTrain (drills and trivia) never feeds those bars or cohort %.\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
     },
     {
       id: "stick",
@@ -2331,6 +2636,16 @@
       tease: "Unlock after your first Train session.",
       unlock: "Unlocked after a Train session.",
       body: "A pine camp badge with cream stitching. Train XP and streaks live here — cosmetics and effort, never an Assess bar."
+    },
+    {
+      id: "word",
+      name: "Warm Word",
+      tag: "Lodge talk",
+      thumb: "assets/museum/word.jpg",
+      lock: function () { return !loadSave().musWord; },
+      tease: "Unlock after a Social Read.",
+      unlock: "Unlocked after Social Read practice.",
+      body: "A wooden speech-bubble plaque. Lodge talk, not a clinic form. Social Read is practice — not an EQ score — and it never changes Assess bars."
     }
   ];
 
@@ -2423,6 +2738,8 @@
   document.getElementById("btn-speed").addEventListener("click", function () { startOrResume("speed"); });
   document.getElementById("btn-train").addEventListener("click", function () { openTrainHub("drills"); });
   document.getElementById("btn-trivia").addEventListener("click", function () { openTrainHub("trivia"); });
+  document.getElementById("btn-social").addEventListener("click", beginSocial);
+  document.getElementById("social-next").addEventListener("click", nextSocial);
   document.getElementById("tab-drills").addEventListener("click", function () { showTrainTab("drills"); });
   document.getElementById("tab-trivia").addEventListener("click", function () { showTrainTab("trivia"); });
   document.getElementById("btn-drill-pattern").addEventListener("click", function () { beginTrain("pattern"); });
@@ -2490,7 +2807,7 @@
 
   function setPlayLocked(on) {
     PRE.blocked = on;
-    ["btn-reason", "btn-memory", "btn-speed", "btn-museum", "btn-train", "btn-trivia"].forEach(function (id) {
+    ["btn-reason", "btn-memory", "btn-speed", "btn-museum", "btn-train", "btn-trivia", "btn-social"].forEach(function (id) {
       document.getElementById(id).disabled = on;
     });
   }
@@ -2555,6 +2872,10 @@
     loadImg("assets/museum/twig.jpg", false);
     loadImg("assets/museum/ember.jpg", false);
     loadImg("assets/museum/badge.jpg", false);
+    loadImg("assets/museum/word.jpg", false);
+    ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"].forEach(function (n) {
+      loadImg("assets/social/sr" + n + ".jpg", false);
+    });
     var glyphs = collectGlyphs();
     var i;
     for (i = 0; i < glyphs.length; i++) {
@@ -2581,6 +2902,7 @@
     if (TRAIN_MEMORY.length < 20) fails.push("train-memory");
     if (TRAIN_SPEED.length < 20) fails.push("train-speed");
     if (TRIVIA.length < 40) fails.push("trivia");
+    if (SOCIAL.length < 16) fails.push("social-pool");
     var guess = scoreReason(3, [45, 45, 45]);
     if (guess.index > 30) fails.push("guess-cap " + guess.index);
     var maxed = scoreReason(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
@@ -2726,6 +3048,7 @@
             if (!/Reasoning/.test(text)) fails.push("no-reason");
             if (!/Memory/.test(text)) fails.push("no-memory");
             if (!/Speed/.test(text)) fails.push("no-speed");
+            if (!/Social Read/.test(text)) fails.push("no-social-bar");
             if (!/Beta norms/.test(text)) fails.push("no-beta");
             if (!/About scoring/.test(text)) fails.push("no-about");
             if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
@@ -2756,7 +3079,28 @@
                 var p3 = loadSave();
                 if (p3.reasoning !== bars0.r || p3.memory !== bars0.m || p3.speed !== bars0.s) fails.push("leave-wrote-bars");
                 if (loadRunSnap()) fails.push("leave-kept-run");
-                reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p3.reasoning + " M" + p3.memory + " S" + p3.speed + " XP" + tr.xp));
+                var barsA = { r: p3.reasoning, m: p3.memory, s: p3.speed };
+                beginSocial();
+                var i;
+                function tapSocial() {
+                  if (mode !== "social") {
+                    var p4 = loadSave();
+                    if (p4.reasoning !== barsA.r || p4.memory !== barsA.m || p4.speed !== barsA.s) fails.push("social-leaked-assess");
+                    if (typeof p4.social !== "number") fails.push("no-social-save");
+                    if (document.getElementById("btn-leave").classList.contains("hidden") && mode === "social") fails.push("no-leave-social");
+                    reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p4.reasoning + " M" + p4.memory + " S" + p4.speed + " SR" + p4.social + " XP" + tr.xp));
+                    return;
+                  }
+                  if (social && social.waiting) {
+                    nextSocial();
+                    setTimeout(tapSocial, 80);
+                    return;
+                  }
+                  var sb = document.querySelector("#social-choices button");
+                  if (sb) sb.click();
+                  setTimeout(tapSocial, 80);
+                }
+                setTimeout(tapSocial, 100);
               }, 200);
             }, 120);
           }, 80);

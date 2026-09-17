@@ -63,8 +63,14 @@ if "function ordinal" not in html:
     fails.append("missing ordinal helper")
 if 'id="btn-train"' not in html:
     fails.append("missing Train button")
-if "EQ · Soon" not in html:
-    fails.append("missing EQ Soon")
+if "Social Read" not in html:
+    fails.append("missing Social Read")
+if "not an EQ score" not in html:
+    fails.append("missing Social Read honesty")
+if html.count('id: "SR') < 16:
+    fails.append("social pool too small")
+if "Warm Word" not in html:
+    fails.append("missing Warm Word")
 if "TRAIN_KEY" not in html:
     fails.append("missing train save key")
 if "PRACTICE ONLY" not in html:
