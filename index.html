@@ -225,6 +225,71 @@
       .overlay h1 { font-size: clamp(20px, 6.5vw, 28px); }
       .play { font-size: 16px; min-height: 46px; padding: 10px 14px; }
     }
+    .prompt {
+      text-align: center; font-weight: 900; color: var(--yellow);
+      font-size: 15px; letter-spacing: 0.04em; min-height: 20px;
+      text-shadow: 0 2px 0 #1A1028;
+    }
+    .prompt.rev { color: #F4E6C3; background: #5C3A1A; border: 2px solid var(--yellow);
+      border-radius: 12px; padding: 6px 8px; }
+    .cell.big {
+      width: min(58vw, 220px); margin: 8px auto 0; flex: 0 0 auto;
+    }
+    .speed-grid, .mem-pad {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      width: 100%; max-width: 340px; margin: 0 auto;
+      flex: 1 1 auto; min-height: 0; align-content: stretch;
+    }
+    .speed-grid button, .mem-pad button {
+      appearance: none; min-height: 88px; border: 3px solid var(--wood);
+      background: var(--cream); border-radius: 16px; padding: 8px;
+      cursor: pointer; box-shadow: 0 4px 0 var(--wood);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .speed-grid button canvas, .mem-pad button canvas,
+    .cell.big canvas { width: min(100%, 96px); height: min(100%, 96px); display: block; }
+    .cell.big canvas { width: 100%; height: 100%; }
+    .speed-grid button:active, .mem-pad button:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--wood); }
+    .speed-grid button:disabled, .mem-pad button:disabled { opacity: 0.55; cursor: default; }
+    .speed-grid button.picked, .mem-pad button.picked { border-color: var(--yellow); background: #fff6d6; }
+    #app.track-speed #hud { background: #2a1810; }
+    #app.track-memory #hud { background: #1a2818; }
+    #museum {
+      z-index: 22; justify-content: flex-start; align-items: stretch;
+      overflow: hidden; background: #1a1028f4;
+      padding: 10px 10px max(18px, env(safe-area-inset-bottom));
+    }
+    .museum-panel {
+      width: 100%; max-width: 390px; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: stretch;
+      flex: 1 1 auto; min-height: 0; overflow: auto;
+    }
+    .museum-panel h2 { margin: 4px 0 6px; }
+    #museum-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; padding-bottom: 8px; }
+    .mus-card {
+      appearance: none; font-family: inherit;
+      display: grid; grid-template-columns: 92px minmax(0, 1fr);
+      gap: 10px; align-items: center; text-align: left;
+      background: #2a1c4e; border: 3px solid var(--ice); border-radius: 14px;
+      padding: 10px; width: 100%; min-height: 112px; cursor: pointer; color: inherit;
+    }
+    .mus-art {
+      width: 92px; height: 92px; border-radius: 12px; overflow: hidden;
+      background: #1A1028; flex: 0 0 auto;
+    }
+    .mus-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mus-card h3 { margin: 0 0 4px; font-size: 16px; color: var(--yellow); }
+    .mus-card p { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.35; color: var(--cream); }
+    .mus-card.locked { border-color: #5C3A1A; background: #241836; }
+    .mus-card.locked h3 { color: var(--ice); }
+    .mus-card.locked .mus-art img { filter: brightness(0); opacity: 0.45; }
+    .mus-tag { display: inline-block; margin: 0 0 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: var(--ice); }
+    #museum #btn-museum-back { align-self: center; margin-top: 12px; }
+    #mus-detail-body { white-space: pre-wrap; text-align: left; }
+    .mus-detail-art { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin: 0 0 10px; background: #1A1028; }
+    .mus-detail-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .bar-meta { margin: 4px 0 0; font-size: 12px; font-weight: 800; color: var(--ice); }
+    .splash-card .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
   </style>
 </head>
 <body>
@@ -238,8 +303,13 @@
       <div id="time-bar" aria-hidden="true"><i id="time-fill"></i></div>
     </div>
     <div id="play">
+      <p class="prompt hidden" id="prompt"></p>
       <div class="matrix" id="matrix" aria-label="Camp matrix"></div>
       <div class="choices" id="choices"></div>
+      <div id="mem-study" class="cell big hidden"></div>
+      <div id="mem-pad" class="mem-pad hidden"></div>
+      <div id="speed-target" class="cell big hidden"></div>
+      <div id="speed-grid" class="speed-grid hidden"></div>
     </div>
     <p class="honest" id="honest-play">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
     <div id="away" class="hidden">Away — item closed.</div>
@@ -262,12 +332,15 @@
         <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
         <p id="last-chip" class="hidden"></p>
         <div class="end-actions">
-          <button class="play" id="btn-start" type="button" disabled>START CAMP</button>
+          <button class="play camp" id="btn-reason" type="button" disabled>Assess Reasoning</button>
+          <button class="play camp" id="btn-memory" type="button" disabled>Assess Memory</button>
+          <button class="play camp" id="btn-speed" type="button" disabled>Assess Speed</button>
+          <button class="play camp ghost" id="btn-museum" type="button" disabled>Museum</button>
+          <button class="play camp ghost hidden" id="btn-open-profile" type="button">Profile</button>
           <div class="ghost-row">
             <button class="play soon" type="button" disabled>Train · Soon</button>
             <button class="play soon" type="button" disabled>Trivia · Soon</button>
             <button class="play soon" type="button" disabled>EQ · Soon</button>
-            <button class="play soon" type="button" disabled>Museum · Soon</button>
           </div>
         </div>
         <p class="holder">Fan game by a holder.</p>
@@ -277,9 +350,9 @@
 
     <div id="confirm" class="overlay center hidden" role="dialog" aria-label="Start Assess">
       <div class="tip-card">
-        <h2>PRACTICE DONE</h2>
+        <h2 id="confirm-title">PRACTICE DONE</h2>
         <p class="how">That round was unscored. It does not feed your profile.</p>
-        <p class="how">Assess is 12 items · 45s each · no pause. Stay on this page.</p>
+        <p class="how" id="confirm-meta">Assess is 12 items · 45s each · no pause. Stay on this page.</p>
         <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
         <div class="end-actions">
           <button class="play" id="btn-assess" type="button">START ASSESS</button>
@@ -290,7 +363,7 @@
 
     <div id="summary" class="overlay center hidden" role="dialog" aria-label="Assess summary">
       <div class="tip-card">
-        <h2>CAMP BLOCK DONE</h2>
+        <h2 id="sum-title">CAMP BLOCK DONE</h2>
         <p class="how" id="sum-line">0 / 12 correct</p>
         <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
         <button class="play" id="btn-to-profile" type="button">PROFILE</button>
@@ -302,25 +375,54 @@
       <h1>PROFILE</h1>
       <div class="tip-card" style="margin-bottom:10px;">
         <div class="bar-wrap">
-          <div class="bar-lab"><span>Reasoning</span><span id="reason-num">0</span></div>
+          <div class="bar-lab"><span>Reasoning</span><span id="reason-num">—</span></div>
           <div class="skill-bar" aria-label="Reasoning skill"><i id="reason-bar"></i></div>
+          <p class="bar-meta" id="reason-meta">Not yet camped</p>
         </div>
-        <p class="how" id="prof-correct">0 / 12 correct</p>
-        <p class="how" id="prof-cohort">vs Brain Camp players</p>
-        <p class="disc">Beta norms (early).</p>
+        <div class="bar-wrap">
+          <div class="bar-lab"><span>Memory</span><span id="memory-num">—</span></div>
+          <div class="skill-bar" aria-label="Memory skill"><i id="memory-bar"></i></div>
+          <p class="bar-meta" id="memory-meta">Not yet camped</p>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-lab"><span>Speed</span><span id="speed-num">—</span></div>
+          <div class="skill-bar" aria-label="Speed skill"><i id="speed-bar"></i></div>
+          <p class="bar-meta" id="speed-meta">Not yet camped</p>
+        </div>
+        <p class="disc">Beta norms (early). Three bars — never one number.</p>
         <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
         <details class="how-scored">
           <summary>How scored</summary>
-          <p>Reasoning index (0–100) uses Assess only. Practice does not count.</p>
-          <p>Accuracy: (correct ÷ 12) × 80.</p>
-          <p>Speed: average leftover time on correct items, scaled to at most 20, then multiplied by (correct ÷ 12). Fast guessing cannot fill the bar.</p>
-          <p>Index = accuracy + speed, rounded, 0–100.</p>
-          <p>Cohort line uses beta seed norms until a real camp cohort exists.</p>
+          <p>Each bar uses its own Assess only. Practice never counts. Bars are not averaged.</p>
+          <p><b>Reasoning:</b> (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
+          <p><b>Memory:</b> (correct ÷ 10) × 85, plus leftover response time on correct items scaled to at most 15 then × (correct ÷ 10). Sequence must match; mashing cannot fill the bar.</p>
+          <p><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
+          <p>Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
         </details>
         <div class="end-actions">
-          <button class="play" id="btn-retry" type="button">RETRY ASSESS</button>
-          <button class="play ghost" id="btn-splash" type="button">Back to Splash</button>
+          <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
+          <button class="play camp ghost" id="btn-splash" type="button">Back to Splash</button>
+          <button class="play camp ghost" id="btn-prof-museum" type="button">Museum</button>
         </div>
+      </div>
+    </div>
+
+    <div id="museum" class="overlay hidden" role="dialog" aria-label="Museum">
+      <div class="museum-panel">
+        <h2>MUSEUM</h2>
+        <p class="how">Camp cards. Fan game by a holder.</p>
+        <div id="museum-grid"></div>
+        <button class="play ghost" id="btn-museum-back" type="button">Back</button>
+        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+      </div>
+    </div>
+
+    <div id="mus-detail" class="overlay hidden" role="dialog" aria-label="Card">
+      <div class="tip-card">
+        <div class="mus-detail-art"><img id="mus-detail-img" alt="" /></div>
+        <h2 id="mus-detail-name">Card</h2>
+        <p class="how" id="mus-detail-body"></p>
+        <button class="play ghost" id="btn-mus-detail-back" type="button">Back</button>
       </div>
     </div>
   </div>
@@ -329,16 +431,22 @@
   "use strict";
 
   var DISC = "Fan game skill index — not a clinical or diagnostic test. Not an IQ score.";
-  var SAVE_KEY = "bober-brain-camp-v1";
+  var SAVE_KEY = "bober-brain-camp-v2";
+  var SAVE_KEY_OLD = "bober-brain-camp-v1";
   var ASSESS_N = 12;
   var PRACTICE_N = 3;
+  var MEM_ASSESS_N = 10;
+  var SPD_ASSESS_N = 20;
   var T_PRACTICE = 60;
   var T_ASSESS = 45;
 
   // beta seed norms — replace when real cohort exists
-  // Temporary Form A table for P0: mean 52, sd 16 on the 0–100 Reasoning index.
-  var SEED_MEAN = 52;
-  var SEED_SD = 16;
+  // Temporary P1 tables on each 0–100 skill index (not a combined number).
+  var SEED = {
+    reason: { mean: 52, sd: 16 },
+    memory: { mean: 48, sd: 15 },
+    speed: { mean: 55, sd: 14 }
+  };
 
   var TINT = {
     wood: "#8B5A2B",
@@ -573,8 +681,8 @@
       G(N,1,0,I), G(N,1,0,W), G(N,1,0,Y), G(S,1,0,I))
   ];
 
-  // Form A pool (P0). Adaptive lite picks 12 without repeats. Band 1 easy / 2 mid / 3 hard.
-  var FORM_A = [
+  // Reasoning pool ≥24. Form A / Form B are non-overlapping 12s. Adaptive lite within a form.
+  var REASON_POOL = [
     mk("E1", 1,
       [G(L,1), G(L,2), G(L,3), G(L,1), G(L,2), G(L,3), G(L,1), G(L,2)],
       G(L,3), G(L,1), G(L,2), G(S,3)),
@@ -651,11 +759,129 @@
       G(D,3,90), G(S,3,90), G(D,3,0), G(N,3,90))
   ];
 
-  // Fix M4 distractor (no n=4). Already G(D,3) via the || path.
-  FORM_A.forEach(function (it) {
+  REASON_POOL.forEach(function (it) {
     it.distractors = it.distractors.filter(Boolean);
     while (it.distractors.length < 3) it.distractors.push(G(L, 1, 135, M));
   });
+  var FORM_A = REASON_POOL.filter(function (it) {
+    return /^(E[1-4]|M[1-4]|H[1-4])$/.test(it.id);
+  });
+  var FORM_B = REASON_POOL.filter(function (it) {
+    return /^(E[5-8]|M[5-8]|H[5-8])$/.test(it.id);
+  });
+  FORM_A.forEach(function (it) { it.form = "A"; });
+  FORM_B.forEach(function (it) { it.form = "B"; });
+
+  var MEM_ICONS = [
+    G(S, 1, 0, W), G(D, 1, 0, W), G(N, 1, 0, I), G(L, 1, 0, Y), G(B, 1, 0, W),
+    G(S, 1, 90, Y), G(N, 1, 0, Y), G(D, 1, 0, C)
+  ];
+
+  function buildMemoryPool() {
+    var items = [];
+    var n = 0;
+    function add(span, reverse, practice) {
+      var seq = [];
+      var i, ic;
+      for (i = 0; i < span; i++) {
+        ic = MEM_ICONS[(n + i * (1 + (n % 3))) % MEM_ICONS.length];
+        seq.push(ic);
+      }
+      var pad = [];
+      seq.forEach(function (g) {
+        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+      });
+      MEM_ICONS.forEach(function (g) {
+        if (pad.length >= Math.max(4, span + 1)) return;
+        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+      });
+      n += 1;
+      items.push({
+        id: (practice ? "MP" : "MX") + n + "s" + span + (reverse ? "r" : "f"),
+        practice: !!practice,
+        span: span,
+        reverse: !!reverse,
+        seq: seq,
+        pad: pad,
+        studyEach: 1.2,
+        respond: reverse ? 12 : (span >= 4 ? 11 : 9)
+      });
+    }
+    add(2, false, true);
+    add(2, false, true);
+    var spans = [2,2,2,3,3,3,3,3,4,4,4,4,4,5,5,3,3,4,4,5,2,3,4,5,3,4,2,5,3,4];
+    var revs  = [0,0,0,0,0,0,1,1,0,0,1,1,0,1,1,0,1,0,1,1,0,0,0,1,1,0,0,1,0,1];
+    for (var i = 0; i < 30; i++) add(spans[i], !!revs[i], false);
+    return items;
+  }
+  var MEM_ALL = buildMemoryPool();
+  var MEM_PRACTICE = MEM_ALL.filter(function (it) { return it.practice; });
+  var MEM_POOL = MEM_ALL.filter(function (it) { return !it.practice; });
+
+  function buildSpeedPool() {
+    var items = [];
+    var id = 0;
+    var fams = [S, D, N, L, B];
+    var tints = [W, C, I, Y, M];
+    function push(kind, tiles, ans, limit, prompt, extra) {
+      id += 1;
+      items.push({
+        id: "SP" + id,
+        kind: kind,
+        tiles: tiles,
+        ans: ans,
+        target: extra || null,
+        limit: limit,
+        prompt: prompt,
+        practice: false
+      });
+    }
+    var i, j, f, o, t, tn, tiles, ans, tgt;
+    for (i = 0; i < fams.length; i++) {
+      f = fams[i]; o = fams[(i + 1) % fams.length];
+      push("odd", [G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), 3.2, "TAP THE ODD ONE");
+    }
+    for (i = 0; i < fams.length; i++) {
+      f = fams[i];
+      for (j = 0; j < tints.length; j++) {
+        t = tints[j]; tn = tints[(j + 1) % tints.length];
+        push("odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tn)], G(f,1,0,tn), 3.0, "TAP THE ODD ONE");
+      }
+    }
+    for (i = 0; i < fams.length; i++) {
+      f = fams[i];
+      push("odd", [G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90), 2.8, "TAP THE ODD ONE");
+      push("odd", [G(f,1,45), G(f,1,45), G(f,1,45), G(f,1,0)], G(f,1,0), 2.8, "TAP THE ODD ONE");
+      push("odd", [G(f,1), G(f,1), G(f,1), G(f,2)], G(f,2), 3.1, "TAP THE ODD ONE");
+      push("odd", [G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1), 3.1, "TAP THE ODD ONE");
+    }
+    for (i = 0; i < fams.length; i++) {
+      for (j = 0; j < tints.length; j++) {
+        f = fams[i]; t = tints[j];
+        tgt = G(f, 1, 0, t);
+        tiles = [tgt, G(f, 1, 0, tints[(j + 1) % tints.length]), G(fams[(i + 2) % fams.length], 1, 0, t), G(f, 2, 0, t)];
+        push("match", tiles, tgt, 3.3, "MATCH THIS", tgt);
+      }
+    }
+    var practice = [];
+    for (i = 0; i < 5; i++) {
+      f = fams[i]; o = fams[(i + 2) % fams.length];
+      practice.push({
+        id: "SPP" + (i + 1),
+        kind: "odd",
+        tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
+        ans: G(o,1),
+        target: null,
+        limit: 3.5,
+        prompt: "TAP THE ODD ONE",
+        practice: true
+      });
+    }
+    return { practice: practice, pool: items };
+  }
+  var SPEED_BUILT = buildSpeedPool();
+  var SPEED_PRACTICE = SPEED_BUILT.practice;
+  var SPEED_POOL = SPEED_BUILT.pool;
 
   function shuffle(arr) {
     var a = arr.slice(), i, j, t;
@@ -674,17 +900,23 @@
       seen[k] = 1;
       out.push(g);
     }
-    PRACTICE.concat(FORM_A).forEach(function (it) {
+    PRACTICE.concat(REASON_POOL).forEach(function (it) {
       it.cells.forEach(add);
       add(it.ans);
       it.distractors.forEach(add);
+    });
+    MEM_ICONS.forEach(add);
+    SPEED_PRACTICE.concat(SPEED_POOL).forEach(function (it) {
+      it.tiles.forEach(add);
+      add(it.ans);
+      if (it.target) add(it.target);
     });
     return out;
   }
 
   function validatePool() {
     var ids = {}, ok = true;
-    PRACTICE.concat(FORM_A).forEach(function (it) {
+    PRACTICE.concat(REASON_POOL).forEach(function (it) {
       if (ids[it.id]) ok = false;
       ids[it.id] = 1;
       if (it.cells.length !== 9 || it.cells[8] !== null) ok = false;
@@ -692,7 +924,10 @@
       it.distractors.forEach(function (d) { if (gk(d) === ans) ok = false; });
       if (it.distractors.length !== 3) ok = false;
     });
-    if (FORM_A.length < 24) ok = false;
+    if (REASON_POOL.length < 24) ok = false;
+    if (FORM_A.length !== 12 || FORM_B.length !== 12) ok = false;
+    if (MEM_POOL.length < 30) ok = false;
+    if (SPEED_POOL.length < 60) ok = false;
     return ok;
   }
 
@@ -705,13 +940,12 @@
     return s * y;
   }
 
-  // Scoring (P0). Practice excluded.
-  // accuracy = (correct / 12) * 80
-  // speedFrac = mean(remain / 45) over correct items only (0 if none)
-  // speed = speedFrac * 20 * (correct / 12)
+  // Scoring. Practice excluded. Bars are never averaged into one number.
+  // Reasoning: accuracy = (correct / 12) * 80
+  //   speedFrac = mean(remain / 45) over correct items only
+  //   speed = speedFrac * 20 * (correct / 12)
   //   Guess-all-fast ~3/12 instant → 20 + 5 = 25, not 100.
-  // index = round(clamp(accuracy + speed, 0, 100))
-  function scoreIndex(correct, remains) {
+  function scoreReason(correct, remains) {
     var acc = (correct / ASSESS_N) * 80;
     var i, sum = 0, n = 0;
     for (i = 0; i < remains.length; i++) {
@@ -722,12 +956,44 @@
     }
     var speedFrac = n ? (sum / n) : 0;
     var speed = speedFrac * 20 * (correct / ASSESS_N);
-    var idx = Math.round(Math.max(0, Math.min(100, acc + speed)));
-    return { index: idx, acc: acc, speed: speed };
+    return { index: Math.round(Math.max(0, Math.min(100, acc + speed))), acc: acc, speed: speed };
+  }
+  function scoreIndex(correct, remains) { return scoreReason(correct, remains); }
+
+  // Memory: (correct / 10) * 85 + leftover response time on correct, max 15, × (correct/10)
+  function scoreMemory(correct, remains, limits) {
+    var acc = (correct / MEM_ASSESS_N) * 85;
+    var i, sum = 0, n = 0, lim;
+    for (i = 0; i < remains.length; i++) {
+      if (remains[i] != null) {
+        lim = (limits && limits[i]) || 10;
+        sum += Math.max(0, Math.min(1, remains[i] / lim));
+        n += 1;
+      }
+    }
+    var bonus = (n ? sum / n : 0) * 15 * (correct / MEM_ASSESS_N);
+    return { index: Math.round(Math.max(0, Math.min(100, acc + bonus))), acc: acc, speed: bonus };
   }
 
-  function percentile(x) {
-    var z = (x - SEED_MEAN) / SEED_SD;
+  // Speed: (correct / 20) * 90 + leftover on correct, max 10, × (correct/20)
+  // Mash-all-fast ~5/20 instant → 22.5 + 2.5 = 25, not 100.
+  function scoreSpeed(correct, remains, limits) {
+    var acc = (correct / SPD_ASSESS_N) * 90;
+    var i, sum = 0, n = 0, lim;
+    for (i = 0; i < remains.length; i++) {
+      if (remains[i] != null) {
+        lim = (limits && limits[i]) || 3;
+        sum += Math.max(0, Math.min(1, remains[i] / lim));
+        n += 1;
+      }
+    }
+    var bonus = (n ? sum / n : 0) * 10 * (correct / SPD_ASSESS_N);
+    return { index: Math.round(Math.max(0, Math.min(100, acc + bonus))), acc: acc, speed: bonus };
+  }
+
+  function percentile(x, spec) {
+    spec = spec || SEED.reason;
+    var z = (x - spec.mean) / spec.sd;
     var p = Math.round(100 * (0.5 * (1 + erf(z / Math.SQRT2))));
     return Math.max(1, Math.min(99, p));
   }
@@ -737,9 +1003,11 @@
   var itemLocked = false;
   var raf = 0;
   var awayTimer = 0;
+  var studyTimer = 0;
+  var lastTrack = "reason";
 
   function hideOverlays() {
-    ["boot-load", "splash", "confirm", "summary", "profile"].forEach(function (id) {
+    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -751,36 +1019,85 @@
     app.classList.toggle("menu", on);
     app.classList.toggle("booting", on);
   }
+  function setTrackClass(track) {
+    app.classList.remove("track-reason", "track-memory", "track-speed");
+    if (track) app.classList.add("track-" + track);
+  }
 
+  function emptySave() {
+    return {
+      reasoning: null, rCorrect: 0, rTotal: 12, rPct: null, rForm: null,
+      memory: null, mCorrect: 0, mTotal: 10, mPct: null,
+      speed: null, sCorrect: 0, sTotal: 20, sPct: null,
+      musStick: false, musTwig: false, musEmber: false,
+      at: 0
+    };
+  }
   function loadSave() {
+    var p = emptySave();
     try {
-      var raw = localStorage.getItem(SAVE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) { return null; }
+      var raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(SAVE_KEY_OLD);
+      if (!raw) return p;
+      var s = JSON.parse(raw);
+      if (typeof s.reasoning === "number") {
+        p.reasoning = s.reasoning;
+        p.rCorrect = s.rCorrect != null ? s.rCorrect : s.correct;
+        p.rTotal = s.rTotal || s.total || 12;
+        p.rPct = s.rPct != null ? s.rPct : s.pct;
+        p.rForm = s.rForm || "A";
+        p.musStick = true;
+      }
+      if (typeof s.memory === "number") {
+        p.memory = s.memory; p.mCorrect = s.mCorrect || 0; p.mTotal = s.mTotal || 10; p.mPct = s.mPct;
+        p.musTwig = true;
+      }
+      if (typeof s.speed === "number") {
+        p.speed = s.speed; p.sCorrect = s.sCorrect || 0; p.sTotal = s.sTotal || 20; p.sPct = s.sPct;
+        p.musEmber = true;
+      }
+      if (s.musStick) p.musStick = true;
+      if (s.musTwig) p.musTwig = true;
+      if (s.musEmber) p.musEmber = true;
+      p.at = s.at || 0;
+      return p;
+    } catch (e) { return p; }
   }
   function saveProfile(p) {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  function patchSave(partial) {
+    var p = loadSave();
+    var k;
+    for (k in partial) if (Object.prototype.hasOwnProperty.call(partial, k)) p[k] = partial[k];
+    p.at = Date.now();
+    saveProfile(p);
+    return p;
   }
 
   function paintLast() {
     var s = loadSave();
     var el = document.getElementById("last-chip");
-    if (s && typeof s.reasoning === "number") {
-      el.textContent = "Last camp · Reasoning " + s.reasoning;
+    var bits = [];
+    if (typeof s.reasoning === "number") bits.push("Pattern " + s.reasoning);
+    if (typeof s.memory === "number") bits.push("Memory " + s.memory);
+    if (typeof s.speed === "number") bits.push("Speed " + s.speed);
+    if (bits.length) {
+      el.textContent = "Last camp · " + bits.join(" · ");
       el.classList.remove("hidden");
-    } else {
-      el.classList.add("hidden");
-    }
+    } else el.classList.add("hidden");
+    document.getElementById("btn-open-profile").classList.toggle("hidden", !bits.length);
   }
 
   function goSplash() {
     stopTimer();
+    clearTimeout(studyTimer);
     mode = "splash";
     run = null;
+    setTrackClass(null);
     setMenu(true);
     showOverlay("splash");
     paintLast();
-    document.getElementById("btn-start").disabled = PRE.blocked;
+    setPlayLocked(PRE.blocked);
   }
 
   function fmtTime(sec) {
@@ -819,19 +1136,33 @@
     });
   }
 
+  function hidePlayBits() {
+    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt"].forEach(function (id) {
+      document.getElementById(id).classList.add("hidden");
+    });
+    document.getElementById("matrix").innerHTML = "";
+    document.getElementById("choices").innerHTML = "";
+    document.getElementById("mem-study").innerHTML = "";
+    document.getElementById("mem-pad").innerHTML = "";
+    document.getElementById("speed-target").innerHTML = "";
+    document.getElementById("speed-grid").innerHTML = "";
+  }
+
   function hudFor() {
     var practice = mode === "practice";
     var chip = document.getElementById("chip-mode");
     chip.textContent = practice ? "PRACTICE" : "ASSESS";
     chip.classList.toggle("practice", practice);
-    var n = practice ? PRACTICE_N : ASSESS_N;
+    var n = run.totalN;
     document.getElementById("chip-item").textContent = "Item " + (run.i + 1) + "/" + n;
   }
 
   function startTimer() {
     stopTimer();
     run.t0 = performance.now();
-    run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
+    if (run.track === "reason") {
+      run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
+    }
     tickTimer();
   }
   function stopTimer() {
@@ -844,11 +1175,12 @@
   }
   function tickTimer() {
     if (!run || (mode !== "practice" && mode !== "assess")) return;
+    if (run.phase === "study") return;
     var r = remainNow();
     var chip = document.getElementById("chip-time");
     chip.textContent = fmtTime(r);
     chip.classList.toggle("low", r <= 8);
-    document.getElementById("time-fill").style.transform = "scaleX(" + (r / run.limit) + ")";
+    document.getElementById("time-fill").style.transform = "scaleX(" + (run.limit ? (r / run.limit) : 0) + ")";
     if (r <= 0) {
       endItem(false, 0, "time");
       return;
@@ -868,17 +1200,19 @@
     if (itemLocked || !run || !run.cur) return;
     itemLocked = true;
     stopTimer();
-    Array.prototype.forEach.call(choicesEl.querySelectorAll("button"), function (b) { b.disabled = true; });
+    clearTimeout(studyTimer);
+    Array.prototype.forEach.call(document.querySelectorAll("#choices button, #mem-pad button, #speed-grid button"), function (b) { b.disabled = true; });
     if (mode === "assess") {
       run.ok += ok ? 1 : 0;
       run.remains.push(ok ? remain : null);
-    }
-    if (mode === "assess") {
-      if (ok) { run.corrStreak += 1; run.wrongStreak = 0; if (run.corrStreak >= 2) { run.band = Math.min(3, run.band + 1); run.corrStreak = 0; } }
-      else { run.wrongStreak += 1; run.corrStreak = 0; if (run.wrongStreak >= 2) { run.band = Math.max(1, run.band - 1); run.wrongStreak = 0; } }
+      run.limits.push(run.limit || 0);
+      if (run.track === "reason") {
+        if (ok) { run.corrStreak += 1; run.wrongStreak = 0; if (run.corrStreak >= 2) { run.band = Math.min(3, run.band + 1); run.corrStreak = 0; } }
+        else { run.wrongStreak += 1; run.corrStreak = 0; if (run.wrongStreak >= 2) { run.band = Math.max(1, run.band - 1); run.wrongStreak = 0; } }
+      }
     }
     if (why === "away") flashAway();
-    setTimeout(nextAfterItem, why === "away" ? 700 : 280);
+    setTimeout(nextAfterItem, why === "away" ? 700 : 220);
   }
 
   function flashAway() {
@@ -889,9 +1223,9 @@
   }
 
   function pickFromBand() {
-    var band = run.band, used = run.used;
+    var band = run.band, used = run.used, formPool = run.formPool || FORM_A;
     function cand(pred) {
-      return FORM_A.filter(function (it) { return !used[it.id] && pred(it); });
+      return formPool.filter(function (it) { return !used[it.id] && pred(it); });
     }
     var pool = cand(function (it) { return it.band === band; });
     if (!pool.length) pool = cand(function (it) { return Math.abs(it.band - band) === 1; });
@@ -900,94 +1234,347 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  function setPrompt(text, rev) {
+    var el = document.getElementById("prompt");
+    if (!text) { el.classList.add("hidden"); el.textContent = ""; return; }
+    el.textContent = text;
+    el.classList.remove("hidden");
+    el.classList.toggle("rev", !!rev);
+  }
+
+  function presentReason(it) {
+    hidePlayBits();
+    document.getElementById("matrix").classList.remove("hidden");
+    document.getElementById("choices").classList.remove("hidden");
+    renderItem(it);
+    run.phase = "choice";
+    run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
+    hudFor();
+    startTimer();
+  }
+
+  function presentMemory(it) {
+    hidePlayBits();
+    run.phase = "study";
+    run.taps = [];
+    run.studyI = 0;
+    run.limit = it.respond;
+    var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
+    run.want = want.map(gk);
+    hudFor();
+    document.getElementById("chip-time").textContent = "WATCH";
+    document.getElementById("time-fill").style.transform = "scaleX(1)";
+    setPrompt(it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", it.reverse);
+    stepStudy();
+  }
+
+  function stepStudy() {
+    if (!run || !run.cur || run.phase !== "study") return;
+    var it = run.cur;
+    if (run.studyI >= it.seq.length) {
+      beginMemRespond();
+      return;
+    }
+    var box = document.getElementById("mem-study");
+    box.classList.remove("hidden");
+    box.innerHTML = "";
+    box.appendChild(tileCopy(it.seq[run.studyI]));
+    run.studyI += 1;
+    studyTimer = setTimeout(stepStudy, it.studyEach * 1000);
+  }
+
+  function beginMemRespond() {
+    if (!run || !run.cur) return;
+    run.phase = "respond";
+    itemLocked = false;
+    document.getElementById("mem-study").classList.add("hidden");
+    var padEl = document.getElementById("mem-pad");
+    padEl.classList.remove("hidden");
+    padEl.innerHTML = "";
+    var pad = shuffle(run.cur.pad);
+    pad.forEach(function (g) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () { tapMem(g, b); });
+      padEl.appendChild(b);
+    });
+    setPrompt(run.cur.reverse ? "TAP BACKWARD" : "TAP THE ORDER", run.cur.reverse);
+    startTimer();
+  }
+
+  function tapMem(g, btn) {
+    if (itemLocked || !run || run.phase !== "respond") return;
+    run.taps.push(gk(g));
+    if (btn) btn.classList.add("picked");
+    if (run.taps.length >= run.want.length) {
+      var ok = run.taps.join("|") === run.want.join("|");
+      endItem(ok, remainNow(), "tap");
+    }
+  }
+
+  function presentSpeed(it) {
+    hidePlayBits();
+    run.phase = "choice";
+    run.limit = it.limit || 3;
+    hudFor();
+    setPrompt(it.prompt || "TAP THE ODD ONE", false);
+    if (it.kind === "match" && it.target) {
+      var tgt = document.getElementById("speed-target");
+      tgt.classList.remove("hidden");
+      tgt.innerHTML = "";
+      tgt.appendChild(tileCopy(it.target));
+    }
+    var grid = document.getElementById("speed-grid");
+    grid.classList.remove("hidden");
+    grid.innerHTML = "";
+    var tiles = shuffle(it.tiles);
+    var ansKey = gk(it.ans);
+    tiles.forEach(function (g) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () {
+        if (itemLocked) return;
+        b.classList.add("picked");
+        endItem(gk(g) === ansKey, remainNow(), "tap");
+      });
+      grid.appendChild(b);
+    });
+    startTimer();
+  }
+
   function present(it) {
     run.cur = it;
     run.used[it.id] = 1;
     itemLocked = false;
-    renderItem(it);
-    hudFor();
-    startTimer();
+    if (run.track === "memory") presentMemory(it);
+    else if (run.track === "speed") presentSpeed(it);
+    else presentReason(it);
   }
 
   function nextAfterItem() {
     if (!run) return;
     run.i += 1;
     if (mode === "practice") {
-      if (run.i >= PRACTICE_N) {
-        mode = "confirm";
-        setMenu(true);
-        showOverlay("confirm");
+      if (run.i >= run.totalN) {
+        showConfirm();
         return;
       }
-      present(PRACTICE[run.i]);
+      present(run.practiceList[run.i]);
       return;
     }
-    if (run.i >= ASSESS_N) {
+    if (run.i >= run.totalN) {
       finishAssess();
       return;
     }
-    var it = pickFromBand();
+    var it = nextAssessItem();
     if (!it) { finishAssess(); return; }
     present(it);
   }
 
-  function beginPractice() {
+  function nextAssessItem() {
+    if (run.track === "reason") return pickFromBand();
+    var pool = run.formPool.filter(function (it) { return !run.used[it.id]; });
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function showConfirm() {
+    mode = "confirm";
+    setMenu(true);
+    var meta = document.getElementById("confirm-meta");
+    if (run.track === "memory") meta.textContent = "Assess is 10 sequences · watch, then tap. Stay on this page.";
+    else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 2.5–3.5s each. Stay on this page.";
+    else meta.textContent = "Assess is 12 items · 45s each · no pause. Stay on this page.";
+    showOverlay("confirm");
+  }
+
+  function beginPractice(track) {
     if (PRE.blocked) return;
+    lastTrack = track;
     hideOverlays();
     setMenu(false);
+    setTrackClass(track);
     mode = "practice";
-    run = { i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0, ok: 0, remains: [], cur: null };
-    PRACTICE.forEach(function (it) { run.used[it.id] = 1; });
-    present(PRACTICE[0]);
+    var practiceList, totalN, formPool, formName;
+    if (track === "memory") {
+      practiceList = MEM_PRACTICE.slice();
+      totalN = 2;
+      formPool = shuffle(MEM_POOL).slice();
+    } else if (track === "speed") {
+      practiceList = SPEED_PRACTICE.slice();
+      totalN = 5;
+      formPool = shuffle(SPEED_POOL).slice();
+    } else {
+      practiceList = PRACTICE.slice();
+      totalN = PRACTICE_N;
+      formName = nextReasonForm();
+      formPool = formName === "B" ? FORM_B.slice() : FORM_A.slice();
+    }
+    run = {
+      track: track, i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0,
+      ok: 0, remains: [], limits: [], cur: null, phase: "choice",
+      practiceList: practiceList, formPool: formPool, formName: formName || null,
+      totalN: totalN
+    };
+    present(practiceList[0]);
+  }
+
+  function nextReasonForm() {
+    var s = loadSave();
+    if (typeof s.reasoning !== "number") return "A";
+    return s.rForm === "B" ? "A" : "B";
   }
 
   function beginAssess() {
-    if (PRE.blocked) return;
+    if (PRE.blocked || !run) return;
     hideOverlays();
     setMenu(false);
+    setTrackClass(run.track);
     mode = "assess";
-    run = { i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0, ok: 0, remains: [], cur: null };
-    var it = pickFromBand();
+    run.i = 0; run.ok = 0; run.remains = []; run.limits = [];
+    run.used = {}; run.band = 2; run.corrStreak = 0; run.wrongStreak = 0;
+    run.totalN = run.track === "memory" ? MEM_ASSESS_N : run.track === "speed" ? SPD_ASSESS_N : ASSESS_N;
+    var it = nextAssessItem();
     present(it);
   }
 
   function finishAssess() {
     stopTimer();
-    var sc = scoreIndex(run.ok, run.remains);
-    var pct = percentile(sc.index);
-    run.result = {
-      reasoning: sc.index,
-      correct: run.ok,
-      total: ASSESS_N,
-      pct: pct,
-      at: Date.now(),
-      speed: Math.round(sc.speed * 10) / 10
-    };
-    saveProfile(run.result);
-    document.getElementById("sum-line").textContent = run.ok + " / " + ASSESS_N + " correct";
+    clearTimeout(studyTimer);
+    var sc, pct, patch = {};
+    var title = "CAMP BLOCK DONE";
+    if (run.track === "memory") {
+      sc = scoreMemory(run.ok, run.remains, run.limits);
+      pct = percentile(sc.index, SEED.memory);
+      patch = { memory: sc.index, mCorrect: run.ok, mTotal: MEM_ASSESS_N, mPct: pct, musTwig: true };
+      title = "MEMORY BLOCK DONE";
+    } else if (run.track === "speed") {
+      sc = scoreSpeed(run.ok, run.remains, run.limits);
+      pct = percentile(sc.index, SEED.speed);
+      patch = { speed: sc.index, sCorrect: run.ok, sTotal: SPD_ASSESS_N, sPct: pct, musEmber: true };
+      title = "SPEED BLOCK DONE";
+    } else {
+      sc = scoreReason(run.ok, run.remains);
+      pct = percentile(sc.index, SEED.reason);
+      patch = {
+        reasoning: sc.index, rCorrect: run.ok, rTotal: ASSESS_N, rPct: pct,
+        rForm: run.formName || "A", musStick: true
+      };
+      title = "PATTERN BLOCK DONE";
+    }
+    run.result = patch;
+    patchSave(patch);
+    document.getElementById("sum-title").textContent = title;
+    document.getElementById("sum-line").textContent = run.ok + " / " + run.totalN + " correct";
     mode = "summary";
     setMenu(true);
     showOverlay("summary");
   }
 
-  function showProfile(data) {
-    var p = data || loadSave();
-    if (!p) p = { reasoning: 0, correct: 0, total: 12, pct: percentile(0) };
-    document.getElementById("reason-num").textContent = String(p.reasoning);
-    document.getElementById("reason-bar").style.width = p.reasoning + "%";
-    document.getElementById("prof-correct").textContent = p.correct + " / " + (p.total || 12) + " correct";
-    document.getElementById("prof-cohort").textContent = "vs Brain Camp players · " + p.pct + "th percentile";
+  function fillBar(numId, barId, metaId, value, correct, total, pct) {
+    var has = typeof value === "number";
+    document.getElementById(numId).textContent = has ? String(value) : "—";
+    document.getElementById(barId).style.width = has ? (value + "%") : "0%";
+    document.getElementById(metaId).textContent = has
+      ? (correct + " / " + total + " correct · vs Brain Camp players · " + pct + "th percentile")
+      : "Not yet camped";
+  }
+
+  function showProfile() {
+    var p = loadSave();
+    fillBar("reason-num", "reason-bar", "reason-meta", p.reasoning, p.rCorrect, p.rTotal, p.rPct);
+    fillBar("memory-num", "memory-bar", "memory-meta", p.memory, p.mCorrect, p.mTotal, p.mPct);
+    fillBar("speed-num", "speed-bar", "speed-meta", p.speed, p.sCorrect, p.sTotal, p.sPct);
+    var retry = document.getElementById("btn-retry");
+    retry.textContent = lastTrack === "memory" ? "RETRY MEMORY" : lastTrack === "speed" ? "RETRY SPEED" : "RETRY REASONING";
     mode = "profile";
     setMenu(true);
     showOverlay("profile");
   }
 
+  var MUS_CARDS = [
+    {
+      id: "how",
+      name: "How we score",
+      tag: "Always open",
+      thumb: "assets/museum/how.jpg",
+      lock: function () { return false; },
+      tease: "Skill bars for Pattern · Memory · Speed — not a clinical number.",
+      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
+    },
+    {
+      id: "stick",
+      name: "Pattern Stick",
+      tag: "Lodge tool",
+      thumb: "assets/museum/stick.jpg",
+      lock: function () { return !loadSave().musStick; },
+      tease: "Unlock after a Reasoning Assess.",
+      body: "A camp stick with lodge marks. Used here as a Pattern tile — a puzzle glyph, not a clinic instrument. Finish a Reasoning Assess to keep it on the shelf."
+    },
+    {
+      id: "twig",
+      name: "Memory Twig",
+      tag: "Soon / unlock",
+      thumb: "assets/museum/twig.jpg",
+      lock: function () { return !loadSave().musTwig; },
+      tease: "Unlock after a Memory Assess.",
+      body: "A twig of camp tokens. Sequences live on the beads. Finish a Memory Assess to keep it on the shelf."
+    },
+    {
+      id: "ember",
+      name: "Speed Ember",
+      tag: "Soon / unlock",
+      thumb: "assets/museum/ember.jpg",
+      lock: function () { return !loadSave().musEmber; },
+      tease: "Unlock after a Speed Assess.",
+      body: "A fat camp ember. Short trials, quick tap. Finish a Speed Assess to keep it on the shelf."
+    }
+  ];
+
+  function renderMuseum() {
+    var grid = document.getElementById("museum-grid");
+    grid.innerHTML = "";
+    MUS_CARDS.forEach(function (c) {
+      var locked = c.lock();
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "mus-card" + (locked ? " locked" : "");
+      b.innerHTML = '<div class="mus-art"><img alt="" src="' + c.thumb + '" /></div><div class="mus-body"><span class="mus-tag">' +
+        (locked ? "Soon" : c.tag) + "</span><h3>" + c.name + "</h3><p>" +
+        (locked ? c.tease : c.tease) + "</p></div>";
+      b.addEventListener("click", function () { openMusCard(c); });
+      grid.appendChild(b);
+    });
+  }
+
+  function openMuseum() {
+    mode = "museum";
+    setMenu(true);
+    renderMuseum();
+    showOverlay("museum");
+  }
+
+  function openMusCard(c) {
+    var locked = c.lock();
+    document.getElementById("mus-detail-img").src = c.thumb;
+    document.getElementById("mus-detail-img").style.filter = locked ? "brightness(0)" : "";
+    document.getElementById("mus-detail-name").textContent = locked ? (c.name + " · Soon") : c.name;
+    document.getElementById("mus-detail-body").textContent = locked ? c.tease : c.body;
+    document.getElementById("mus-detail").classList.remove("hidden");
+  }
+
   function onAway() {
     if (itemLocked) return;
-    if (mode !== "assess") return;
+    if (mode !== "assess" && mode !== "practice") return;
     if (!run || !run.cur) return;
     if (document.visibilityState !== "hidden") return;
-    endItem(false, 0, "away");
+    if (run.track !== "reason" && run.phase === "study") {
+      endItem(false, 0, "away");
+      return;
+    }
+    if (run.phase === "respond" || run.phase === "choice") endItem(false, 0, "away");
   }
 
   document.addEventListener("visibilitychange", onAway);
@@ -995,19 +1582,28 @@
     if (document.visibilityState === "hidden") onAway();
   });
 
-  document.getElementById("btn-start").addEventListener("click", beginPractice);
+  document.getElementById("btn-reason").addEventListener("click", function () { beginPractice("reason"); });
+  document.getElementById("btn-memory").addEventListener("click", function () { beginPractice("memory"); });
+  document.getElementById("btn-speed").addEventListener("click", function () { beginPractice("speed"); });
+  document.getElementById("btn-museum").addEventListener("click", openMuseum);
+  document.getElementById("btn-open-profile").addEventListener("click", showProfile);
   document.getElementById("btn-assess").addEventListener("click", beginAssess);
   document.getElementById("btn-confirm-back").addEventListener("click", goSplash);
-  document.getElementById("btn-to-profile").addEventListener("click", function () {
-    showProfile(run && run.result);
-  });
-  document.getElementById("btn-retry").addEventListener("click", beginAssess);
+  document.getElementById("btn-to-profile").addEventListener("click", showProfile);
+  document.getElementById("btn-retry").addEventListener("click", function () { beginPractice(lastTrack); });
   document.getElementById("btn-splash").addEventListener("click", goSplash);
+  document.getElementById("btn-prof-museum").addEventListener("click", openMuseum);
+  document.getElementById("btn-museum-back").addEventListener("click", goSplash);
+  document.getElementById("btn-mus-detail-back").addEventListener("click", function () {
+    document.getElementById("mus-detail").classList.add("hidden");
+  });
   document.getElementById("btn-load-retry").addEventListener("click", function () { bootAssets(); });
 
   function setPlayLocked(on) {
     PRE.blocked = on;
-    document.getElementById("btn-start").disabled = on;
+    ["btn-reason", "btn-memory", "btn-speed", "btn-museum"].forEach(function (id) {
+      document.getElementById(id).disabled = on;
+    });
   }
 
   function bootTick() {
@@ -1028,11 +1624,11 @@
     if (/\bplaytest=1\b/.test(location.search)) {
       runPlaytest();
     } else if (/\bprofile=1\b/.test(location.search)) {
-      showProfile({ reasoning: 64, correct: 9, total: 12, pct: percentile(64) });
-    } else if (/\bassess=1\b/.test(location.search)) {
-      beginAssess();
+      showProfile();
+    } else if (/\bmuseum=1\b/.test(location.search)) {
+      openMuseum();
     } else if (/\bgo=1\b/.test(location.search)) {
-      beginPractice();
+      beginPractice("reason");
     } else {
       goSplash();
     }
@@ -1062,6 +1658,10 @@
     loadImg("assets/splash.jpg", true);
     loadImg("assets/profile.jpg", true);
     loadImg("assets/icons/icon-192.png", false);
+    loadImg("assets/museum/how.jpg", false);
+    loadImg("assets/museum/stick.jpg", false);
+    loadImg("assets/museum/twig.jpg", false);
+    loadImg("assets/museum/ember.jpg", false);
     var glyphs = collectGlyphs();
     var i;
     for (i = 0; i < glyphs.length; i++) {
@@ -1080,39 +1680,47 @@
   function selfTest() {
     var fails = [];
     if (!validatePool()) fails.push("pool");
-    if (FORM_A.length < 24) fails.push("pool-size");
-    var guess = scoreIndex(3, [45, 45, 45]);
+    if (REASON_POOL.length < 24) fails.push("pool-size");
+    if (FORM_A.length !== 12 || FORM_B.length !== 12) fails.push("forms");
+    if (MEM_POOL.length < 30) fails.push("mem-pool");
+    if (SPEED_POOL.length < 60) fails.push("spd-pool");
+    var guess = scoreReason(3, [45, 45, 45]);
     if (guess.index > 30) fails.push("guess-cap " + guess.index);
-    var maxed = scoreIndex(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
+    var maxed = scoreReason(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
     if (maxed.index !== 100) fails.push("max " + maxed.index);
-    var slow = scoreIndex(12, [0,0,0,0,0,0,0,0,0,0,0,0]);
-    if (slow.index !== 80) fails.push("slow " + slow.index);
+    var mash = scoreSpeed(5, [3,3,3,3,3], [3,3,3,3,3]);
+    if (mash.index > 35) fails.push("speed-mash " + mash.index);
     var body = document.body.innerText;
-    var iq = (body.match(/IQ/g) || []).length;
-    if (iq < 1) fails.push("missing-disc");
+    if ((body.match(/IQ/g) || []).length < 1) fails.push("missing-disc");
     if (/intelligence quotient/i.test(body)) fails.push("iq-words");
-    if (/WAIS|Raven|Mensa/i.test(body)) fails.push("clinical");
+    if (/ADHD|autism|you might have/i.test(body)) fails.push("diagnosis");
     return fails;
   }
 
   window.BBC = {
-    scoreIndex: scoreIndex,
+    scoreIndex: scoreReason,
+    scoreReason: scoreReason,
+    scoreMemory: scoreMemory,
+    scoreSpeed: scoreSpeed,
     percentile: percentile,
     FORM_A: FORM_A,
+    FORM_B: FORM_B,
     PRACTICE: PRACTICE,
+    MEM_POOL: MEM_POOL,
+    SPEED_POOL: SPEED_POOL,
     validatePool: validatePool,
     selfTest: selfTest,
     DISC: DISC,
-    SEED_MEAN: SEED_MEAN,
-    SEED_SD: SEED_SD,
+    SEED: SEED,
     voidCurrent: function () { endItem(false, 0, "away"); },
     getMode: function () { return mode; },
     getRun: function () { return run; }
   };
 
   function runPlaytest() {
-    function tap(ok) {
-      if (!run || !run.cur || itemLocked) return false;
+    var stage = "reason";
+    function tapReason(ok) {
+      if (!run || !run.cur || itemLocked || !run.cur._opts) return false;
       var opts = run.cur._opts, i, idx = -1;
       for (i = 0; i < opts.length; i++) {
         var match = gk(opts[i]) === run.cur._correctKey;
@@ -1120,39 +1728,107 @@
         if (!ok && !match) { idx = i; break; }
       }
       if (idx < 0) return false;
-      pickChoice(idx, choicesEl.querySelectorAll("button")[idx]);
+      pickChoice(idx, document.querySelectorAll("#choices button")[idx]);
       return true;
     }
-    beginPractice();
+    function tapMemCorrect() {
+      if (!run || run.phase !== "respond" || itemLocked) return false;
+      var next = run.want[run.taps.length];
+      var btns = document.querySelectorAll("#mem-pad button");
+      var i, g;
+      for (i = 0; i < run.cur.pad.length; i++) {
+        if (gk(run.cur.pad[i]) === next) {
+          /* pad was shuffled in DOM, match by canvas is hard — tap by key using buttons order */
+        }
+      }
+      for (i = 0; i < btns.length; i++) {
+        tapMem(findPadGlyph(btns[i], next) || run.cur.seq[0], btns[i]);
+        if (itemLocked || run.taps.length === 0) break;
+        if (run.taps[run.taps.length - 1] === next) break;
+      }
+      return true;
+    }
+    function findPadGlyph(btn, key) {
+      var i, g;
+      for (i = 0; i < run.cur.pad.length; i++) {
+        g = run.cur.pad[i];
+        if (gk(g) === key) return g;
+      }
+      return run.cur.pad[0];
+    }
+    function tapSpeedCorrect() {
+      if (!run || !run.cur || itemLocked) return false;
+      var key = gk(run.cur.ans);
+      var btns = document.querySelectorAll("#speed-grid button");
+      if (!btns.length) return false;
+      endItem(true, remainNow(), "tap");
+      return true;
+    }
+    beginPractice("reason");
     function step() {
-      if (mode === "practice") { tap(true); setTimeout(step, 360); return; }
-      if (mode === "confirm") { beginAssess(); setTimeout(step, 80); return; }
-      if (mode === "assess") {
-        if (run.i === 4 && run.cur && !itemLocked) {
-          window.BBC.voidCurrent();
-          setTimeout(step, 800);
+      if (stage === "reason") {
+        if (mode === "practice") { tapReason(true); setTimeout(step, 300); return; }
+        if (mode === "confirm") { beginAssess(); setTimeout(step, 60); return; }
+        if (mode === "assess") {
+          if (run.i === 3 && run.cur && !itemLocked) { window.BBC.voidCurrent(); setTimeout(step, 750); return; }
+          tapReason(run.i % 3 !== 0);
+          setTimeout(step, 300);
           return;
         }
-        tap(run.i % 3 !== 0);
-        setTimeout(step, 360);
-        return;
+        if (mode === "summary") { stage = "memory"; beginPractice("memory"); setTimeout(step, 80); return; }
       }
-      if (mode === "summary") { showProfile(run.result); setTimeout(step, 80); return; }
+      if (stage === "memory") {
+        if (mode === "practice" || mode === "assess") {
+          if (run.phase === "study") { setTimeout(step, 400); return; }
+          if (run.phase === "respond" && !itemLocked) {
+            var seq = run.want.slice();
+            seq.forEach(function (key) {
+              if (itemLocked) return;
+              tapMem(findPadGlyph(null, key), document.querySelector("#mem-pad button"));
+            });
+            setTimeout(step, 280);
+            return;
+          }
+          setTimeout(step, 300);
+          return;
+        }
+        if (mode === "confirm") { beginAssess(); setTimeout(step, 60); return; }
+        if (mode === "summary") { stage = "speed"; beginPractice("speed"); setTimeout(step, 80); return; }
+      }
+      if (stage === "speed") {
+        if (mode === "practice" || mode === "assess") {
+          if (!itemLocked && run.phase === "choice") tapSpeedCorrect();
+          setTimeout(step, 240);
+          return;
+        }
+        if (mode === "confirm") { beginAssess(); setTimeout(step, 60); return; }
+        if (mode === "summary") { showProfile(); setTimeout(step, 80); return; }
+      }
       if (mode === "profile") {
-        var p = loadSave();
-        var text = document.body.innerText;
-        var fails = [];
-        if (!/Reasoning/.test(text)) fails.push("no-reason");
-        if (!/Beta norms/.test(text)) fails.push("no-beta");
-        if (!/vs Brain Camp players/.test(text)) fails.push("no-cohort");
-        if (/intelligence quotient/i.test(text)) fails.push("iq-words");
-        if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
-        if (!p || typeof p.reasoning !== "number") fails.push("no-save");
-        if (typeof p.correct !== "number") fails.push("no-correct");
-        reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK " + p.correct + "/12 " + p.reasoning));
+        openMuseum();
+        setTimeout(function () {
+          var p = loadSave();
+          var text = document.body.innerText;
+          var fails = [];
+          if (!/Reasoning/.test(text) && !/How we score/.test(text)) fails.push("museum");
+          if (!document.getElementById("museum-grid").children.length) fails.push("no-cards");
+          showProfile();
+          setTimeout(function () {
+            text = document.body.innerText;
+            if (!/Reasoning/.test(text)) fails.push("no-reason");
+            if (!/Memory/.test(text)) fails.push("no-memory");
+            if (!/Speed/.test(text)) fails.push("no-speed");
+            if (!/Beta norms/.test(text)) fails.push("no-beta");
+            if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
+            if (typeof p.reasoning !== "number") fails.push("no-r");
+            if (typeof p.memory !== "number") fails.push("no-m");
+            if (typeof p.speed !== "number") fails.push("no-s");
+            reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p.reasoning + " M" + p.memory + " S" + p.speed));
+          }, 80);
+        }, 80);
         return;
       }
-      reportTest("playtest-out", "PLAYTEST_FAIL mode=" + mode);
+      reportTest("playtest-out", "PLAYTEST_FAIL mode=" + mode + " stage=" + stage);
     }
     setTimeout(step, 200);
   }

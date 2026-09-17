@@ -4,9 +4,9 @@ Fan game by a holder. Not affiliated with any token, studio, or official Bober p
 
 **Play online:** https://ccosma1.github.io/bober-brain-camp/
 
-A phone-first camp of short puzzle rounds. Phase 0 is **Reasoning Assess + Profile**.
+A phone-first camp of short puzzle rounds. Phase 1 is **Reasoning + Memory + Speed Assess**, a three-bar **Profile**, and a light **Museum**.
 
-**Honesty:** Fan game skill index — not a clinical or diagnostic test. Not an IQ score. Results are a Reasoning skill bar (0–100) and a beta cohort percentile only. No clinical score, no official test.
+**Honesty:** Fan game skill index — not a clinical or diagnostic test. Not an IQ score. Results are skill bars (0–100) and beta cohort percentiles only. Bars are never averaged into one number. No clinical score, no official test.
 
 Mission: Train at Brain Camp — puzzles, people sense, trivia. Not an official IQ score.
 
@@ -20,15 +20,15 @@ Run `START.bat` or open `index.html` in a browser.
 
 ## How to play
 
-1. **Splash** — read the mission, then **Start Camp** (art preloads first).
-2. **Practice** (unscored) — 3 matrix items, big PRACTICE label, 60s gentle timer. Does not feed the profile.
-3. Confirm **Start Assess**.
-4. **Assess** (scored) — 12 matrix items, Form A. 45s each. Progress `Item k/12`. No pause. Leaving the tab mid-item closes that item as missed and continues.
-5. **Profile** — Reasoning bar 0–100, correct/12, “vs Brain Camp players” with **Beta norms (early).** Open **How scored** for the formula. **Retry Assess** or **Back to Splash**. Last profile soft-saves in this browser.
+1. **Splash** — art preloads, then pick **Assess Reasoning**, **Assess Memory**, or **Assess Speed**. **Museum** is open. Train / Trivia / EQ stay **Soon**.
+2. Each Assess starts with a short **Practice** (unscored), then **Start Assess**.
+3. **Reasoning** — 3 practice + 12 matrix items (Form A or B). 45s each. Leaving the tab mid-item closes that item as missed. Retry flips Form A ↔ Form B.
+4. **Memory** — 2 warmups + 10 sequences. Watch lodge icons, then tap the same order (some items say TAP BACKWARD). Blur during the response closes the item.
+5. **Speed** — 5 warmups + 20 short trials. Four tiles: tap the odd one, or match the target. About 3s each. Miss / timeout / leave-tab = missed.
+6. **Profile** — three bars: Reasoning · Memory · Speed, last correct counts, **Beta norms (early).** Open **How scored** for the three formulas. Last profile soft-saves in this browser.
+7. **Museum** — How we score (always). Pattern Stick / Memory Twig / Speed Ember unlock after those Assess blocks.
 
-Each item is a 3×3 lodge-mark grid with one missing cell and 4 chunky choices. Original camp tiles (sticks, dams, snow, lodge marks, beaver silhouettes). Not a clinical plate.
-
-Train / Trivia / EQ / Museum are labeled **Soon** in this phase.
+Original camp tiles (sticks, dams, snow, lodge marks, beaver silhouettes). Not a clinical plate.
 
 ## GitHub Pages
 

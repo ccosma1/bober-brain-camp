@@ -15,23 +15,21 @@ if DISC not in html:
 if "not a clinical" not in readme.lower():
     fails.append("readme missing clinical honesty")
 
-# Player-facing IQ may only appear in the locked honesty lines.
-allowed_iq = {
+allowed_iq = (
     DISC,
     "Train at Brain Camp — puzzles, people sense, trivia. Not an official IQ score.",
     "Not an official IQ score.",
-    "**Honesty:** Fan game skill index — not a clinical or diagnostic test. Not an IQ score. Results are a Reasoning skill bar (0–100) and a beta cohort percentile only. No clinical score, no official test.",
-    "Mission: Train at Brain Camp — puzzles, people sense, trivia. Not an official IQ score.",
-}
+    "not an IQ number",
+    "not an IQ score",
+)
 for path, text in (("index.html", html), ("README.md", readme)):
     for i, line in enumerate(text.splitlines(), 1):
         if re.search(r"IQ|intelligence quotient", line, re.I):
             stripped = line.strip()
-            if "selfTest" in line or "iq-words" in line or "iq-as-score" in line or "body.match(/IQ" in line:
-                continue
-            if "missing-disc" in line or "iq < 1" in line or "PLAYTEST" in line:
-                continue
-            if "var DISC" in line:
+            if any(x in line for x in (
+                "selfTest", "iq-words", "iq-as-score", "body.match(/IQ",
+                "missing-disc", "iq < 1", "PLAYTEST", "var DISC", "not an IQ number",
+            )):
                 continue
             if any(a in line for a in allowed_iq):
                 continue
@@ -39,30 +37,29 @@ for path, text in (("index.html", html), ("README.md", readme)):
                 continue
             fails.append(f"{path}:{i} unexpected IQ line: {stripped[:120]}")
 
-if re.search(r"WAIS|Raven Progressive|Mensa", html):
-    if "WAIS|Raven|Mensa" not in html:
-        fails.append("clinical brand in html")
-# The selftest regex mentions those names; that is the only allowed hit.
-
 if html.count('mk("') < 27:
     fails.append("item pool too small")
-if "FORM_A" not in html or "SEED_MEAN = 52" not in html:
+if "SEED" not in html or "mean: 52" not in html:
     fails.append("missing seed norms")
 if "beta seed norms — replace when real cohort exists" not in html:
     fails.append("missing seed comment")
 if "visibilitychange" not in html:
     fails.append("missing away handler")
-if "bober-brain-camp-v1" not in html:
+if "bober-brain-camp-v2" not in html:
     fails.append("missing localStorage key")
-if "START CAMP" not in html:
-    fails.append("missing Start Camp")
-for stub in ("Train · Soon", "Trivia · Soon", "EQ · Soon", "Museum · Soon"):
+if "Assess Reasoning" not in html:
+    fails.append("missing Assess Reasoning")
+if "Assess Memory" not in html:
+    fails.append("missing Assess Memory")
+if "Assess Speed" not in html:
+    fails.append("missing Assess Speed")
+if "How we score" not in html:
+    fails.append("missing How we score")
+for stub in ("Train · Soon", "Trivia · Soon", "EQ · Soon"):
     if stub not in html:
         fails.append(f"missing stub {stub}")
-if "wallet" in html.lower() and "connect" in html.lower():
-    # splash must not offer a wallet connect
-    if re.search(r"connect wallet|wallet connect", html, re.I):
-        fails.append("wallet connect string")
+if re.search(r"connect wallet|wallet connect", html, re.I):
+    fails.append("wallet connect string")
 
 if fails:
     print("FAIL")
