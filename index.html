@@ -88,7 +88,7 @@
     #time-bar i { display: block; height: 100%; width: 100%; background: var(--yellow); transform-origin: left center; }
     #play {
       flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
-      padding: 8px 8px 6px; gap: 8px; min-width: 0;
+      padding: 8px 8px 6px; gap: 8px; min-width: 0; position: relative;
     }
     #app.booting #play, #app.menu #play { visibility: hidden; }
     .matrix {
@@ -370,11 +370,12 @@
     }
     #train-fb.bad { border-color: var(--danger); }
     #trivia-q { margin: 0 8px; font-weight: 800; font-size: 16px; line-height: 1.35; text-align: center; color: var(--cream); }
-    #trivia-choices { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-width: 340px; margin: 0 auto; flex: 1 1 auto; }
+    #trivia-choices { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-width: 340px; margin: 0 auto; flex: 1 1 auto; overflow: auto; min-height: 0; align-content: start; grid-auto-rows: min-content; }
     #trivia-choices button {
-      appearance: none; min-height: 52px; border: 3px solid var(--wood); background: var(--cream);
-      color: var(--ink); border-radius: 14px; padding: 10px 12px; font-family: inherit;
+      appearance: none; min-height: 46px; border: 3px solid var(--wood); background: var(--cream);
+      color: var(--ink); border-radius: 14px; padding: 8px 12px; font-family: inherit;
       font-weight: 800; font-size: 15px; text-align: left; cursor: pointer; box-shadow: 0 3px 0 var(--wood);
+      overflow-wrap: anywhere; white-space: normal;
     }
     #trivia-choices button.ok { border-color: #3D6B38; background: #d7efc8; }
     #trivia-choices button.bad { border-color: var(--danger); background: #f6d0c8; }
@@ -386,7 +387,7 @@
       display: flex; flex-direction: column; gap: 8px;
     }
     #social-art {
-      width: 100%; max-height: 28vh; object-fit: cover; border-radius: 14px;
+      width: 100%; max-height: 22vh; object-fit: cover; border-radius: 14px;
       border: 3px solid var(--wood); background: #1A1028; flex: 0 0 auto;
     }
     #social-title {
@@ -395,12 +396,14 @@
     }
     #social-scene {
       margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--cream); text-align: left;
+      overflow-wrap: anywhere;
     }
-    #social-choices { display: flex; flex-direction: column; gap: 8px; }
+    #social-choices { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
     #social-choices button {
-      appearance: none; min-height: 52px; border: 3px solid var(--wood); background: var(--cream);
-      color: var(--ink); border-radius: 14px; padding: 10px 12px; font-family: inherit;
+      appearance: none; min-height: 48px; border: 3px solid var(--wood); background: var(--cream);
+      color: var(--ink); border-radius: 14px; padding: 8px 12px; font-family: inherit;
       font-weight: 800; font-size: 15px; text-align: left; cursor: pointer; box-shadow: 0 3px 0 var(--wood);
+      overflow-wrap: anywhere; white-space: normal; max-width: 100%;
     }
     #social-choices button.picked { border-color: var(--yellow); background: #fff6d6; }
     #social-choices button:disabled { opacity: 0.85; cursor: default; }
@@ -410,12 +413,33 @@
       min-height: 72px; z-index: 9;
     }
     #social-fb {
-      margin: 0; font-size: 15px; font-weight: 800; line-height: 1.35; color: var(--yellow);
-      text-align: center; min-height: 2.2em;
+      margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--yellow);
+      text-align: left; min-height: 0; overflow-wrap: anywhere;
     }
     #social-next {
       min-height: 56px; width: 100%; max-width: 340px; margin: 0 auto;
       font-size: 20px; letter-spacing: 0.08em;
+    }
+    #trivia-dock {
+      flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch;
+      gap: 8px; padding: 8px 0 max(10px, env(safe-area-inset-bottom)); min-height: 72px; z-index: 9;
+    }
+    #trivia-teach {
+      margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--yellow);
+      text-align: left; min-height: 0; overflow-wrap: anywhere;
+    }
+    #trivia-next {
+      min-height: 56px; width: 100%; max-width: 340px; margin: 0 auto;
+      font-size: 20px; letter-spacing: 0.08em;
+    }
+    #trivia-next:disabled, #social-next:disabled {
+      opacity: 0.5; cursor: default; filter: none;
+    }
+    #span-banner {
+      position: absolute; inset: 0; z-index: 14;
+      display: flex; align-items: center; justify-content: center;
+      background: #1a1028ee; color: var(--yellow); font-size: clamp(28px, 8vw, 42px);
+      font-weight: 900; letter-spacing: 0.08em; text-align: center; padding: 16px;
     }
   </style>
 </head>
@@ -441,6 +465,11 @@
       <div id="trivia-illu" class="cell big hidden"></div>
       <p id="trivia-q" class="hidden"></p>
       <div id="trivia-choices" class="hidden"></div>
+      <div id="trivia-dock" class="hidden">
+        <p id="trivia-teach" class="hidden"></p>
+        <button type="button" class="play hidden" id="trivia-next">Next</button>
+      </div>
+      <div id="span-banner" class="hidden"></div>
       <div id="social-box" class="hidden">
         <div id="social-scroll">
           <img id="social-art" alt="" />
@@ -481,10 +510,7 @@
           <button class="play camp ghost" id="btn-museum" type="button" disabled>Museum</button>
           <button class="play camp ghost hidden" id="btn-open-profile" type="button">Profile</button>
           <button class="play camp" id="btn-train" type="button" disabled>Train</button>
-          <div class="ghost-row">
-            <button class="play ghost" id="btn-trivia" type="button" disabled>Trivia</button>
-            <button class="play ghost" id="btn-social" type="button" disabled>Social Read</button>
-          </div>
+          <button class="play camp" id="btn-social" type="button" disabled>Social Read</button>
         </div>
         <div class="hub-row">
           <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
@@ -497,7 +523,7 @@
       <div class="tip-card">
         <h2 id="confirm-title">PRACTICE DONE</h2>
         <p class="how">That round was unscored. It does not feed your profile.</p>
-        <p class="how" id="confirm-meta">Assess is 12 items · 45s each · no pause. Stay on this page.</p>
+        <p class="how" id="confirm-meta">Assess is 12 items · 50s each · no pause. Stay on this page.</p>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <div class="end-actions">
           <button class="play" id="btn-assess" type="button">START ASSESS</button>
@@ -584,9 +610,9 @@
           <p class="how">Train does not feed Assess bars or cohort %.</p>
           <p class="how">Social Read is lodge-scenario practice — not an EQ score. It does not change Assess bars.</p>
           <p class="how">Bars are never averaged into one number.</p>
-          <p class="how"><b>Reasoning:</b> (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
-          <p class="how"><b>Memory:</b> (correct ÷ 10) × 85, plus leftover response time on correct items scaled to at most 15 then × (correct ÷ 10). Sequence must match; mashing cannot fill the bar.</p>
-          <p class="how"><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
+          <p class="how"><b>Reasoning:</b> 12 items, 50s each. (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
+          <p class="how"><b>Memory:</b> 10 trials. Study 1.8s per icon, 12s to tap. Starts at span 3; span rises after 3 correct at that span, drops after 2 wrong. Reverse is labeled at the start of a trial and never flips mid-item. (correct ÷ 10) × 85, plus leftover tap time on correct trials scaled to at most 15 then × (correct ÷ 10).</p>
+          <p class="how"><b>Speed:</b> 20 trials, 3.2s each. (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p class="how"><b>Social Read:</b> 10 lodge scenarios. Preferred choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6.</p>
           <p class="how">Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
@@ -671,7 +697,21 @@
   var MEM_ASSESS_N = 10;
   var SPD_ASSESS_N = 20;
   var T_PRACTICE = 60;
-  var T_ASSESS = 45;
+  var T_ASSESS = 50;
+  var MEM_STUDY = 1.8;
+  var MEM_PROBE = 12;
+  var SPD_LIMIT = 3.2;
+  var TRAIN_MEM_STUDY = 2.16;
+  var TRAIN_MEM_PROBE = 14.4;
+  var TRAIN_SPD_LIMIT = 3.84;
+  var TEACH_DWELL = 2500;
+  var SPAN_BANNER = 1000;
+  var MEM_SPAN_START = 3;
+  var MEM_SPAN_UP = 3;
+  var MEM_SPAN_DOWN = 2;
+  var MEM_SPAN_MAX = 7;
+  var TRAIN_MEM_SPAN_START = 2;
+  var TRAIN_MEM_SPAN_UP = 4;
 
   // beta seed norms — replace when real cohort exists
   // Temporary P1 tables on each 0–100 skill index (not a combined number).
@@ -1011,39 +1051,66 @@
     G(S, 1, 90, Y), G(N, 1, 0, Y), G(D, 1, 0, C)
   ];
 
+  function makeMemTrial(span, reverse, id, studyEach, respond) {
+    span = Math.max(2, Math.min(MEM_SPAN_MAX, span || MEM_SPAN_START));
+    var start = Math.floor(Math.random() * MEM_ICONS.length);
+    var step = 1 + (start % 3);
+    var seq = [];
+    var i, ic;
+    for (i = 0; i < span; i++) {
+      ic = MEM_ICONS[(start + i * step) % MEM_ICONS.length];
+      seq.push(ic);
+    }
+    var pad = [];
+    seq.forEach(function (g) {
+      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+    });
+    MEM_ICONS.forEach(function (g) {
+      if (pad.length >= Math.max(4, span + 1)) return;
+      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+    });
+    return {
+      id: id || ("MX" + span + (reverse ? "r" : "f") + "-" + start),
+      span: span,
+      reverse: !!reverse,
+      seq: seq,
+      pad: pad,
+      studyEach: studyEach == null ? MEM_STUDY : studyEach,
+      respond: respond == null ? MEM_PROBE : respond
+    };
+  }
+  function bumpMemSpan(state, ok, upNeed, downNeed, minSpan, maxSpan) {
+    if (!state) return;
+    minSpan = minSpan == null ? MEM_SPAN_START : minSpan;
+    maxSpan = maxSpan == null ? MEM_SPAN_MAX : maxSpan;
+    if (ok) {
+      state.spanOk = (state.spanOk || 0) + 1;
+      state.spanBad = 0;
+      if (state.spanOk >= upNeed) {
+        state.span = Math.min(maxSpan, (state.span || minSpan) + 1);
+        state.spanOk = 0;
+      }
+    } else {
+      state.spanBad = (state.spanBad || 0) + 1;
+      state.spanOk = 0;
+      if (state.spanBad >= downNeed) {
+        state.span = Math.max(minSpan, (state.span || minSpan) - 1);
+        state.spanBad = 0;
+      }
+    }
+  }
   function buildMemoryPool() {
     var items = [];
     var n = 0;
     function add(span, reverse, practice) {
-      var seq = [];
-      var i, ic;
-      for (i = 0; i < span; i++) {
-        ic = MEM_ICONS[(n + i * (1 + (n % 3))) % MEM_ICONS.length];
-        seq.push(ic);
-      }
-      var pad = [];
-      seq.forEach(function (g) {
-        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
-      });
-      MEM_ICONS.forEach(function (g) {
-        if (pad.length >= Math.max(4, span + 1)) return;
-        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
-      });
       n += 1;
-      items.push({
-        id: (practice ? "MP" : "MX") + n + "s" + span + (reverse ? "r" : "f"),
-        practice: !!practice,
-        span: span,
-        reverse: !!reverse,
-        seq: seq,
-        pad: pad,
-        studyEach: 1.2,
-        respond: reverse ? 12 : (span >= 4 ? 11 : 9)
-      });
+      var it = makeMemTrial(span, reverse, (practice ? "MP" : "MX") + n + "s" + span + (reverse ? "r" : "f"), MEM_STUDY, MEM_PROBE);
+      it.practice = !!practice;
+      items.push(it);
     }
-    add(2, false, true);
-    add(2, false, true);
-    var spans = [2,2,2,3,3,3,3,3,4,4,4,4,4,5,5,3,3,4,4,5,2,3,4,5,3,4,2,5,3,4];
+    add(3, false, true);
+    add(3, false, true);
+    var spans = [3,3,3,3,3,3,4,4,4,4,4,4,5,5,3,3,4,4,5,3,3,4,5,3,4,3,5,4,3,4];
     var revs  = [0,0,0,0,0,0,1,1,0,0,1,1,0,1,1,0,1,0,1,1,0,0,0,1,1,0,0,1,0,1];
     for (var i = 0; i < 30; i++) add(spans[i], !!revs[i], false);
     return items;
@@ -1073,28 +1140,28 @@
     var i, j, f, o, t, tn, tiles, ans, tgt;
     for (i = 0; i < fams.length; i++) {
       f = fams[i]; o = fams[(i + 1) % fams.length];
-      push("odd", [G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), 3.2, "TAP THE ODD ONE");
+      push("odd", [G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), SPD_LIMIT, "TAP THE ODD ONE");
     }
     for (i = 0; i < fams.length; i++) {
       f = fams[i];
       for (j = 0; j < tints.length; j++) {
         t = tints[j]; tn = tints[(j + 1) % tints.length];
-        push("odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tn)], G(f,1,0,tn), 3.0, "TAP THE ODD ONE");
+        push("odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tn)], G(f,1,0,tn), SPD_LIMIT, "TAP THE ODD ONE");
       }
     }
     for (i = 0; i < fams.length; i++) {
       f = fams[i];
-      push("odd", [G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90), 2.8, "TAP THE ODD ONE");
-      push("odd", [G(f,1,45), G(f,1,45), G(f,1,45), G(f,1,0)], G(f,1,0), 2.8, "TAP THE ODD ONE");
-      push("odd", [G(f,1), G(f,1), G(f,1), G(f,2)], G(f,2), 3.1, "TAP THE ODD ONE");
-      push("odd", [G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1), 3.1, "TAP THE ODD ONE");
+      push("odd", [G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90), SPD_LIMIT, "TAP THE ODD ONE");
+      push("odd", [G(f,1,45), G(f,1,45), G(f,1,45), G(f,1,0)], G(f,1,0), SPD_LIMIT, "TAP THE ODD ONE");
+      push("odd", [G(f,1), G(f,1), G(f,1), G(f,2)], G(f,2), SPD_LIMIT, "TAP THE ODD ONE");
+      push("odd", [G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1), SPD_LIMIT, "TAP THE ODD ONE");
     }
     for (i = 0; i < fams.length; i++) {
       for (j = 0; j < tints.length; j++) {
         f = fams[i]; t = tints[j];
         tgt = G(f, 1, 0, t);
         tiles = [tgt, G(f, 1, 0, tints[(j + 1) % tints.length]), G(fams[(i + 2) % fams.length], 1, 0, t), G(f, 2, 0, t)];
-        push("match", tiles, tgt, 3.3, "MATCH THIS", tgt);
+        push("match", tiles, tgt, SPD_LIMIT, "MATCH THIS", tgt);
       }
     }
     var practice = [];
@@ -1106,7 +1173,7 @@
         tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
         ans: G(o,1),
         target: null,
-        limit: 3.5,
+        limit: 3.84,
         prompt: "TAP THE ODD ONE",
         practice: true
       });
@@ -1145,7 +1212,7 @@
         if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
       });
       n += 1;
-      items.push({ id: "TWM" + n, span: span, reverse: false, seq: seq, pad: pad, studyEach: 1.3, respond: 12 });
+      items.push({ id: "TWM" + n, span: span, reverse: false, seq: seq, pad: pad, studyEach: TRAIN_MEM_STUDY, respond: TRAIN_MEM_PROBE });
     }
     var k;
     for (k = 0; k < 12; k++) add(2);
@@ -1161,7 +1228,7 @@
       items.push({
         id: "TWS" + n, kind: "odd",
         tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
-        ans: G(o,1), limit: 4.2, prompt: "TAP THE ODD ONE"
+        ans: G(o,1), limit: TRAIN_SPD_LIMIT, prompt: "TAP THE ODD ONE"
       });
     }
     return items;
@@ -1171,48 +1238,90 @@
   var TRAIN_SPEED = buildTrainSpeed();
 
   var TRIVIA = [
-    { id: "TQ01", cat: "Lodge", q: "A beaver lodge is mostly built from what?", choices: ["Woven sticks and mud", "Cut stone blocks", "Ice bricks", "Iron plates"], ans: 0, teach: "A lodge is a stick-and-mud house on the water." },
-    { id: "TQ02", cat: "Lodge", q: "Where does a lodge usually sit?", choices: ["On the water, with a dive-in door", "On a mountain peak", "Inside a cave of iron", "On a desert dune"], ans: 0, teach: "The doorway is underwater. That's the point." },
-    { id: "TQ03", cat: "Lodge", q: "What is the warm room in a lodge for?", choices: ["Dry rest and kits", "Storing gold bars", "Firing a kiln", "Parking a wagon"], ans: 0, teach: "Dry chamber, family, quiet chew." },
-    { id: "TQ04", cat: "Lodge", q: "A dam across a stream is meant to…", choices: ["Hold a still pond", "Look pretty for boats", "Cut all rain", "Summon winter"], ans: 0, teach: "Still water makes the lodge safer." },
-    { id: "TQ05", cat: "Lodge", q: "Bober's big front teeth are mainly for…", choices: ["Chewing wood", "Fishing with a net", "Writing letters", "Holding a crown"], ans: 0, teach: "Wood first. Always wood." },
-    { id: "TQ06", cat: "Lodge", q: "A lodge roof often looks like…", choices: ["A mound of sticks", "A glass dome", "A tiled church", "A metal silo"], ans: 0, teach: "Mound, not a steeple." },
-    { id: "TQ07", cat: "Lodge", q: "In Green Home stories, winter is something you…", choices: ["Hold and then end", "Buy with a wallet", "Diagnose", "Skip with a code"], ans: 0, teach: "Hold the fire. Then summer." },
-    { id: "TQ08", cat: "Lodge", q: "Dam Defense is about holding…", choices: ["The wooden dam", "A stock chart", "A clinic form", "A gacha roll"], ans: 0, teach: "Twin posts. Hold the flood." },
-    { id: "TQ09", cat: "Lodge", q: "Nightfall's sword is made of…", choices: ["A wooden stick-blade", "A neon lightsaber", "A paper fan", "A credit card"], ans: 0, teach: "Chunky wood. Ice later." },
-    { id: "TQ10", cat: "Lodge", q: "A camp slate with one missing square is for…", choices: ["Finding the missing tile", "Scoring a clinical number", "Connecting a wallet", "Reading a prescription"], ans: 0, teach: "Fill the hole. That's the puzzle." },
-    { id: "TQ11", cat: "Patterns", q: "If a row shows 1 stick, then 2 sticks, the next is…", choices: ["3 sticks", "A snowflake", "Zero sticks", "A crown"], ans: 0, teach: "Count goes up by one." },
-    { id: "TQ12", cat: "Patterns", q: "Three brown logs and one ice burst. The odd one is…", choices: ["The ice burst", "All four equally", "The middle log", "There is no odd one"], ans: 0, teach: "Three match. One breaks the family." },
-    { id: "TQ13", cat: "Patterns", q: "A stick pointing right, then down, then left. Next points…", choices: ["Up", "Right again", "Into a circle", "Nowhere"], ans: 0, teach: "Quarter turns around the clock." },
-    { id: "TQ14", cat: "Patterns", q: "Same lodge mark, three times, then a beaver. The beaver is…", choices: ["The odd tile", "The average", "A clinical score", "A wallet"], ans: 0, teach: "Odd-one-out. Family vs stranger." },
-    { id: "TQ15", cat: "Patterns", q: "If every column is wood, cream, ice, the last cell of that rule is…", choices: ["Ice", "A random color", "Blank forever", "Gold only"], ans: 0, teach: "Finish the tint cycle." },
-    { id: "TQ16", cat: "Patterns", q: "Two tiles stacked in one cell usually means…", choices: ["Both marks together", "A broken save", "A clinic stamp", "A pause menu"], ans: 0, teach: "Union: you see both families." },
-    { id: "TQ17", cat: "Patterns", q: "A gold ring around a tile is…", choices: ["An extra mark on the same family", "A medical stamp", "A paywall", "A skip"], ans: 0, teach: "Ring is just another lodge mark." },
-    { id: "TQ18", cat: "Patterns", q: "If left plus middle makes the right, 1 stick + 1 stick makes…", choices: ["2 sticks", "A dam log", "Snow", "Nothing"], ans: 0, teach: "Add the counts." },
-    { id: "TQ19", cat: "Patterns", q: "Three snow bursts of growing size. Next is…", choices: ["The biggest burst", "A tiny stick", "A blank", "A crown"], ans: 0, teach: "Keep growing." },
-    { id: "TQ20", cat: "Patterns", q: "A missing cell in the bottom-right of a 3×3 is asking you to…", choices: ["Complete the rule", "Guess a clinical score", "Leave the tab", "Pay XP"], ans: 0, teach: "Read the eight. Fill the ninth." },
-    { id: "TQ21", cat: "Patterns", q: "Stick is to dam as snow is to…", choices: ["Lodge roof-white", "A wallet", "A stethoscope", "A spreadsheet"], ans: 0, teach: "Camp families sit together." },
-    { id: "TQ22", cat: "Patterns", q: "If every row has one stick, one dam, one snow, the last row needs…", choices: ["The family not yet used in that row", "Three sticks", "A random beaver", "A blank"], ans: 0, teach: "Each family once per row." },
-    { id: "TQ23", cat: "Camp life", q: "Best wood for a small campfire is…", choices: ["Dry sticks", "Wet moss only", "River stones", "Snowballs"], ans: 0, teach: "Dry first. Then a little more." },
-    { id: "TQ24", cat: "Camp life", q: "A picnic table at Brain Camp is for…", choices: ["Puzzle slates", "Tax forms", "Crypto trades", "Clinic charts"], ans: 0, teach: "Slates and snacks. That's camp." },
-    { id: "TQ25", cat: "Camp life", q: "Canvas tents at dusk mean…", choices: ["Someone is staying the night", "A server crash", "A diagnosis", "A gacha banner"], ans: 0, teach: "Sleep near the lodge." },
-    { id: "TQ26", cat: "Camp life", q: "A cream moon over pines is a sign of…", choices: ["Night at camp", "Market open", "A lab result", "A password"], ans: 0, teach: "Night purple sky. Cream moon." },
-    { id: "TQ27", cat: "Camp life", q: "If your boots are wet, you…", choices: ["Dry them by the fire", "Throw them in the pond", "Eat them", "Mail them"], ans: 0, teach: "Fire first. Then socks." },
-    { id: "TQ28", cat: "Camp life", q: "A gold tack on a wooden slate is…", choices: ["A camp nail, not a prize score", "A clinic pin", "A wallet badge", "A medical clip"], ans: 0, teach: "It's just a tack." },
-    { id: "TQ29", cat: "Camp life", q: "Green Home Games are…", choices: ["Fan games by a holder", "Official clinic tools", "Chain wallets", "Paid diagnoses"], ans: 0, teach: "Unofficial. Play for fun." },
-    { id: "TQ30", cat: "Camp life", q: "The right way to treat a wrong Train answer is…", choices: ["Read the teach line and go again", "Write it on a clinical chart", "Quit the camp forever", "Buy a higher bar"], ans: 0, teach: "Wrong answers teach. They don't brand you." },
-    { id: "TQ31", cat: "Lodge", q: "A beaver's paddle tail helps with…", choices: ["Steering in water and warning slaps", "Holding a pen", "Mining coin", "Taking attendance"], ans: 0, teach: "Slap the water. Swim straight." },
-    { id: "TQ32", cat: "Lodge", q: "Mud on a dam is useful because it…", choices: ["Seals gaps between sticks", "Attracts tourists", "Raises a clinical score", "Cools a GPU"], ans: 0, teach: "Mud is mortar." },
-    { id: "TQ33", cat: "Lodge", q: "Kits in a lodge are…", choices: ["Young beavers", "Download packs", "Clinic samples", "Loot boxes"], ans: 0, teach: "Kids. In the dry room." },
-    { id: "TQ34", cat: "Camp life", q: "A good Brain Camp round is…", choices: ["Short, then you stop", "An all-night official exam", "A paid diagnosis", "A PvP duel"], ans: 0, teach: "Short rounds. Play to improve." },
-    { id: "TQ35", cat: "Camp life", q: "Train XP is for…", choices: ["Streaks and camp badges", "Raising Assess bars", "Buying cohort %", "Unlocking a clinic"], ans: 0, teach: "Cosmetics and streak. Not Assess." },
-    { id: "TQ36", cat: "Patterns", q: "Four tiles, three match, one does not. You tap…", choices: ["The one that breaks the rule", "All four as fast as possible", "The prettiest", "None, and wait"], ans: 0, teach: "Odd-one-out. That's Speed and Train." },
-    { id: "TQ37", cat: "Patterns", q: "Watch three icons, then tap them in order. That drill is…", choices: ["Memory warmup", "A clinical span exam", "A wallet check", "Trivia only"], ans: 0, teach: "Train Memory. Practice only." },
-    { id: "TQ38", cat: "Camp life", q: "If you leave a Train drill to check the sky, Train should…", choices: ["Pause kindly", "Void the item as Assess does", "Erase your Profile", "Ban the device"], ans: 0, teach: "Train pauses. Assess does not." },
-    { id: "TQ39", cat: "Lodge", q: "Crown chapter weather is…", choices: ["Summer on the grass", "Endless night purple only", "A blizzard in the shop", "A sterile white lab"], ans: 0, teach: "Summer stays. Hold the town." },
-    { id: "TQ40", cat: "Camp life", q: "Fan game by a holder means…", choices: ["Unofficial, made with love, no wallet", "Official medical software", "A listed token sale", "A school exam board"], ans: 0, teach: "Holder. Fan. Not the project team." },
-    { id: "TQ41", cat: "Patterns", q: "A 2×2 of fat tiles is usually…", choices: ["Four choices, one tap", "A spreadsheet", "A brain scan", "Nine matrix cells"], ans: 0, teach: "Speed and Train use a 2×2 pad." },
-    { id: "TQ42", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "Snow hat. Then it melts." }
+    { id: "TQ01", cat: "Quantum", q: "A quantum leap is…", choices: ["A jump between energy levels with no in-between", "A very long beaver stroll", "A slow slide down a dam", "A campfire getting slightly warmer"], ans: 0, teach: "An electron jumps from one allowed energy to another. It does not skate the gap like Twig on wet ice. One chew, then the next orbit. Lodge lesson: the hallway is empty." },
+    { id: "TQ02", cat: "Quantum", q: "Superposition, camp-style, means a tiny thing can…", choices: ["Sit in more than one state until you look", "Only be wet or only be dry, forever", "Hide behind a log and become a log", "Score an official test number"], ans: 0, teach: "Until you measure, a quantum system can be a mix of states. Nib both fishing and not fishing until you peek at the hole. Looking picks a camp. The poke is the measurement." },
+    { id: "TQ03", cat: "Quantum", q: "Entanglement is closest to which lodge cartoon?", choices: ["Two twinned embers: poke one, the pair’s story is linked", "Two campers yelling across a lake, faster than light", "A stick that clones itself for gold", "A wallet that copies coins"], ans: 0, teach: "Two particles can share one story. Measure one, the pair’s allowed answers are linked. That is not a radio shouting faster than light. No secret mail, just a shared camp rule." },
+    { id: "TQ04", cat: "Quantum", q: "A photon is…", choices: ["A packet of light", "A wet pebble", "A kind of mud", "A clinical score"], ans: 0, teach: "Light comes in packets called photons. Dim the lantern enough and you count them one by one. Bober’s eyes still want a pile. Nature sends crumbs." },
+    { id: "TQ05", cat: "Quantum", q: "Light in the double-slit tale acts like…", choices: ["Waves that interfere, even when sent one photon at a time", "Only a rock, never a ripple", "A tax form", "A diagnosis"], ans: 0, teach: "Send photons one at a time and an interference pattern still builds. Each packet seems to explore both slits unless you watch which path. Peeking kills the pretty bands. Camp rule: nosy lodges collapse the fun." },
+    { id: "TQ06", cat: "Quantum", q: "Planck’s big lodge rule is that energy often comes in…", choices: ["Packets, not a perfectly smooth pour", "Infinite soup with no cups", "Only ice cubes", "Wallet fees"], ans: 0, teach: "E = h f. Energy of a wave is tied to frequency in packets. You cannot pour a half-photon like watered stew. The universe uses cups. Bober wanted a ladle; Planck brought thimbles." },
+    { id: "TQ07", cat: "Quantum", q: "Quantum tunneling is when a particle…", choices: ["Shows up past a barrier it should not classically climb", "Digs a beaver canal with a shovel", "Pays a toll", "Waits for spring thaw only"], ans: 0, teach: "Classically the wall is too high. Quantum-wise there is a small chance to appear on the other side. Not a magic shovel. Just a leak in certainty. Twig calls it cheating. Physics calls it Tuesday." },
+    { id: "TQ08", cat: "Quantum", q: "The uncertainty idea says you cannot perfectly know both…", choices: ["Position and momentum at once", "Tea temperature and mug color", "Who chopped and who posed", "A clinic chart of a person"], ans: 0, teach: "Sharpen where it is, and how it is moving gets fuzzy, and the other way around. Not because your eyes are bad. The pair will not sit still for a clinic chart. Lodge: you can pin the fish or the splash, not both as gospel." },
+    { id: "TQ09", cat: "Quantum", q: "A qubit is different from a regular bit because it can be…", choices: ["0, 1, or a mix of both until measured", "Only 0, like a closed dam", "Only 1, like a lit ember", "A medical diagnosis"], ans: 0, teach: "A bit is a stick: yes or no. A qubit can lean both ways until you look. Measurement snaps it to a camp. Do not write it on a clinical form. It is a puzzle coin, not a person." },
+    { id: "TQ10", cat: "Quantum", q: "The ground state of an atom is…", choices: ["Its lowest energy sitting-spot", "A muddy floor in the lodge", "A wallet address", "A panic attack"], ans: 0, teach: "Electrons prefer the cheapest bunk. That lowest allowed energy is the ground state. Heat or light can kick them upstairs. They fall back and often spit a photon like a spark from wet wood." },
+    { id: "TQ11", cat: "Quantum", q: "Wave–particle duality means light can…", choices: ["Act like a ripple or like a pellet, depending on the test", "Only ever be soup", "Only ever be a rock", "Diagnose a camper"], ans: 0, teach: "Run a wave experiment, you get ripples. Run a particle experiment, you get hits. Same light, different lodge games. The test you pick is part of the answer. Bober wanted one story. Nature shrugged." },
+    { id: "TQ12", cat: "Quantum", q: "If you do not measure a quantum coin mid-flip, the honest camp line is…", choices: ["It is not secretly already heads in a tiny drawer", "It hid the answer in the sap jug", "A doctor already knows", "The wallet knows"], ans: 0, teach: "The mix is real in the math until a measurement. It is not a coin under a mug. Superposition is not shyness. Looking is a physical poke, not gossip." },
+    { id: "TQ13", cat: "Math", q: "A square’s perimeter is…", choices: ["Four times one side", "Side times side", "Half a side", "Always 180"], ans: 0, teach: "Walk the fence: four equal sides. Perimeter is the walk, area is the floor. Twig counted posts and forgot the last wall once. The lodge laughed. Four times the side. Then go eat." },
+    { id: "TQ14", cat: "Math", q: "Twig lays a 3-by-4 rectangle of logs. How many logs if one sits in each cell?", choices: ["12", "7", "34", "9"], ans: 0, teach: "Three rows of four. Multiply. 3 × 4 = 12. Adding 3 + 4 is a different chore. Area of a 3-by-4 grid is twelve bunks. Twig still tries to add when hungry." },
+    { id: "TQ15", cat: "Math", q: "Half of 10 camp biscuits is…", choices: ["5", "2", "8", "20"], ans: 0, teach: "Half means split into two equal piles. Ten split fair is five and five. Not a clinical half-life. Just biscuits. Puddle will still ask who got the bigger crumb." },
+    { id: "TQ16", cat: "Math", q: "A straight line measures…", choices: ["180 degrees", "90 degrees", "360 degrees", "0 degrees always"], ans: 0, teach: "A flat lodge floor is a 180° angle. Two right angles back to back make that line. 90° is a corner. 360° is a full spin until you face the same pine." },
+    { id: "TQ17", cat: "Math", q: "A right angle is…", choices: ["90 degrees, like a square’s corner", "180 degrees, like a frozen lake", "45 degrees, like a polite nod", "360 degrees, like a dizzy kit"], ans: 0, teach: "The carpenter’s corner. Square tiles, door frames, honest crates. Not a vibe. A quarter-turn from a straight stick. Twig’s ‘almost square’ dam was 88° and leaked." },
+    { id: "TQ18", cat: "Math", q: "Area of a 5-by-2 wood platform is…", choices: ["10", "7", "52", "25"], ans: 0, teach: "Length times width. 5 × 2 = 10. Perimeter would be 14 if you walked the edge. Area is the sleeping space. Count the planks, not the stroll." },
+    { id: "TQ19", cat: "Math", q: "The three angles of a triangle add to…", choices: ["180 degrees", "90 degrees", "360 degrees", "100 percent"], ans: 0, teach: "Any flat triangle, skinny or fat, still sums to 180°. Lodge trick: tear the corners off a paper triangle and they make a straight line. Euclid would take tea." },
+    { id: "TQ20", cat: "Math", q: "Circumference of a circle is…", choices: ["2 × π × radius (about 6.28 times the radius)", "Radius squared only", "Diameter minus π", "Always 12 logs"], ans: 0, teach: "Walk around the pond. C = 2πr, or π times diameter. π is a bit more than 3.14. Bober measured with a tail and got ‘about three and a nibble.’ Close for camp. Not for bridges." },
+    { id: "TQ21", cat: "Math", q: "Even plus odd is…", choices: ["Odd", "Even", "Zero", "A clinical evenness"], ans: 0, teach: "Two-even is even. Add one leftover stick and the pile is odd. 4 + 3 = 7. The leftover is the whole joke. Nature loves that extra tooth." },
+    { id: "TQ22", cat: "Math", q: "2 to the power of 3 (2³) is…", choices: ["8", "6", "5", "23"], ans: 0, teach: "2 × 2 × 2. Double the sticks three times: 2, 4, 8. Not 2 × 3. Exponents stack the same factor. Twig wrote 6 on the slate and the table groaned." },
+    { id: "TQ23", cat: "Math", q: "The mean of 2, 4, and 6 biscuits is…", choices: ["4", "12", "6", "2"], ans: 0, teach: "Add them, divide by how many piles. 2 + 4 + 6 = 12, then 12 ÷ 3 = 4. Mean is the fair share if you melt the piles together. Not a mood score." },
+    { id: "TQ24", cat: "Math", q: "25% of 8 dry sticks is…", choices: ["2", "4", "8", "25"], ans: 0, teach: "25% is one quarter. A quarter of eight is two. Percent is per hundred, so 25/100 = 1/4. Lodge shortcut: half of half. Then stop before Puddle ‘rounds up.’" },
+    { id: "TQ25", cat: "Thermo", q: "Heat, left alone, flows…", choices: ["From hotter to colder", "From colder to hotter as a hobby", "Only uphill", "Into a wallet"], ans: 0, teach: "Hot soup warms the cold bench, not the other way around, unless you run a machine. That is the second-law camp version. Embers heat paws. Paws do not invent fire by wishing." },
+    { id: "TQ26", cat: "Thermo", q: "Steam from the kettle rises because…", choices: ["Hot vapor is less dense than the cool air around it", "Ghosts lift it", "The lid is magnetic", "Steam is heavier than winter air"], ans: 0, teach: "Warm air and steam take more space per mass, so they float on cooler air. Convection is a lazy elevator. Open the flap and the lodge breathes. Cold air sneaks in at boot level like a gossip." },
+    { id: "TQ27", cat: "Thermo", q: "Absolute zero is…", choices: ["0 kelvin, about −273 °C, where thermal jiggling bottoms out", "When the fire looks sad", "Room temperature in the lodge", "A medical freeze"], ans: 0, teach: "You cannot strip every last wiggle of heat. 0 K is the floor of the thermometer story. Nothing in camp is close. Snow is tropical compared to that. Do not try it with a kettle." },
+    { id: "TQ28", cat: "Thermo", q: "A snow blanket on a lodge can keep the inside warmer because snow…", choices: ["Traps air and conducts heat poorly", "Is secretly a heater coil", "Eats cold for breakfast", "Raises a clinical score"], ans: 0, teach: "Insulation is trapped still air. Fluffy snow is full of pockets. Heat leaks slower. That is why dens stay snug under a drift. Stomp it into ice and you ruin the coat." },
+    { id: "TQ29", cat: "Thermo", q: "Banking embers overnight works because you…", choices: ["Limit oxygen so coals glow slow instead of flaming out", "Add gasoline", "Open every flue", "Sing to them"], ans: 0, teach: "Fire needs fuel, heat, and air. Cover coals with ash, starve the rush of oxygen, keep a heart of heat. Morning: puff and feed. Puddle once banked with wet moss. We ate cold." },
+    { id: "TQ30", cat: "Thermo", q: "At standard pressure, water boils near…", choices: ["100 °C", "0 °C", "37 °C", "273 °C"], ans: 0, teach: "One atmosphere, sea-level kettle: 100 °C. Up a mountain the boil comes earlier because pressure is lower. Tea on a peak can be weak and proud. Ice melts near 0 °C. Do not mix the two numbers." },
+    { id: "TQ31", cat: "Thermo", q: "Ice on the pond melts when…", choices: ["It takes in heat at about 0 °C", "It gets bored", "You name it summer", "A chain signs in"], ans: 0, teach: "Melting is a phase change. Energy goes into breaking the ice lattice, not instantly into a hotter thermometer. The slush sits near 0 °C while it works. Patience. Then splash." },
+    { id: "TQ32", cat: "Thermo", q: "Conduction is heat moving by…", choices: ["Direct contact through a material", "Only empty space beams", "Gossip", "A diagnosis"], ans: 0, teach: "Hot pan, cold paw: that sting is conduction. Metals do it fast. Wood is slower, which is why handles exist. Lodge rule: the poker conducts. The stick-cup does you a kindness." },
+    { id: "TQ33", cat: "Thermo", q: "A convection current in the lodge is mostly…", choices: ["Warm air rising, cooler air sliding in to replace it", "Heat hopping through a solid log with no air", "Light from the fire only", "A legal contract"], ans: 0, teach: "Fluids move the heat. Fire makes a plume. Cold creeps along the floor. Crack a high vent and a low vent and you get a chimney. One hole just sulks." },
+    { id: "TQ34", cat: "Thermo", q: "You feel a fire from across the room mainly by…", choices: ["Radiation — infrared light, no need for a touching log", "The floor becoming soup instantly", "Sound waves of crackle", "Cohort percentile"], ans: 0, teach: "Radiation travels through air (and vacuum). Face the coals, your fur warms. Put a screen between and the glow is blocked. Convection is the plume. Radiation is the hug." },
+    { id: "TQ35", cat: "Thermo", q: "Sweat (or a wet pelt) cools you because evaporation…", choices: ["Carries away the fastest, most energetic molecules", "Adds heat from the moon", "Makes you denser than lead", "Is a clinical treatment claim"], ans: 0, teach: "Liquid to gas costs energy. The jumpy molecules leave. What stays is cooler. Wind helps. A sealed wet sock just stays wet. Physics, not a diagnosis." },
+    { id: "TQ36", cat: "Thermo", q: "Most solids, when heated, …", choices: ["Expand a little", "Shrink into coins", "Turn into skill-bar points", "Stop existing"], ans: 0, teach: "Atoms jiggle wider and take more space. Bridges need gaps. A stuck iron lid pops after warm water. Ice is the rude exception when it freezes — water expands, which is why ponds float a lid of ice." },
+    { id: "TQ37", cat: "History", q: "Gutenberg’s press is famous for…", choices: ["Movable metal type that printed books by the pile", "Inventing the beaver dam", "The first steam kettle", "Clinical testing of campers"], ans: 0, teach: "Mid-1400s Europe. Reusable type, ink, press. Ideas stopped being copied one monk at a time. Campfire version: one carved letter, many pages. The lodge bulletin board got dangerous." },
+    { id: "TQ38", cat: "History", q: "Newton’s three laws, camp-short, are about…", choices: ["Inertia, F = ma, and action–reaction pairs", "Only apples and hats", "How to score a person", "Wallet friction"], ans: 0, teach: "A sled stays put or keeps sliding unless a force nags it. Push harder on the same mass, it accelerates more. You shove the dam, the dam shoves you. Twig learned that with a too-big log." },
+    { id: "TQ39", cat: "History", q: "Antonie van Leeuwenhoek is tied to…", choices: ["Simple microscopes and seeing tiny living ‘animalcules’", "Printing the first newspaper", "The steam engine", "Quantum leaping on purpose"], ans: 0, teach: "A Dutch draper, 1600s, ground superb lenses. Pond water and scrapings became a zoo. Camp moral: the clear drop is crowded. Wash the cup. Wonder stays." },
+    { id: "TQ40", cat: "History", q: "Galileo turning a spyglass on Jupiter found…", choices: ["Moons going around Jupiter, not everything around Earth", "A new kind of fish", "The first official test chart", "A wallet on the moon"], ans: 0, teach: "1610. Four bright attendants. A center that was not us. The lodge argument got loud. Telescopes do not care who chairs the table. Look, then argue." },
+    { id: "TQ41", cat: "History", q: "Marie Curie is remembered for…", choices: ["Pioneering radioactivity research, and two Nobel prizes", "Inventing the paddle tail", "Banking embers", "Writing an EQ test"], ans: 0, teach: "She and Pierre hunted polonium and radium. Hard, glowing, dangerous work. Science with chapped paws. Not a superhero montage. Real notebooks, real burns, real change." },
+    { id: "TQ42", cat: "History", q: "Faraday’s spark of genius was showing that…", choices: ["A changing magnetic field can push electric current", "Mud seals a dam", "Light is made of biscuits", "People have official-test stamps"], ans: 0, teach: "Move a magnet by a coil, get a twitch of current. Generators are that trick in a Sunday coat. Camp: crank a dynamo, light a bulb. No mystic fluid. Motion and fields." },
+    { id: "TQ43", cat: "History", q: "Darwin’s Beagle years mattered because he gathered…", choices: ["Careful notes that later fed the idea of natural selection", "Gold to buy a clinic", "A steam patent", "An official intelligence test"], ans: 0, teach: "Voyage, islands, finches, barnacles, patience. Traits that help leaving offspring tend to stick around. Camp version: the stream edits the dam-builders over long time. Not a moral grade. A history of what worked." },
+    { id: "TQ44", cat: "History", q: "Einstein’s 1905 light paper treated light as…", choices: ["Quanta — packets that can kick electrons loose", "A continuous honey pour only", "A beaver hymn", "A medical ray"], ans: 0, teach: "The photoelectric effect: color (frequency) matters more than ‘brighter soup.’ Packets again. Planck’s cups, Einstein’s kick. Lodge lanterns suddenly had opinions." },
+    { id: "TQ45", cat: "History", q: "James Clerk Maxwell is the name on…", choices: ["Unifying electricity, magnetism, and light as one family", "The first canoe paddle patent", "Absolute zero as a brand", "EQ scoring"], ans: 0, teach: "Four equations, one story. Light is a ripple in electric and magnetic fields. The campfire’s glow is kinship with the compass. Beautiful and, for homework, slightly rude." },
+    { id: "TQ46", cat: "History", q: "James Watt did not invent steam, but he…", choices: ["Made steam engines far more efficient and practical", "Discovered Jupiter’s moons", "Printed the Bible first", "Named the kelvin"], ans: 0, teach: "Newcomen wheezed. Watt added a separate condenser and real engineering. Factories hummed. The kettle on our hearth is a cousin, not the whole industrial plot." },
+    { id: "TQ47", cat: "History", q: "Benjamin Franklin’s kite work argued that lightning is…", choices: ["Electricity, the same family as lodge-static sparks", "Angry sky fish", "A kind of snow", "A diagnostic test"], ans: 0, teach: "Storms carry huge electric charge. Sparks and bolts are cousins. Do not copy the kite stunt; it was reckless. Use a lightning rod. The lodge prefers un-barbecued beavers." },
+    { id: "TQ48", cat: "History", q: "Kepler’s planetary punchline is that orbits are…", choices: ["Ellipses, not perfect circles", "Squares", "Straight lines to the moon", "Random like spilled sap"], ans: 0, teach: "Tycho’s data, Kepler’s stubborn math. Planets sweep equal areas in equal times; the square of the period matches the cube of the distance. Camp: the sky is elliptical, not a dinner plate." },
+    { id: "TQ49", cat: "Lodge", q: "A beaver lodge is mostly built from…", choices: ["Woven sticks and mud", "Cut stone blocks", "Ice bricks", "Iron plates"], ans: 0, teach: "Sticks are bones. Mud is mortar. The pile becomes a mound with a dry room inside. No kiln, no quarry. Just teeth, paws, and patience. Fancy stone is for other animals’ myths." },
+    { id: "TQ50", cat: "Lodge", q: "Where does a lodge usually sit?", choices: ["On the water, with a dive-in door", "On a mountain peak", "Inside a cave of iron", "On a desert dune"], ans: 0, teach: "The doorway is underwater on purpose. Predators hate the commute. Kits learn to hold air and pop up in the dark living room. Camp architecture with a moat attached." },
+    { id: "TQ51", cat: "Lodge", q: "The warm room in a lodge is for…", choices: ["Dry rest and kits", "Storing gold bars", "Firing a kiln", "Parking a wagon"], ans: 0, teach: "Above the waterline: bedding, family, quiet chew. Wet commute, dry bunk. That contrast is the whole invention. Gold bars would just sink the mood." },
+    { id: "TQ52", cat: "Lodge", q: "A dam across a stream is meant to…", choices: ["Hold a still pond", "Look pretty for boats", "Cut all rain", "Summon winter"], ans: 0, teach: "Still water makes the lodge safer and the pantry wet-wood convenient. Flood control is a side effect, not a TED talk. The pond is the point. Boats can file a complaint." },
+    { id: "TQ53", cat: "Lodge", q: "Bober’s big front teeth are mainly for…", choices: ["Chewing wood", "Fishing with a net", "Writing letters", "Holding a crown"], ans: 0, teach: "Incisors grow like rude hope. Chew or be overgrown. Wood first. Always wood. Nets are a different sport. Crowns slip off wet fur anyway." },
+    { id: "TQ54", cat: "Lodge", q: "A beaver’s paddle tail helps with…", choices: ["Steering in water and warning slaps", "Holding a pen", "Mining coin", "Taking attendance"], ans: 0, teach: "Fat rudder, fat alarm. Slap the surface and the pond rings. Swim straight with a built-in oar. It is not a desk tool. Do not borrow it to sign forms." },
+    { id: "TQ55", cat: "Lodge", q: "Mud on a dam is useful because it…", choices: ["Seals gaps between sticks", "Attracts tourists", "Raises a clinical score", "Cools a GPU"], ans: 0, teach: "Mud is mortar. Water wants holes. Beavers want fewer holes. Pack the weave. Repeat after every flood gossip. Tourism is optional. Seals are not." },
+    { id: "TQ56", cat: "Lodge", q: "Kits in a lodge are…", choices: ["Young beavers", "Download packs", "Clinic samples", "Loot boxes"], ans: 0, teach: "Kids. In the dry room. They stay long, learn the pond, chew the curriculum. Not software. Not loot. If someone gacha-ed a kit we would leave the chat." },
+    { id: "TQ57", cat: "Lodge", q: "In Green Home stories, winter is something you…", choices: ["Hold and then end", "Buy with a wallet", "Diagnose", "Skip with a code"], ans: 0, teach: "Hold the fire. Then summer. Fan games, not a shop. No connect-wallet spring. The season is a story you finish with paws, not a coupon." },
+    { id: "TQ58", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears — and extra insulation", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "A snow hat. It can insulate if it stays fluffy. Then it melts. The mound looks like a frosted bun. That is weather, not a medical stamp." },
+    { id: "TQ59", cat: "Lodge", q: "Dam Defense, in this camp’s family of games, is about holding…", choices: ["The wooden dam", "A stock chart", "A clinic form", "A gacha roll"], ans: 0, teach: "Twin posts. Hold the flood. Fan game by a holder. No wallet. The wood is the plot. If a chart appears, you walked into the wrong clearing." },
+    { id: "TQ60", cat: "Lodge", q: "A camp slate with one missing square is for…", choices: ["Finding the missing tile", "Scoring a clinical number", "Connecting a wallet", "Reading a prescription"], ans: 0, teach: "Fill the hole. That is the puzzle. Eight clues, one answer. Not a diagnosis. Not a chain. Just a lodge mark that belongs." },
+    { id: "TQ61", cat: "Patterns", q: "If a row shows 1 stick, then 2 sticks, the next is…", choices: ["3 sticks", "A snowflake", "Zero sticks", "A crown"], ans: 0, teach: "Count goes up by one. The rule is addition, not interior design. If snow appears, someone broke the family. Complete the walk. Then tap." },
+    { id: "TQ62", cat: "Patterns", q: "Three brown logs and one ice burst. The odd one is…", choices: ["The ice burst", "All four equally", "The middle log", "There is no odd one"], ans: 0, teach: "Three match. One breaks the family. Odd-one-out is a lodge game, not a personality test. Tap the stranger. Leave the logs their dignity." },
+    { id: "TQ63", cat: "Patterns", q: "A stick pointing right, then down, then left. Next points…", choices: ["Up", "Right again", "Into a circle", "Nowhere"], ans: 0, teach: "Quarter turns around the clock. Right, down, left, up. Then the dance repeats. If you jumped to a spiral, you invented a new camp. This slate did not." },
+    { id: "TQ64", cat: "Patterns", q: "Same lodge mark, three times, then a beaver. The beaver is…", choices: ["The odd tile", "The average", "A clinical score", "A wallet"], ans: 0, teach: "Odd-one-out. Family versus stranger. Averages are for biscuits. Wallets are for other websites. Tap the beaver and keep your streak kind." },
+    { id: "TQ65", cat: "Patterns", q: "If every column is wood, cream, ice, the last cell of that rule is…", choices: ["Ice", "A random color", "Blank forever", "Gold only"], ans: 0, teach: "Finish the tint cycle. Wood, cream, ice — then the column is dressed. Random is how you fail a slate. Gold is a different holiday." },
+    { id: "TQ66", cat: "Patterns", q: "Two tiles stacked in one cell usually means…", choices: ["Both marks together", "A broken save", "A clinic stamp", "A pause menu"], ans: 0, teach: "Union: you see both families. Read the stack as ‘and,’ not ‘error.’ The slate is honest. Your save file is fine. Keep looking at the other eight." },
+    { id: "TQ67", cat: "Patterns", q: "A gold ring around a tile is…", choices: ["An extra mark on the same family", "A medical stamp", "A paywall", "A skip"], ans: 0, teach: "Ring is just another lodge mark, like a hat on a stick. It is not a diagnosis and not a shop. Track which cells wear the ring. That is the rule." },
+    { id: "TQ68", cat: "Patterns", q: "If left plus middle makes the right, 1 stick + 1 stick makes…", choices: ["2 sticks", "A dam log", "Snow", "Nothing"], ans: 0, teach: "Add the counts. The third cell is the sum, not a new species. 1 + 1 is 2 even at camp. If snow falls out, you added weather by mistake." },
+    { id: "TQ69", cat: "Patterns", q: "Three snow bursts of growing size. Next is…", choices: ["The biggest burst", "A tiny stick", "A blank", "A crown"], ans: 0, teach: "Keep growing. Size is the story. A sudden stick is a plot twist the slate did not write. Pick the fat flake. Then go warm your paws." },
+    { id: "TQ70", cat: "Patterns", q: "A missing cell in the bottom-right of a 3×3 is asking you to…", choices: ["Complete the rule", "Guess a clinical score", "Leave the tab", "Pay XP"], ans: 0, teach: "Read the eight. Fill the ninth. Rules live in rows, columns, or both. Guessing a number about yourself is a different, banned game. This is tiles." },
+    { id: "TQ71", cat: "Patterns", q: "If every row has one stick, one dam, one snow, the last row needs…", choices: ["The family not yet used in that row", "Three sticks", "A random beaver", "A blank"], ans: 0, teach: "Each family once per row, like a fair chore chart. Sudoku energy, camp glyphs. Look which mark is missing. Plant it. Do not invent a fourth cousin." },
+    { id: "TQ72", cat: "Patterns", q: "Four tiles, three match, one does not. You tap…", choices: ["The one that breaks the rule", "All four as fast as possible", "The prettiest", "None, and wait"], ans: 0, teach: "Odd-one-out. That is Speed and Train. Mashing all four is how you miss. Pretty is not a rule unless the slate said so. Tap the break." },
+    { id: "TQ73", cat: "Camp life", q: "Best wood for a small campfire is…", choices: ["Dry sticks", "Wet moss only", "River stones", "Snowballs"], ans: 0, teach: "Dry first. Then a little more. Wet moss smokes you out of friendship. Stones can explode if river-wet and pocketed in coals. Snowballs are dessert for the flame, not fuel." },
+    { id: "TQ74", cat: "Camp life", q: "If your boots are wet, you…", choices: ["Dry them by the fire — not in it", "Throw them in the pond", "Eat them", "Mail them"], ans: 0, teach: "Fire first, distance second. Steam them, do not roast them. Then socks. A melted boot is a sad sculpture. The pond already had its turn." },
+    { id: "TQ75", cat: "Camp life", q: "Green Home Games are…", choices: ["Fan games by a holder", "Official clinic tools", "Chain wallets", "Paid diagnoses"], ans: 0, teach: "Unofficial. Play for fun. No wallet, no gacha, no PvP ladder of doom. A holder made a camp. That is the whole license plate." },
+    { id: "TQ76", cat: "Camp life", q: "Train XP is for…", choices: ["Streaks and camp badges", "Raising Assess bars", "Buying cohort %", "Unlocking a clinic"], ans: 0, teach: "Cosmetics and streak. Not Assess. The Profile bars do not sip Train. If someone sells you otherwise, they are selling fog. Keep the badge. Keep the honesty." },
+    { id: "TQ77", cat: "Camp life", q: "If you leave a Train drill to check the sky, Train should…", choices: ["Pause kindly", "Void the item as Assess does", "Erase your Profile", "Ban the device"], ans: 0, teach: "Train pauses. Assess does not. That split is the product. Practice is a friend. Snapshot is a timer. Do not mix the kettles." },
+    { id: "TQ78", cat: "Camp life", q: "Fan game by a holder means…", choices: ["Unofficial, made with love, no wallet", "Official medical software", "A listed token sale", "A school exam board"], ans: 0, teach: "Holder. Fan. Not the project team. Not a clinic. Not a ticker. If a connect-wallet button appears, you have left Brain Camp and entered a swamp." },
+    { id: "TQ79", cat: "Camp life", q: "A good Brain Camp round is…", choices: ["Short, then you stop", "An all-night official exam", "A paid diagnosis", "A PvP duel"], ans: 0, teach: "Short rounds. Play to improve, not to brand yourself. The disclaimer is not decoration. When the block is done, go to the fire. The slate will wait." },
+    { id: "TQ80", cat: "Camp life", q: "The right way to treat a wrong Train answer is…", choices: ["Read the teach line and go again", "Write it on a clinical chart", "Quit the camp forever", "Buy a higher bar"], ans: 0, teach: "Wrong answers teach. They do not brand you. Sit with the punchline until Next wakes up. Then try another. Streaks reset. People do not." },
+    { id: "TQ81", cat: "Camp life", q: "Social Read in this camp is…", choices: ["Lodge-scenario practice — not an EQ score", "An official EQ number", "A clinical empathy test", "A way to change Assess bars"], ans: 0, teach: "Ten scenes, soft feedback, Next when you have read it. Preferred choices bump a practice index. It never feeds Reasoning, Memory, or Speed. No EQ tattoo." },
+    { id: "TQ82", cat: "Camp life", q: "About scoring exists so you can…", choices: ["Read honesty plus the formulas in one popup", "Buy a better percentile", "Hide the disclaimer", "Average the bars into one official number"], ans: 0, teach: "One About scoring. Not a second How scored accordion. Formulas for the four indices, plus the fan-game disclaimer. Close it. Play. Do not worship the percent." },
+    { id: "TQ83", cat: "Math", q: "A 2-by-2 of fat tiles in Speed is usually…", choices: ["Four choices, one tap", "A spreadsheet", "A brain scan", "Nine matrix cells"], ans: 0, teach: "Speed and some Train use a 2×2 pad. One odd or one match. Nine cells is the Reasoning slate. Do not fill a spreadsheet. Tap once like you mean it." },
+    { id: "TQ84", cat: "History", q: "A campfire history night is for…", choices: ["Real people and real tricks, told with lodge jokes", "Inventing medical claims", "Reading scraped official tests", "Selling tokens"], ans: 0, teach: "Gutenberg, Newton, Leeuwenhoek, Curie — true hinges, funny delivery. Accuracy first, punchline second. No scraped tests, no clinical claims, no diagnosing campers." },
   ];
 
   var SOCIAL_N = 10;
@@ -1221,115 +1330,283 @@
     { id: "SR01", core: true, art: "assets/social/sr01.jpg", title: "Frozen Nib",
       scene: "The hole iced over in the night. Nib stands there with a fishing stick and will not drop the line. Twig is already stacking wood. Lodge dinner is still a maybe.",
       choices: [
-        { t: "Push Nib to fish now", fb: "Push shuts Nib down harder. The ice did not blink." },
-        { t: "Sit with tea and wait for thaw-light", fb: "Warmth first, then the hole. Nib moves when the tea is gone." },
-        { t: "Send Twig to the hole instead", fb: "Twig can fish. It works. Nib gets sidelined and knows it." }
+        { t: "Push Nib to fish now", fb: "Push shuts Nib down harder. The ice did not blink, and now Nib is performing stubbornness for an audience of one. Warmth first; the hole thaws on its own clock." },
+        { t: "Sit with tea and wait for thaw-light", fb: "Warmth first, then the hole. You sit, the tea goes, and Nib’s shoulders drop a thumb. The line can wait until the ice is honest. That is lodge timing, not laziness." },
+        { t: "Send Twig to the hole instead", fb: "Twig can fish. It works. Nib gets sidelined and knows it. You solved supper and spent a little trust. Next time Nib may not even bring the stick." },
       ], prefer: 1 },
     { id: "SR02", core: true, art: "assets/social/sr02.jpg", title: "Credit Chop",
       scene: "You split the morning wood. Puddle poses on the pile like it was all their work. The lodge is watching. Your paws still sting.",
       choices: [
-        { t: "Call Puddle out loud", fb: "True, and loud. The pile got quieter than it needed." },
-        { t: "Joke now, claim the chop later", fb: "The lodge laughs. The record stays honest. Nice." },
-        { t: "Let it go today", fb: "Peace today. The pile still knows whose paws did it." }
+        { t: "Call Puddle out loud", fb: "True, and loud. The pile got quieter than it needed. Puddle shrunk, the room picked a villain, and your sting is now public theater. Honesty can wait for a smaller stage." },
+        { t: "Joke now, claim the chop later", fb: "The lodge laughs. The record stays honest without a trial. Puddle can keep the pose for a minute; you keep the story. That is how credit survives a crowd." },
+        { t: "Let it go today", fb: "Peace today. The pile still knows whose paws did it, and so do you. If it becomes a habit, you will need the joke later. One pose is not a stolen winter." },
       ], prefer: 1 },
     { id: "SR03", core: true, art: "assets/social/sr03.jpg", title: "Guest Roast",
       scene: "A guest snorts at the hearth. “Just sticks.” The Lodge Fire is the house. You are nearest the poker.",
       choices: [
-        { t: "Roast them harder", fb: "They shrank. The fire did not feel safer." },
-        { t: "Guard the hearth first, then talk", fb: "Screen the flame. Then words. Lodge first." },
-        { t: "Kindly walk them to the door", fb: "Kind door. Cold night. The fire keeps its job." }
+        { t: "Roast them harder", fb: "They shrank. The fire did not feel safer. You won the roast and spent the room’s warmth on a point. Guests remember heat more than punchlines." },
+        { t: "Guard the hearth first, then talk", fb: "Screen the flame. Then words. Lodge first. The guest can learn manners after the house is not at risk. You look steady, not thin-skinned." },
+        { t: "Kindly walk them to the door", fb: "Kind door. Cold night. The fire keeps its job, and the guest keeps their coat. Fair, if the snort was a threat. A first joke might have wanted a smaller answer." },
       ], prefer: 1 },
     { id: "SR04", core: true, art: "assets/social/sr04.jpg", title: "Twig Switch",
       scene: "You and Twig were on the wood pile. Mid-chop, Twig flips to a new job and leaves the stalling stack in your paws.",
       choices: [
-        { t: "Snap. Pick one job and bark it.", fb: "Twig froze. The wood still stalls." },
-        { t: "Short list: chop this, then tend that", fb: "Two beats, one order. Wood moves. Twig stays." },
-        { t: "Let Twig bounce", fb: "Twig bounces. The pile does not." }
+        { t: "Snap. Pick one job and bark it.", fb: "Twig froze. The wood still stalls. Fear is not a schedule. You got silence and a half-chopped log that now belongs to nobody." },
+        { t: "Short list: chop this, then tend that", fb: "Two beats, one order. Wood moves. Twig stays. The switch gets a lane instead of a scolding. Camp runs on lists you can finish." },
+        { t: "Let Twig bounce", fb: "Twig bounces. The pile does not. You taught that jobs are optional weather. Tomorrow the stack will still be your problem, plus a little resentment." },
       ], prefer: 1 },
     { id: "SR05", core: true, art: "assets/social/sr05.jpg", title: "Quiet Table",
       scene: "Dinner is loud. One camper at the end of the table has not said a word. A talking-stick sits in the bread bowl.",
       choices: [
-        { t: "Put them on the spot", fb: "The table stared. The quiet got louder." },
-        { t: "Pass the stick — talk is optional", fb: "Offer, not a trap. They can hold it or pass." },
-        { t: "Leave them alone all night", fb: "Space is kind. A tiny invite would still have fit." }
+        { t: "Put them on the spot", fb: "The table stared. The quiet got louder. Spotlight is not invitation. They may talk later, just not to you." },
+        { t: "Pass the stick — talk is optional", fb: "Offer, not a trap. They can hold it or pass. You named a door and left it unlatched. That is how shy lodges join a meal." },
+        { t: "Leave them alone all night", fb: "Space is kind. A tiny invite would still have fit. Isolation can look like respect until it feels like exile. Next time, pass the stick once." },
       ], prefer: 1 },
     { id: "SR06", core: true, art: "assets/social/sr08.jpg", title: "Sap Spill",
       scene: "The sap jug is on its side. Sticky everywhere. Blame is already floating around the room like steam.",
       choices: [
-        { t: "Hunt who knocked it", fb: "Hunt first, mop never. The floor stays sticky." },
-        { t: "Grab rags. Clean first.", fb: "Rags, then talk. Lodge floor first." },
-        { t: "Joke until someone else cleans", fb: "Funny. The sap still wins." }
+        { t: "Hunt who knocked it", fb: "Hunt first, mop never. The floor stays sticky and the lodge picks a villain before the rags even move. Blame is a poor sponge." },
+        { t: "Grab rags. Clean first.", fb: "Rags, then talk. Lodge floor first. Once the stickiness is gone, the story is smaller and usually dumber. You look like a grown beaver." },
+        { t: "Joke until someone else cleans", fb: "Funny. The sap still wins. Humor without a rag is just commentary. Someone’s socks will remember you." },
       ], prefer: 1 },
     { id: "SR07", core: true, art: "assets/social/sr14.jpg", title: "Night Watch",
       scene: "Two campers want the same night-watch slot. Both look tired. The path is quiet. Someone has to stand it.",
       choices: [
-        { t: "Coin flip. Done.", fb: "Fair-ish. Nobody asked how they slept." },
-        { t: "Ask who slept worse. Give it to them.", fb: "The worse-slept one sits. The other gets a real night." },
-        { t: "Split the night in half", fb: "Two short watches. Works, if both can wake." }
+        { t: "Coin flip. Done.", fb: "Fair-ish. Nobody asked how they slept. A coin is quick and a little cold. Fine for sticks, thin for people who already look grey." },
+        { t: "Ask who slept worse. Give it to them.", fb: "The worse-slept one sits. The other gets a real night. You treated tired as data, not drama. The path still gets a watcher who can stand." },
+        { t: "Split the night in half", fb: "Two short watches. Works, if both can wake. You avoided a fight and invented two alarms. Kind, with a little chaos at 2 a.m." },
       ], prefer: 1 },
     { id: "SR08", core: true, art: "assets/social/sr10.jpg", title: "Broken Tool",
       scene: "Nib’s tapper snaps on a knot. Nib is spiraling — it was the good one. Spare tools sit in the crate.",
       choices: [
-        { t: "Say it’s just a tool", fb: "True. Nib did not hear “just.”" },
-        { t: "Fix it, or find a spare, together", fb: "Two paws on the crate. The spiral slows." },
-        { t: "Hand over yours and walk off", fb: "Nib has a tool. You have a cold walk." }
+        { t: "Say it’s just a tool", fb: "True. Nib did not hear “just.” The spiral is about the morning, not the metal. Facts without company sound like a door." },
+        { t: "Fix it, or find a spare, together", fb: "Two paws on the crate. The spiral slows. You joined the problem before you named it small. Tools break. Lodges hold." },
+        { t: "Hand over yours and walk off", fb: "Nib has a tool. You have a cold walk. Generous, and a little vanishing act. Stay for the first tap so it feels like a handoff, not a drop." },
       ], prefer: 1 },
     { id: "SR09", core: true, art: "assets/social/sr07.jpg", title: "Whiteout Vote",
       scene: "Whiteout at the tree line. Half the lodge wants to haul wood now. Half wants to lock in. Voices stack.",
       choices: [
-        { t: "Boss the haul. Go now.", fb: "You won the room. The weather did not vote." },
-        { t: "Name the risk, vote once, stick", fb: "One vote, named risk, then you stick. Lodge can move." },
-        { t: "Wait until panic decides", fb: "Panic is a voter. Not a kind one." }
+        { t: "Boss the haul. Go now.", fb: "You won the room. The weather did not vote. Command feels clean until someone is lost in the white. Speed without a named risk is just noise with a leader." },
+        { t: "Name the risk, vote once, stick", fb: "One vote, named risk, then you stick. Lodge can move without a leftover argument walking into the storm. That is how whiteouts get fewer heroes." },
+        { t: "Wait until panic decides", fb: "Panic is a voter. Not a kind one. Delay until the loudest fear wins, and you will haul or hide for the wrong reason. Pick a time, then act." },
       ], prefer: 1 },
     { id: "SR10", core: true, art: "assets/social/sr12.jpg", title: "Soft Win",
       scene: "The shy camper just landed a quiet streak at the slate table. Nobody clapped. They look at the floor like it might clap.",
       choices: [
-        { t: "Big public cheer", fb: "The room roared. They shrank into the bench." },
-        { t: "Quiet nod and one specific praise", fb: "A nod and the exact move. They sit taller." },
-        { t: "Say nothing", fb: "The streak happened. So did the silence." }
+        { t: "Big public cheer", fb: "The room roared. They shrank into the bench. Volume is not the same as praise. You turned a private win into a stage they did not book." },
+        { t: "Quiet nod and one specific praise", fb: "A nod and the exact move. They sit taller. Specific is a gift you can carry. The table heard enough without becoming a parade." },
+        { t: "Say nothing", fb: "The streak happened. So did the silence. Some wins need a witness or they evaporate. You can be quiet and still mark the thing." },
       ], prefer: 1 },
     { id: "SR11", core: false, art: "assets/social/sr09.jpg", title: "One bowl left",
       scene: "Supper is thin. One bowl of stew remains. A smaller beaver looks at it like it is a whole summer.",
       choices: [
-        { t: "Take the bowl. You chopped all day.", fb: "True chop. Thin night for them." },
-        { t: "Split the bowl, extra bread for both", fb: "Half stew, whole lodge. That's camp." },
-        { t: "Give the whole bowl and eat later", fb: "Kind to a fault. Eat something, friend." }
+        { t: "Take the bowl. You chopped all day.", fb: "True chop. Thin night for them. The lodge files that under ‘fair’ and ‘cold’ at the same time. Hunger remembers." },
+        { t: "Split the bowl, extra bread for both", fb: "Half stew, whole lodge. That is camp. Nobody plays martyr, nobody plays king. Bread fills the gap the spoon cannot." },
+        { t: "Give the whole bowl and eat later", fb: "Kind to a fault. Eat something, friend. A collapsed chopper tomorrow is not a gift. Share first, then the extra if you still have it." },
       ], prefer: 1 },
     { id: "SR12", core: false, art: "assets/social/sr11.jpg", title: "Puddle after the slip",
       scene: "Puddle went in the river. They are soaked, shaking, and trying to laugh it off. You have a dry blanket.",
       choices: [
-        { t: "Laugh along and keep walking", fb: "They laughed. Their teeth did not." },
-        { t: "Wrap the blanket, then the joke", fb: "Warm first. Joke second. Lodge order." },
-        { t: "Lecture about river banks", fb: "True banks. Cold Puddle." }
+        { t: "Laugh along and keep walking", fb: "They laughed. Their teeth did not. Matching the joke leaves the wetness in charge. Humor after the wrap, not instead of it." },
+        { t: "Wrap the blanket, then the joke", fb: "Warm first. Joke second. Lodge order. Puddle gets to be funny once they can feel their paws. You look like the adult in the current." },
+        { t: "Lecture about river banks", fb: "True banks. Cold Puddle. A safety talk on a shivering audience is just extra weather. Dry, then the map of where not to step." },
       ], prefer: 1 },
     { id: "SR13", core: false, art: "assets/social/sr13.jpg", title: "Last berry cake",
       scene: "Night kitchen. You and a guest both reach for the last berry cake. Hands hover. The cake is small and perfect.",
       choices: [
-        { t: "Grab it. Host rules.", fb: "Host ate. Guest remembered." },
-        { t: "Split it with a clean cut", fb: "Two halves. Two smiles. Cake math." },
-        { t: "Insist they take all of it", fb: "Polite duel. Someone still goes hungry." }
+        { t: "Grab it. Host rules.", fb: "Host ate. Guest remembered. The cake was tiny; the story will not be. Host rules are real. So is the walk home hungry." },
+        { t: "Split it with a clean cut", fb: "Two halves. Two smiles. Cake math. You kept host and guest on the same side of the knife. Perfect food, imperfect greed, solved." },
+        { t: "Insist they take all of it", fb: "Polite duel. Someone still goes hungry, and now it is a manners contest. Split is kinder than a staged sacrifice." },
       ], prefer: 1 },
     { id: "SR14", core: false, art: "assets/social/sr15.jpg", title: "A leak in the dam",
       scene: "A hiss in the dam. Twig found it. You both have mud. The pond is watching.",
       choices: [
-        { t: "Bark orders and take the glory hole", fb: "Hole plugged. Twig went quiet." },
-        { t: "Plug it together, count out loud", fb: "Two paws, one leak, zero fuss." },
-        { t: "Go fetch Nib and lose the minute", fb: "Help is coming. The hiss is not waiting." }
+        { t: "Bark orders and take the glory hole", fb: "Hole plugged. Twig went quiet. The pond is saved and the partnership leaked. Next hiss, you may find it alone." },
+        { t: "Plug it together, count out loud", fb: "Two paws, one leak, zero fuss. Counting makes a team out of panic. The pond does not need a hero caption." },
+        { t: "Go fetch Nib and lose the minute", fb: "Help is coming. The hiss is not waiting. Extra paws are good after the first wad of mud, not instead of it." },
       ], prefer: 1 },
     { id: "SR15", core: false, art: "assets/social/sr16.jpg", title: "Seat by the fire",
       scene: "Your usual hearth seat is taken by a tired guest. You have a mug. They have sore paws. The bench is almost wide enough.",
       choices: [
-        { t: "Ask them to move. That's your seat.", fb: "Seat reclaimed. Guest felt the draft." },
-        { t: "Share the bench and the mug-warmth", fb: "Two on a bench. Fire does the rest." },
-        { t: "Stand in the cold to make a point", fb: "Point made. Toes lost." }
+        { t: "Ask them to move. That's your seat.", fb: "Seat reclaimed. Guest felt the draft. Custom is not a deed. You taught the house that tired visitors stand." },
+        { t: "Share the bench and the mug-warmth", fb: "Two on a bench. Fire does the rest. You kept a ritual without making it a border. Sore paws thaw. So does the story of this lodge." },
+        { t: "Stand in the cold to make a point", fb: "Point made. Toes lost. Martyrdom is loud furniture. Sit somewhere; the fire is not a courtroom." },
       ], prefer: 1 },
     { id: "SR16", core: false, art: "assets/social/sr06.jpg", title: "The last stick",
       scene: "Two friends tug one last good stick. Both need it. You are in the middle with empty paws.",
       choices: [
-        { t: "Pick a side out loud", fb: "One friend glows. The other goes quiet." },
-        { t: "Split it down the grain", fb: "Two shorter sticks. Two shorter frowns." },
-        { t: "Invent a third option — swap chores for the stick", fb: "New deal. Nobody loses the night." }
-      ], prefer: 2 }
+        { t: "Pick a side out loud", fb: "One friend glows. The other goes quiet. You solved the stick and spent a friendship chip. Sides are expensive at dusk." },
+        { t: "Split it down the grain", fb: "Two shorter sticks. Two shorter frowns. Not elegant, but both can work. The tug-of-war ends without a judge." },
+        { t: "Invent a third option — swap chores for the stick", fb: "New deal. Nobody loses the night. You turned a stick into a trade. That is lodge politics at its least stupid." },
+      ], prefer: 2 },
+    { id: "SR17", core: false, art: "assets/social/sr01.jpg", title: "Double Ask",
+      scene: "Puddle already asked you to haul water at dawn. You said yes. At dusk they ask again as if the first yes never happened, in front of Nib.",
+      choices: [
+        { t: "Snap that you already said yes", fb: "True, and sharp. Puddle hears the snap louder than the yes. Nib files you as touchy. The buckets are still empty." },
+        { t: "Restate the yes, name the time, smile at Nib", fb: "You keep the promise visible without a trial. Puddle gets a clock. Nib sees a lodge that remembers. Repeats often want a handle, not a scolding." },
+        { t: "Pretend it is a new ask and say maybe", fb: "Now there are two maybes and zero buckets. Softness here looks like fog. Fog fills the path at dawn." },
+      ], prefer: 1 },
+    { id: "SR18", core: false, art: "assets/social/sr03.jpg", title: "Joke Landmine",
+      scene: "Twig tells a dam joke. The room laughs. You see Nib go still — it was about last winter’s flood, and Nib’s kit got scared then.",
+      choices: [
+        { t: "Louder follow-up joke in the same vein", fb: "You doubled down. Nib leaves the light. The room learns that fear is fuel. Funny died on the second lap." },
+        { t: "Ease the room, check Nib later without a show", fb: "You let the laugh land, then change weather. Private check beats a public rescue that pins Nib to the joke. Care can be quiet." },
+        { t: "Call Twig cruel in front of everyone", fb: "You named the landmine and detonated the table. Twig is now the villain, Nib is the exhibit. True, and costly." },
+      ], prefer: 1 },
+    { id: "SR19", core: false, art: "assets/social/sr02.jpg", title: "Late Haul",
+      scene: "The wood haul was at first light. You arrive when the pile is already stacked. Twig’s breath is a cloud. Nobody has said your name yet.",
+      choices: [
+        { t: "Invent a dramatic excuse", fb: "The lodge hears a play. Twig hears a shrug. Next haul they will not save you a strap. Stories are heavier than lateness." },
+        { t: "Own it, take the leftover ugly jobs", fb: "You name the miss and pick up the worst remaining work. Twig’s cloud thins. Trust likes repairs more than theater." },
+        { t: "Joke that they started without you on purpose", fb: "Now it is their fault they were on time. Clever, and poisonous. The pile does not laugh." },
+      ], prefer: 1 },
+    { id: "SR20", core: false, art: "assets/social/sr05.jpg", title: "Borrowed Hat",
+      scene: "Your warm hat is on Puddle’s head by the fire. Puddle is half-asleep and humming. Your ears are pink.",
+      choices: [
+        { t: "Yank it off and lecture", fb: "Hat reclaimed. Humming dies. The whole bench watches a theft trial over wool. You will get the hat and lose the evening." },
+        { t: "Ask once, offer a spare scarf if they are still cold", fb: "Clear ask, extra kindness. Puddle can wake up a citizen. You keep ears and a friend. Borrowing needs a door, not a raid." },
+        { t: "Sit hatless to prove a point", fb: "Point proven to nobody. Pink ears do not teach. Ask for the wool. Martyr frost is not a curriculum." },
+      ], prefer: 1 },
+    { id: "SR21", core: false, art: "assets/social/sr16.jpg", title: "Fire Hog",
+      scene: "A guest plants in the sweet spot of the hearth and spreads like a drying net. The rest of the lodge orbits the cold edge.",
+      choices: [
+        { t: "Call them a hog out loud", fb: "True shape, rude name. The guest folds up and the room goes brittle. You got space and a story that will travel." },
+        { t: "Make a wider ring: scoot, invite, share the poker", fb: "You redesign the fire instead of prosecuting a body. People can move when the map is kind. Heat is a commons. Act like it." },
+        { t: "Leave for the drafty corner in silence", fb: "The hog never learns. You freeze on principle. Silence trains the worst seating chart in camp." },
+      ], prefer: 1 },
+    { id: "SR22", core: false, art: "assets/social/sr13.jpg", title: "Secret Snack",
+      scene: "You catch a kit eating the travel nuts behind the crate. Winter is not here yet. The kit’s cheeks are heroic.",
+      choices: [
+        { t: "Shame them at the table", fb: "The kit learns hiding, not sharing. Public shame stores worse than nuts. You protected a jar and bruised a small camper." },
+        { t: "Quiet talk: hunger, rules, a fair share now", fb: "You name the rule without an audience. The kit still eats. The jar still exists. Secrets like this usually want a meal and a lid." },
+        { t: "Pretend you saw nothing", fb: "The jar will empty in the dark. Kindness without a boundary is just a delayed argument with winter." },
+      ], prefer: 1 },
+    { id: "SR23", core: false, art: "assets/social/sr04.jpg", title: "New Camper",
+      scene: "A new beaver stands in the doorway with a too-big pack. Chores are already flying. Nobody has said their name twice.",
+      choices: [
+        { t: "Point at the woodpile and walk off", fb: "Efficient. Lonely. They will learn the pile and not the people. First nights remember the first sentence." },
+        { t: "Name them, pair them with one easy job and a buddy", fb: "A handle, a task, a person. The pack comes off. New campers do not need a speech. They need a place to put their paws." },
+        { t: "Give a full tour until supper is late", fb: "Kind overload. Hungry lodges get snappy. A buddy and a job beat a museum lecture on day one." },
+      ], prefer: 1 },
+    { id: "SR24", core: false, art: "assets/social/sr07.jpg", title: "Map Fight",
+      scene: "Two maps, two routes around the white stand of pines. Twig’s path is longer. Nib’s is bold and cuts the creek. Voices rise.",
+      choices: [
+        { t: "Pick a winner by volume", fb: "The loud map wins. The creek does not care. You taught that certainty is a contest, not a check." },
+        { t: "Name ice, light, and energy, then choose one route together", fb: "Risks on the table. One line on the snow. The fight becomes a plan. Maps like witnesses." },
+        { t: "Split the party to ‘save time’", fb: "Two maps, two groups, one storm. Saving time is how lodges write ballads. Stay a lodge." },
+      ], prefer: 1 },
+    { id: "SR25", core: false, art: "assets/social/sr12.jpg", title: "Praise Flood",
+      scene: "A camper lands a decent chop. Puddle showers them with ‘best in the valley’ until the camper looks trapped in honey.",
+      choices: [
+        { t: "Add even bigger praise", fb: "The honey deepens. The chop was fine. Now it is a statue they have to live in. Floods drown small wins." },
+        { t: "Translate: name the actual good cut, then move on", fb: "Specific, then next log. The camper can breathe. Puddle learns a smaller ladle. Praise that fits can be picked up tomorrow." },
+        { t: "Mock the praise until everyone is dry and mean", fb: "You saved them from honey by serving vinegar. The chop vanishes. So does safety around effort." },
+      ], prefer: 1 },
+    { id: "SR26", core: false, art: "assets/social/sr14.jpg", title: "Broken Promise",
+      scene: "Twig swore the dawn watch. Dawn comes. Twig does not. You stood it alone until your feet went stupid.",
+      choices: [
+        { t: "Blast Twig at breakfast", fb: "The table becomes a court. Twig defends. You get heat, not a future watch. Public blast is a poor alarm clock." },
+        { t: "Private: impact, then a repair — Twig takes tonight", fb: "You say what the night cost, then book a make-good. Promises like receipts. The lodge stays a lodge, not a rumor mill." },
+        { t: "Never mention it and never ask Twig again", fb: "Quiet exile. Twig may not even know the size of the miss. Ghosting a chore partner trains nobody." },
+      ], prefer: 1 },
+    { id: "SR27", core: false, art: "assets/social/sr10.jpg", title: "Loud Tools",
+      scene: "Someone starts chopping at first bird, right under the sleep loft. The kits thump the ceiling. You have a voice and a door.",
+      choices: [
+        { t: "Storm out and grab the axe mid-swing", fb: "The chop stops. So does trust. A flying axe conversation is how lodges get extra holes. Too much force for a clock problem." },
+        { t: "Ask for a later hour and a farther stump, then help move", fb: "You protect sleep and still want wood. Moving the work is the whole joke. Birds can have the stump at a kinder time." },
+        { t: "Suffer in silence and be wrecked all day", fb: "Noble, and contagious. Tired lodges snap at supper. Name the hour. Wood will still be wood at eight." },
+      ], prefer: 1 },
+    { id: "SR28", core: false, art: "assets/social/sr09.jpg", title: "Guest Gift",
+      scene: "A guest brings a slightly sad dried-fish braid. It is the wrong season and a little proud. The kitchen goes quiet.",
+      choices: [
+        { t: "Joke about the smell immediately", fb: "True nose, cheap laugh. The gift was a bridge. You dropped it in the stew of other people’s eyes." },
+        { t: "Thank them, plate a little, save the rest without fuss", fb: "Honor the intent. Do not force the lodge to eat a mistake. Gifts like a landing pad, not a roast. You can cook something else later." },
+        { t: "Refuse it so nobody has to deal", fb: "Honest and a little brutal. The guest carries the braid back into the night. A small thanks would have cost less than the weather." },
+      ], prefer: 1 },
+    { id: "SR29", core: false, art: "assets/social/sr11.jpg", title: "Extra Blanket",
+      scene: "One spare blanket. Two cold campers. One of them already has a slightly thicker coat and will not say so.",
+      choices: [
+        { t: "Give it to whoever asks loudest", fb: "Volume wins warmth. The quieter one invents a new way to shiver. Asking style is not a thermometer." },
+        { t: "Check coats, split the night, or share the blanket", fb: "You look at actual cold, not theater. Sharing a blanket is awkward and effective. Fair beats fast." },
+        { t: "Keep it yourself ‘for emergencies’", fb: "The emergency is tonight. Hoarding spare warmth is a philosophy, not a plan." },
+      ], prefer: 1 },
+    { id: "SR30", core: false, art: "assets/social/sr02.jpg", title: "Dawn Chore",
+      scene: "Chore sticks are in the mug. The worst one — ice-path sanding — is still in there. Eyes bounce. Nobody draws.",
+      choices: [
+        { t: "Push it onto the newest camper", fb: "Hazing with a stick. The path gets sanded by someone who does not know the ice. Mean, and a little unsafe." },
+        { t: "Draw fair, or take it if you know the ice best", fb: "Fair mug, or skill. Either is lodge. Ice paths like experience more than justice theater, but hiding the stick is worse." },
+        { t: "Announce there is no ice path actually", fb: "The path remains. Someone falls. Lying about chores is how legends and bruises get made." },
+      ], prefer: 1 },
+    { id: "SR31", core: false, art: "assets/social/sr05.jpg", title: "Story Steal",
+      scene: "Nib starts a flood story. Mid-sentence Puddle takes the ending, louder, with extra heroes. Nib’s mouth stays open around nothing.",
+      choices: [
+        { t: "Let Puddle finish; stories belong to the bold", fb: "Nib learns not to start. The fire gets a show and loses a storyteller. Bold is not a deed to someone else’s night." },
+        { t: "Steer back: ‘Nib was telling it — Nib?’", fb: "A small door, reopened. Puddle can still add later. The original mouth gets to close the sentence. That is fire etiquette." },
+        { t: "Mock both until the story dies", fb: "Equal-opportunity frost. Nobody tells anything. The flood already happened; you do not need to drown it twice." },
+      ], prefer: 1 },
+    { id: "SR32", core: false, art: "assets/social/sr08.jpg", title: "Wet Matches",
+      scene: "The match tin is damp. You packed it last. Twig is already kneeling at the tinder like the night depends on a spark. It does.",
+      choices: [
+        { t: "Blame the weather in a long speech", fb: "Weather is wet. So is the tin you packed. Speeches do not strike. Twig’s knees are still in the snow." },
+        { t: "Own the pack job, switch to flint, ask for dry bark", fb: "You name it, change tools, recruit bark. Fire is a team sport when matches fail. Honesty here is kindling." },
+        { t: "Hand Twig the wet tin and wander for ‘better sticks’", fb: "You left the problem in someone else’s paws with a prop. Better sticks will not forgive the tin." },
+      ], prefer: 1 },
+    { id: "SR33", core: false, art: "assets/social/sr06.jpg", title: "Queue Cut",
+      scene: "Stew line. A guest slides in beside a friend near the front. The kits at the back do the math with their eyes.",
+      choices: [
+        { t: "Yell ‘line!’ from the back", fb: "True geometry, public shaming. The guest may move. The kits learn that volume is law. Sometimes that is enough. Often it curdles supper." },
+        { t: "Walk up, friendly: ‘end of the line is back there — we’ll save you a story’", fb: "You keep the rule and the guest’s face. Saving a story is a bridge off the cut. Lines are how small lodges stay small in the good way." },
+        { t: "Cut in too, since they did", fb: "Now there are two cuts. The kits file a longer grievance. Matching rudeness is not a queue." },
+      ], prefer: 1 },
+    { id: "SR34", core: false, art: "assets/social/sr14.jpg", title: "Quiet Snore",
+      scene: "Someone snores like a small dam failing. The loft is a drum. You have an elbow and a lot of night left.",
+      choices: [
+        { t: "Elbow hard until they yelp", fb: "The snore stops. So does sleep for everyone, plus a bruise. Violence is a poor mute button." },
+        { t: "Roll them gently, offer a side-sleep, maybe the extra loft", fb: "A nudge, a trick, a maybe-move. Snores are bodies, not morals. You can want quiet without a trial at 2 a.m." },
+        { t: "Suffer and be wrecked, then snap at breakfast", fb: "The snore wins twice: night and morning. Deal with the loft, not the porridge." },
+      ], prefer: 1 },
+    { id: "SR35", core: false, art: "assets/social/sr07.jpg", title: "Shared Compass",
+      scene: "One compass. Two day-trips. Nib wants the ridge. You want the creek. Both trips are real. The needle is not.",
+      choices: [
+        { t: "Pocket it because you thought of it first", fb: "Possession is not a route. Nib’s ridge gets guesswork. First-thought is a thin claim on a tool the lodge owns." },
+        { t: "Time-share, or send the riskier trip with the needle", fb: "Risk gets the instrument. The creek can follow banks. Sharing a compass is just adult weather." },
+        { t: "Hide it so nobody can ‘win’", fb: "Spite navigation. Both trips get lost in principle. That is not fairness. That is a riddle with frostbite." },
+      ], prefer: 1 },
+    { id: "SR36", core: false, art: "assets/social/sr13.jpg", title: "Burnt Bannock",
+      scene: "You burnt the bannock. The lodge is hungry. Puddle is already composing a joke with your name in it.",
+      choices: [
+        { t: "Throw it in the snow and storm off", fb: "No food, extra drama. Hunger plus a vanished cook is a bad stew. The snow does not need bread." },
+        { t: "Scrape the charcoal, serve what is edible, start a second pan", fb: "Repair in public without a speech. Jokes can land on a second pan. Burnt happens. Leaving hunger is a choice." },
+        { t: "Force everyone to eat it as a lesson", fb: "Lesson in what? Bitterness? The lodge is not a school of charcoal. Cook again." },
+      ], prefer: 1 },
+    { id: "SR37", core: false, art: "assets/social/sr04.jpg", title: "Lost Mitten",
+      scene: "A kit lost a mitten on the path. Dusk. The kit is crying more than the cold requires. You have a lantern and supper almost ready.",
+      choices: [
+        { t: "Say mittens are a lesson and eat", fb: "The lesson is you. A small lost thing at dusk is how kits learn whether the lodge hunts with them. Supper can wait a loop." },
+        { t: "Lantern loop, then supper; invite one extra pair of eyes", fb: "Bounded search. Help. Food after. Crying often wants company more than wool, but the wool still matters." },
+        { t: "Promise you will look tomorrow", fb: "Tomorrow the snow has opinions. Dusk is the window. Promises are not mittens." },
+      ], prefer: 1 },
+    { id: "SR38", core: false, art: "assets/social/sr09.jpg", title: "Guest Dish",
+      scene: "A guest cooks with a spice the lodge does not know. It is edible. It is also… loud. Twig already pushed the bowl an inch away.",
+      choices: [
+        { t: "Push yours away too, make a face", fb: "Now the guest is the joke. The spice is not a crime. Faces travel farther than flavors." },
+        { t: "Try a real bite, name what you like, leave the rest kindly", fb: "Curiosity plus an exit. Guests cook to belong. You can belong without finishing a fire-pepper manifesto." },
+        { t: "Demand they cook ‘normal’ next time", fb: "Normal is just last week’s pot. You made the kitchen a border. Invite a milder pan, do not ban a person." },
+      ], prefer: 1 },
+    { id: "SR39", core: false, art: "assets/social/sr15.jpg", title: "Too Many Logs",
+      scene: "Twig keeps feeding the fire like it insulted them. Flames lick the smoke hole. The lodge is already tropical.",
+      choices: [
+        { t: "Yank logs out with your bare plan and a yell", fb: "Fire is not a debate partner you grab. You might win the temperature and lose eyebrows. Panic stacking on panic." },
+        { t: "Name the risk, pull extras with tools, set a feed pace", fb: "Smoke hole, tools, pace. The fire learns a metronome. Twig can still help without building a sun indoors." },
+        { t: "Open every door and joke about summer", fb: "Draft plus a runaway fire is a different problem. Jokes do not throttle oxygen. Tend the pile." },
+      ], prefer: 1 },
+    { id: "SR40", core: false, art: "assets/social/sr01.jpg", title: "Ice Path",
+      scene: "The path is glass. An older guest starts down it anyway, proud. You have sand in a pail and two minutes before someone dances without meaning to.",
+      choices: [
+        { t: "Let pride walk; they said they are fine", fb: "Pride on glass is a hospital story in other towns. Here it is a bruise and a long carry. Fine is not friction." },
+        { t: "Sand the worst sheet, offer an arm, no speech", fb: "Sand, arm, dignity. You do not need a lecture on age. Ice wants grit. People want not to be treated like kits." },
+        { t: "Ban the path loudly in front of everyone", fb: "Safe, and a little parade of shame. The guest may sit out of spite. Sand plus an arm is quieter safety." },
+      ], prefer: 1 },
   ];
 
   function shuffle(arr) {
@@ -1386,8 +1663,8 @@
     if (MEM_POOL.length < 30) ok = false;
     if (SPEED_POOL.length < 60) ok = false;
     if (TRAIN_PATTERN.length < 20 || TRAIN_MEMORY.length < 20 || TRAIN_SPEED.length < 20) ok = false;
-    if (TRIVIA.length < 40) ok = false;
-    if (SOCIAL.length < 16) ok = false;
+    if (TRIVIA.length < 80) ok = false;
+    if (SOCIAL.length < 40) ok = false;
     return ok;
   }
 
@@ -1402,7 +1679,7 @@
 
   // Scoring. Practice excluded. Bars are never averaged into one number.
   // Reasoning: accuracy = (correct / 12) * 80
-  //   speedFrac = mean(remain / 45) over correct items only
+  //   speedFrac = mean(remain / 50) over correct items only
   //   speed = speedFrac * 20 * (correct / 12)
   //   Guess-all-fast ~3/12 instant → 20 + 5 = 25, not 100.
   function scoreReason(correct, remains) {
@@ -1426,7 +1703,7 @@
     var i, sum = 0, n = 0, lim;
     for (i = 0; i < remains.length; i++) {
       if (remains[i] != null) {
-        lim = (limits && limits[i]) || 10;
+        lim = (limits && limits[i]) || MEM_PROBE;
         sum += Math.max(0, Math.min(1, remains[i] / lim));
         n += 1;
       }
@@ -1442,7 +1719,7 @@
     var i, sum = 0, n = 0, lim;
     for (i = 0; i < remains.length; i++) {
       if (remains[i] != null) {
-        lim = (limits && limits[i]) || 3;
+        lim = (limits && limits[i]) || SPD_LIMIT;
         sum += Math.max(0, Math.min(1, remains[i] / lim));
         n += 1;
       }
@@ -1467,6 +1744,7 @@
   var lastTrack = "reason";
   var train = null;
   var trainFbTimer = 0;
+  var dwellTimer = 0;
   var social = null;
 
   function hideOverlays() {
@@ -1498,6 +1776,7 @@
       document.getElementById("train-pause").classList.add("hidden");
       if (raf) cancelAnimationFrame(raf);
       clearTimeout(studyTimer);
+      clearTimeout(dwellTimer);
       openTrainHub(train && train.kind === "trivia" ? "trivia" : "drills");
       return;
     }
@@ -1520,6 +1799,7 @@
   function confirmLeaveAssess() {
     stopTimer();
     clearTimeout(studyTimer);
+    clearTimeout(dwellTimer);
     run = null;
     social = null;
     clearRunSave();
@@ -1650,9 +1930,13 @@
         taps: run.taps || [],
         phase: run.phase,
         totalN: run.totalN,
-        remain: (run.phase === "study") ? null : remainNow(),
+        remain: (run.phase === "study" || run.phase === "banner") ? null : remainNow(),
         want: run.want || null,
-        studyI: run.studyI || 0
+        studyI: run.studyI || 0,
+        span: run.span || MEM_SPAN_START,
+        spanOk: run.spanOk || 0,
+        spanBad: run.spanBad || 0,
+        memCur: run.track === "memory" ? run.cur : null
       }));
     } catch (e) {}
   }
@@ -1676,6 +1960,7 @@
   function goSplash() {
     stopTimer();
     clearTimeout(studyTimer);
+    clearTimeout(dwellTimer);
     mode = "splash";
     run = null;
     train = null;
@@ -1744,14 +2029,17 @@
       totalN: snap.totalN,
       taps: snap.taps || [],
       want: snap.want || null,
-      studyI: snap.studyI || 0
+      studyI: snap.studyI || 0,
+      span: snap.span || MEM_SPAN_START,
+      spanOk: snap.spanOk || 0,
+      spanBad: snap.spanBad || 0
     };
     mode = snap.mode || "assess";
     if (mode === "confirm") {
       showConfirm();
       return;
     }
-    var it = itemById(snap.curId) || (mode === "practice" ? practiceList[run.i] : formPool[0]);
+    var it = snap.memCur || itemById(snap.curId) || (mode === "practice" ? practiceList[run.i] : formPool[0]);
     if (!it) { abandonRun(); return; }
     hideOverlays();
     setMenu(false);
@@ -1816,7 +2104,7 @@
   }
 
   function hidePlayBits() {
-    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices", "social-box"].forEach(function (id) {
+    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices", "trivia-dock", "trivia-teach", "trivia-next", "span-banner", "social-box"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
     document.getElementById("matrix").innerHTML = "";
@@ -1828,6 +2116,8 @@
     document.getElementById("trivia-illu").innerHTML = "";
     document.getElementById("trivia-q").textContent = "";
     document.getElementById("trivia-choices").innerHTML = "";
+    document.getElementById("trivia-teach").textContent = "";
+    document.getElementById("span-banner").textContent = "";
   }
 
   function hudFor() {
@@ -1871,7 +2161,7 @@
   }
   function tickTimer() {
     if (!run || (mode !== "practice" && mode !== "assess")) return;
-    if (run.phase === "study") return;
+    if (run.phase === "study" || run.phase === "banner") return;
     var r = remainNow();
     var chip = document.getElementById("chip-time");
     chip.textContent = fmtTime(r);
@@ -1906,6 +2196,7 @@
         if (ok) { run.corrStreak += 1; run.wrongStreak = 0; if (run.corrStreak >= 2) { run.band = Math.min(3, run.band + 1); run.corrStreak = 0; } }
         else { run.wrongStreak += 1; run.corrStreak = 0; if (run.wrongStreak >= 2) { run.band = Math.max(1, run.band - 1); run.wrongStreak = 0; } }
       }
+      if (run.track === "memory") bumpMemSpan(run, ok, MEM_SPAN_UP, MEM_SPAN_DOWN, MEM_SPAN_START, MEM_SPAN_MAX);
     }
     if (why === "away") flashAway();
     snapshotRun();
@@ -1950,9 +2241,21 @@
     startTimer();
   }
 
+  function showSpanBanner(it, then) {
+    var ban = document.getElementById("span-banner");
+    ban.textContent = (it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
+    ban.classList.remove("hidden");
+    document.getElementById("chip-time").textContent = "SPAN " + it.span;
+    document.getElementById("time-fill").style.transform = "scaleX(1)";
+    setPrompt(it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", it.reverse);
+    clearTimeout(studyTimer);
+    studyTimer = setTimeout(function () {
+      ban.classList.add("hidden");
+      then();
+    }, SPAN_BANNER);
+  }
   function presentMemory(it, resume) {
     hidePlayBits();
-    run.phase = "study";
     if (!resume) {
       run.taps = [];
       run.studyI = 0;
@@ -1964,7 +2267,20 @@
     document.getElementById("chip-time").textContent = "WATCH";
     document.getElementById("time-fill").style.transform = "scaleX(1)";
     setPrompt(it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", it.reverse);
-    stepStudy();
+    if (resume && run.phase === "study") {
+      stepStudy();
+      return;
+    }
+    if (resume && run.phase === "respond") {
+      beginMemRespond();
+      return;
+    }
+    run.phase = "banner";
+    showSpanBanner(it, function () {
+      if (!run || !run.cur) return;
+      run.phase = "study";
+      stepStudy();
+    });
   }
 
   function stepStudy() {
@@ -2016,7 +2332,7 @@
   function presentSpeed(it) {
     hidePlayBits();
     run.phase = "choice";
-    run.limit = it.limit || 3;
+    run.limit = it.limit || SPD_LIMIT;
     hudFor();
     setPrompt(it.prompt || "TAP THE ODD ONE", false);
     if (it.kind === "match" && it.target) {
@@ -2077,6 +2393,11 @@
 
   function nextAssessItem() {
     if (run.track === "reason") return pickFromBand();
+    if (run.track === "memory") {
+      var reverse = false;
+      if (mode === "assess" && run.i >= 3) reverse = (run.i % 3 === 2);
+      return makeMemTrial(run.span || MEM_SPAN_START, reverse, "MX" + (run.i + 1) + "s" + (run.span || MEM_SPAN_START) + (reverse ? "r" : "f"), MEM_STUDY, MEM_PROBE);
+    }
     var pool = run.formPool.filter(function (it) { return !run.used[it.id]; });
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -2086,9 +2407,9 @@
     mode = "confirm";
     setMenu(true);
     var meta = document.getElementById("confirm-meta");
-    if (run.track === "memory") meta.textContent = "Assess is 10 sequences · watch, then tap. Stay on this page.";
-    else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 2.5–3.5s each. Stay on this page.";
-    else meta.textContent = "Assess is 12 items · 45s each · no pause. Stay on this page.";
+    if (run.track === "memory") meta.textContent = "Assess is 10 trials · study 1.8s per icon · 12s to tap · start span 3. Stay on this page.";
+    else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 3.2s each. Stay on this page.";
+    else meta.textContent = "Assess is 12 items · 50s each · no pause. Stay on this page.";
     showOverlay("confirm");
     snapshotRun();
   }
@@ -2125,7 +2446,8 @@
       track: track, i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0,
       ok: 0, remains: [], limits: [], cur: null, phase: "choice",
       practiceList: practiceList, formPool: formPool, formName: formName || null,
-      totalN: totalN
+      totalN: totalN,
+      span: MEM_SPAN_START, spanOk: 0, spanBad: 0
     };
     present(practiceList[0]);
     updateLeave();
@@ -2145,6 +2467,7 @@
     mode = "assess";
     run.i = 0; run.ok = 0; run.remains = []; run.limits = [];
     run.used = {}; run.band = 2; run.corrStreak = 0; run.wrongStreak = 0;
+    run.span = MEM_SPAN_START; run.spanOk = 0; run.spanBad = 0;
     run.totalN = run.track === "memory" ? MEM_ASSESS_N : run.track === "speed" ? SPD_ASSESS_N : ASSESS_N;
     var it = nextAssessItem();
     present(it);
@@ -2262,7 +2585,7 @@
     });
     var cats = document.getElementById("trivia-cats");
     if (!cats.childNodes.length) {
-      ["All", "Lodge", "Patterns", "Camp life"].forEach(function (c) {
+      ["All", "Quantum", "Math", "Thermo", "History", "Lodge", "Patterns", "Camp life"].forEach(function (c) {
         var b = document.createElement("button");
         b.type = "button";
         b.textContent = c;
@@ -2310,6 +2633,7 @@
     if (kind === "trivia") {
       var cat = loadTrain().cat || "All";
       filtered = TRIVIA.filter(function (q) { return cat === "All" || q.cat === cat; });
+      if (!filtered.length) filtered = TRIVIA.slice();
       pool = shuffle(filtered);
     } else if (kind === "memory") pool = shuffle(TRAIN_MEMORY);
     else if (kind === "speed") pool = shuffle(TRAIN_SPEED);
@@ -2318,7 +2642,7 @@
     pool.sort(function (a, b) {
       return (last.indexOf(a.id) >= 0 ? 1 : 0) - (last.indexOf(b.id) >= 0 ? 1 : 0);
     });
-    train = { kind: kind, pool: pool, i: 0, pausedRemain: null };
+    train = { kind: kind, pool: pool, i: 0, pausedRemain: null, span: TRAIN_MEM_SPAN_START, spanOk: 0, spanBad: 0, waiting: false };
     mode = "train";
     app.classList.add("train");
     setMenu(false);
@@ -2328,7 +2652,14 @@
   }
   function presentTrain() {
     if (!train) return;
-    var it = train.pool[train.i % train.pool.length];
+    var it;
+    train.waiting = false;
+    train.locked = false;
+    if (train.kind === "memory") {
+      it = makeMemTrial(train.span || TRAIN_MEM_SPAN_START, false, "TWM" + (train.i + 1), TRAIN_MEM_STUDY, TRAIN_MEM_PROBE);
+    } else {
+      it = train.pool[train.i % train.pool.length];
+    }
     train.cur = it;
     hudFor();
     document.getElementById("chip-time").textContent = loadTrain().streak + " str";
@@ -2373,19 +2704,23 @@
       });
       grid.appendChild(b);
     });
-    train.limit = it.limit || 4.2;
+    train.limit = it.limit || TRAIN_SPD_LIMIT;
     train.t0 = performance.now();
     trainTick();
   }
   function presentTrainMemory(it) {
     hidePlayBits();
-    train.phase = "study";
+    train.phase = "banner";
     train.studyI = 0;
     train.taps = [];
     train.want = it.seq.map(gk);
     setPrompt("WATCH, then tap the same order", false);
     document.getElementById("chip-time").textContent = "WATCH";
-    stepTrainStudy();
+    showSpanBanner(it, function () {
+      if (!train || mode !== "train") return;
+      train.phase = "study";
+      stepTrainStudy();
+    });
   }
   function stepTrainStudy() {
     if (!train || mode !== "train" || train.phase !== "study") return;
@@ -2427,31 +2762,86 @@
     train.t0 = performance.now();
     trainTick();
   }
+  function triviaMark(cat) {
+    if (cat === "Quantum") return G(N, 1, 0, I);
+    if (cat === "Math") return G(S, 1, 45, Y);
+    if (cat === "Thermo") return G(D, 1, 0, W);
+    if (cat === "History") return G(L, 1, 0, Y);
+    if (cat === "Lodge") return G(L, 1, 0, W);
+    if (cat === "Patterns") return G(S, 1, 0, W);
+    return G(B, 1, 0, W);
+  }
   function presentTrainTrivia(it) {
     hidePlayBits();
     setPrompt((it.cat || "Camp") + " · PRACTICE ONLY", false);
     var illu = document.getElementById("trivia-illu");
     illu.classList.remove("hidden");
-    var mark = it.cat === "Patterns" ? G(S, 1, 45, Y) : it.cat === "Lodge" ? G(L, 1, 0, W) : G(N, 1, 0, I);
-    illu.appendChild(tileCopy(mark));
+    illu.appendChild(tileCopy(triviaMark(it.cat)));
     var q = document.getElementById("trivia-q");
     q.textContent = it.q;
     q.classList.remove("hidden");
     var box = document.getElementById("trivia-choices");
     box.classList.remove("hidden");
+    document.getElementById("trivia-dock").classList.add("hidden");
+    document.getElementById("trivia-teach").classList.add("hidden");
+    document.getElementById("trivia-next").classList.add("hidden");
+    document.getElementById("trivia-next").disabled = true;
     var order = [0, 1, 2, 3];
     shuffle(order).forEach(function (idx) {
       var b = document.createElement("button");
       b.type = "button";
+      b.setAttribute("data-idx", String(idx));
       b.textContent = it.choices[idx];
-      b.addEventListener("click", function () {
-        if (mode !== "train" || train.locked) return;
-        var ok = idx === it.ans;
-        if (ok) b.classList.add("ok"); else b.classList.add("bad");
-        trainPick(ok, b, null, it.teach);
-      });
+      b.addEventListener("click", function () { trainTriviaAnswer(idx, b); });
       box.appendChild(b);
     });
+  }
+  function trainTriviaAnswer(idx, btn) {
+    if (!train || train.locked || mode !== "train" || train.kind !== "trivia") return;
+    train.locked = true;
+    train.waiting = true;
+    var it = train.cur;
+    var ok = idx === it.ans;
+    document.getElementById("trivia-illu").classList.add("hidden");
+    Array.prototype.forEach.call(document.querySelectorAll("#trivia-choices button"), function (b) {
+      b.disabled = true;
+      var bi = parseInt(b.getAttribute("data-idx"), 10);
+      if (bi === it.ans) b.classList.add("ok");
+      else if (b === btn && !ok) b.classList.add("bad");
+      if (bi !== it.ans && b !== btn) b.classList.add("hidden");
+    });
+    awardTrainLast(ok);
+    var teach = document.getElementById("trivia-teach");
+    teach.textContent = it.teach;
+    teach.classList.remove("hidden");
+    document.getElementById("trivia-dock").classList.remove("hidden");
+    var nextBtn = document.getElementById("trivia-next");
+    nextBtn.textContent = "Next";
+    nextBtn.classList.remove("hidden");
+    nextBtn.disabled = true;
+    clearTimeout(dwellTimer);
+    dwellTimer = setTimeout(function () {
+      if (!train || !train.waiting) return;
+      nextBtn.disabled = false;
+    }, TEACH_DWELL);
+  }
+  function nextTrivia() {
+    if (!train || train.kind !== "trivia" || !train.waiting) return;
+    var nxt = document.getElementById("trivia-next");
+    if (nxt && nxt.disabled) return;
+    train.waiting = false;
+    train.locked = false;
+    train.i += 1;
+    train.t0 = null;
+    presentTrain();
+  }
+  function awardTrainLast(ok) {
+    var t = awardTrain(ok);
+    var ids = t.lastIds || [];
+    if (train && train.cur) ids.push(train.cur.id);
+    t.lastIds = ids.slice(-24);
+    saveTrain(t);
+    return t;
   }
   function trainTick() {
     if (mode !== "train" || !train || train.paused || !train.t0) return;
@@ -2466,19 +2856,18 @@
   }
   function trainPick(ok, btn, ansKey, teach) {
     if (!train || train.locked) return;
+    if (train.kind === "trivia") return;
     train.locked = true;
     if (raf) cancelAnimationFrame(raf);
     clearTimeout(studyTimer);
     if (btn && ok) btn.classList.add("ok");
     if (btn && !ok) btn.classList.add("bad");
-    var t = awardTrain(ok);
+    awardTrainLast(ok);
+    var t = loadTrain();
     var line = (ok ? "Yes. " : "Not that. ") + (teach || "") + "  +" + (ok ? (6 + Math.min(t.streak, 8)) : 0) + " XP";
     if (!ok) line = (teach || "Miss.") + " Streak reset.";
     showTrainFb(ok, line);
-    var ids = t.lastIds || [];
-    if (train.cur) ids.push(train.cur.id);
-    t.lastIds = ids.slice(-24);
-    saveTrain(t);
+    if (train.kind === "memory") bumpMemSpan(train, ok, TRAIN_MEM_SPAN_UP, MEM_SPAN_DOWN, TRAIN_MEM_SPAN_START, 5);
     setTimeout(function () {
       if (mode !== "train" || !train) return;
       train.i += 1;
@@ -2493,12 +2882,16 @@
     if (train.t0) train.pausedRemain = Math.max(0.5, train.limit - (performance.now() - train.t0) / 1000);
     if (raf) cancelAnimationFrame(raf);
     clearTimeout(studyTimer);
+    clearTimeout(dwellTimer);
     document.getElementById("train-pause").classList.remove("hidden");
   }
   function unpauseTrain() {
     document.getElementById("train-pause").classList.add("hidden");
     if (!train) { openTrainHub(); return; }
     train.paused = false;
+    if (train.kind === "trivia" && train.waiting) {
+      document.getElementById("trivia-next").disabled = false;
+    }
     if (train.pausedRemain != null) {
       train.limit = train.pausedRemain;
       train.t0 = performance.now();
@@ -2506,6 +2899,12 @@
       trainTick();
     } else if (train.kind === "memory" && train.phase === "study") {
       stepTrainStudy();
+    } else if (train.kind === "memory" && train.phase === "banner" && train.cur) {
+      showSpanBanner(train.cur, function () {
+        if (!train || mode !== "train") return;
+        train.phase = "study";
+        stepTrainStudy();
+      });
     }
   }
 
@@ -2578,12 +2977,19 @@
     var nextBtn = document.getElementById("social-next");
     nextBtn.textContent = social.i >= social.pool.length - 1 ? "Done" : "Next";
     nextBtn.classList.remove("hidden");
-    nextBtn.disabled = false;
+    nextBtn.disabled = true;
+    clearTimeout(dwellTimer);
+    dwellTimer = setTimeout(function () {
+      if (!social || !social.waiting) return;
+      nextBtn.disabled = false;
+    }, TEACH_DWELL);
     snapshotRun();
   }
   function nextSocial() {
     if (!social) return;
     if (!social.waiting) return;
+    var nxt = document.getElementById("social-next");
+    if (nxt && nxt.disabled && !/\bplaytest=1\b/.test(location.search)) return;
     social.i += 1;
     social.waiting = false;
     if (social.i >= social.pool.length) finishSocial();
@@ -2723,7 +3129,7 @@
     if (!run || !run.cur) return;
     if (document.visibilityState !== "hidden") return;
     snapshotRun();
-    if (run.track !== "reason" && run.phase === "study") {
+    if (run.track !== "reason" && (run.phase === "study" || run.phase === "banner")) {
       endItem(false, 0, "away");
       return;
     }
@@ -2759,9 +3165,9 @@
   document.getElementById("btn-memory").addEventListener("click", function () { startOrResume("memory"); });
   document.getElementById("btn-speed").addEventListener("click", function () { startOrResume("speed"); });
   document.getElementById("btn-train").addEventListener("click", function () { openTrainHub("drills"); });
-  document.getElementById("btn-trivia").addEventListener("click", function () { openTrainHub("trivia"); });
   document.getElementById("btn-social").addEventListener("click", beginSocial);
   document.getElementById("social-next").addEventListener("click", nextSocial);
+  document.getElementById("trivia-next").addEventListener("click", nextTrivia);
   document.getElementById("tab-drills").addEventListener("click", function () { showTrainTab("drills"); });
   document.getElementById("tab-trivia").addEventListener("click", function () { showTrainTab("trivia"); });
   document.getElementById("btn-drill-pattern").addEventListener("click", function () { beginTrain("pattern"); });
@@ -2829,7 +3235,7 @@
 
   function setPlayLocked(on) {
     PRE.blocked = on;
-    ["btn-reason", "btn-memory", "btn-speed", "btn-museum", "btn-train", "btn-trivia", "btn-social"].forEach(function (id) {
+    ["btn-reason", "btn-memory", "btn-speed", "btn-museum", "btn-train", "btn-social"].forEach(function (id) {
       document.getElementById(id).disabled = on;
     });
   }
@@ -2866,6 +3272,20 @@
           if (b) b.click();
         }, 400);
       }
+    } else if (/\btrivia=1\b/.test(location.search)) {
+      openTrainHub("trivia");
+      beginTrain("trivia");
+      if (/\bpick=1\b/.test(location.search)) {
+        setTimeout(function () {
+          var b = document.querySelector("#trivia-choices button");
+          if (b) b.click();
+        }, 400);
+      }
+    } else if (/\bmemory=1\b/.test(location.search)) {
+      beginPractice("memory");
+    } else if (/\babout=1\b/.test(location.search)) {
+      goSplash();
+      openAbout();
     } else if (loadRunSnap()) {
       showResume();
     } else {
@@ -2931,13 +3351,22 @@
     if (TRAIN_PATTERN.length < 20) fails.push("train-pattern");
     if (TRAIN_MEMORY.length < 20) fails.push("train-memory");
     if (TRAIN_SPEED.length < 20) fails.push("train-speed");
-    if (TRIVIA.length < 40) fails.push("trivia");
-    if (SOCIAL.length < 16) fails.push("social-pool");
-    var guess = scoreReason(3, [45, 45, 45]);
+    if (TRIVIA.length < 80) fails.push("trivia");
+    if (SOCIAL.length < 40) fails.push("social-pool");
+    var cats = {};
+    TRIVIA.forEach(function (q) { cats[q.cat] = (cats[q.cat] || 0) + 1; });
+    ["Quantum", "Math", "Thermo", "History", "Lodge", "Patterns", "Camp life"].forEach(function (c) {
+      if (!cats[c]) fails.push("trivia-cat-" + c);
+    });
+    if (T_ASSESS !== 50) fails.push("reason-timer");
+    if (MEM_STUDY !== 1.8 || MEM_PROBE !== 12) fails.push("mem-timer");
+    if (SPD_LIMIT !== 3.2) fails.push("spd-timer");
+    if (TRAIN_SPD_LIMIT < SPD_LIMIT) fails.push("train-speed-harder");
+    var guess = scoreReason(3, [50, 50, 50]);
     if (guess.index > 30) fails.push("guess-cap " + guess.index);
-    var maxed = scoreReason(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
+    var maxed = scoreReason(12, [50,50,50,50,50,50,50,50,50,50,50,50]);
     if (maxed.index !== 100) fails.push("max " + maxed.index);
-    var mash = scoreSpeed(5, [3,3,3,3,3], [3,3,3,3,3]);
+    var mash = scoreSpeed(5, [3.2,3.2,3.2,3.2,3.2], [3.2,3.2,3.2,3.2,3.2]);
     if (mash.index > 35) fails.push("speed-mash " + mash.index);
     var about = document.getElementById("about").textContent;
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
@@ -2963,6 +3392,8 @@
     DISC: DISC,
     SEED: SEED,
     ordinal: ordinal,
+    TRIVIA: TRIVIA,
+    SOCIAL: SOCIAL,
     voidCurrent: function () { endItem(false, 0, "away"); },
     getMode: function () { return mode; },
     getRun: function () { return run; }
@@ -3030,7 +3461,7 @@
       }
       if (stage === "memory") {
         if (mode === "practice" || mode === "assess") {
-          if (run.phase === "study") { setTimeout(step, 400); return; }
+          if (run.phase === "study" || run.phase === "banner") { setTimeout(step, 400); return; }
           if (run.phase === "respond" && !itemLocked) {
             var seq = run.want.slice();
             seq.forEach(function (key) {
@@ -3106,6 +3537,11 @@
                 if (!tr.played) fails.push("train-not-played");
                 if (document.getElementById("chip-mode").textContent !== "TRAIN") fails.push("no-train-chip");
                 if (document.getElementById("btn-leave").classList.contains("hidden")) fails.push("no-leave-train");
+                var teachEl = document.getElementById("trivia-teach");
+                if (!teachEl || teachEl.classList.contains("hidden") || !teachEl.textContent) fails.push("trivia-teach");
+                var tNext = document.getElementById("trivia-next");
+                if (!tNext || tNext.classList.contains("hidden")) fails.push("trivia-next");
+                if (document.getElementById("btn-trivia")) fails.push("splash-trivia");
                 beginPractice("reason");
                 requestLeave();
                 if (document.getElementById("leave-assess").classList.contains("hidden")) fails.push("no-leave-confirm");

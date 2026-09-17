@@ -24,7 +24,7 @@ allowed_iq = (
 )
 for path, text in (("index.html", html), ("README.md", readme)):
     for i, line in enumerate(text.splitlines(), 1):
-        if re.search(r"IQ|intelligence quotient", line, re.I):
+        if re.search(r"\bIQ\b|intelligence quotient", line, re.I):
             stripped = line.strip()
             if any(x in line for x in (
                 "selfTest", "iq-words", "iq-as-score", "body.match(/IQ",
@@ -71,12 +71,28 @@ if "Social Read" not in html:
     fails.append("missing Social Read")
 if "not an EQ score" not in html:
     fails.append("missing Social Read honesty")
-if html.count('id: "SR') < 16:
+if html.count('id: "SR') < 40:
     fails.append("social pool too small")
 if "SOCIAL_N = 10" not in html:
     fails.append("social run must be 10")
 if "Frozen Nib" not in html or "Soft Win" not in html:
     fails.append("missing core Social Read stories")
+if "Double Ask" not in html or "Guest Gift" not in html:
+    fails.append("missing new Social Read stories")
+if "T_ASSESS = 50" not in html:
+    fails.append("reasoning timer must be 50s")
+if "MEM_STUDY = 1.8" not in html or "MEM_PROBE = 12" not in html:
+    fails.append("memory study/probe timers")
+if "SPD_LIMIT = 3.2" not in html:
+    fails.append("speed timer must be 3.2s")
+if "TEACH_DWELL = 2500" not in html:
+    fails.append("missing teach dwell")
+if 'id="btn-trivia"' in html:
+    fails.append("splash Trivia button should be gone")
+if "Quantum" not in html or "Camp life" not in html:
+    fails.append("missing trivia categories")
+if 'id="trivia-next"' not in html or 'id="span-banner"' not in html:
+    fails.append("missing trivia next or span banner")
 if "Warm Word" not in html:
     fails.append("missing Warm Word")
 if "TRAIN_KEY" not in html:
@@ -87,7 +103,7 @@ if 'id="btn-leave"' not in html:
     fails.append("missing Leave control")
 if "leave-assess" not in html:
     fails.append("missing Leave Assess confirm")
-if html.count('TQ') < 40:
+if html.count('TQ') < 80:
     fails.append("trivia pool too small")
 if re.search(r"connect wallet|wallet connect", html, re.I):
     fails.append("wallet connect string")
