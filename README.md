@@ -29,7 +29,7 @@ Run `START.bat` or open `index.html` in a browser.
 7. **Museum** — tap a card for detail (large art if unlocked, silhouette tease if locked). Close with Back, X, or tap outside. How we score (always). Pattern Stick / Memory Twig / Speed Ember unlock after those Assess blocks. **Train Badge** after Train. **Warm Word** after Social Read.
 8. **Train** — PRACTICE ONLY. Drills (Pattern / Memory / Speed warmups with feedback) and Trivia (≥40 lodge/camp/pattern questions). XP and streaks save separately. Train never changes Assess bars or cohort %. Blur pauses Train. **Leave** (top-left) returns to the Train hub from a drill/trivia, or to Splash from the hub.
 9. **Leave** on Assess (practice or scored) and Social Read asks once, then abandons the run without writing Profile bars. Museum card detail closes on tap outside the card (also Back and X).
-10. **Social Read** — 10 lodge scenarios drawn from a pool of 16 (core Story 10 + extras). Soft feedback, then Next (or auto-advance). Practice index only — not an EQ score. Never feeds Reasoning / Memory / Speed.
+10. **Social Read** — 10 lodge scenarios drawn from a pool of 16 (core Story 10 + extras). Soft feedback, then tap **Next** (no auto-advance). Practice index only — not an EQ score. Never feeds Reasoning / Memory / Speed.
 
 Original camp tiles (sticks, dams, snow, lodge marks, beaver silhouettes). Not a clinical plate.
 

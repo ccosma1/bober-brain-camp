@@ -410,12 +410,19 @@
     }
     #social-choices button.picked { border-color: var(--yellow); background: #fff6d6; }
     #social-choices button:disabled { opacity: 0.85; cursor: default; }
-    #social-dock { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; }
-    #social-fb {
-      margin: 0; font-size: 14px; font-weight: 800; line-height: 1.35; color: var(--yellow);
-      text-align: center; min-height: 1.4em;
+    #social-dock {
+      flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch;
+      gap: 8px; padding: 8px 0 max(10px, env(safe-area-inset-bottom));
+      min-height: 72px; z-index: 9;
     }
-    #social-next { min-height: 48px; width: min(100%, 220px); }
+    #social-fb {
+      margin: 0; font-size: 15px; font-weight: 800; line-height: 1.35; color: var(--yellow);
+      text-align: center; min-height: 2.2em;
+    }
+    #social-next {
+      min-height: 56px; width: 100%; max-width: 340px; margin: 0 auto;
+      font-size: 20px; letter-spacing: 0.08em;
+    }
   </style>
 </head>
 <body>
@@ -1525,7 +1532,6 @@
     stopTimer();
     clearTimeout(studyTimer);
     run = null;
-    if (social && social.advTimer) clearTimeout(social.advTimer);
     social = null;
     clearRunSave();
     document.getElementById("leave-assess").classList.add("hidden");
@@ -1681,7 +1687,6 @@
   function goSplash() {
     stopTimer();
     clearTimeout(studyTimer);
-    if (social && social.advTimer) clearTimeout(social.advTimer);
     mode = "splash";
     run = null;
     train = null;
@@ -2535,7 +2540,7 @@
   }
   function beginSocial() {
     if (PRE.blocked) return;
-    social = { pool: pickSocialRun(), i: 0, pref: 0, other: 0, scored: 0, waiting: false, advTimer: 0 };
+    social = { pool: pickSocialRun(), i: 0, pref: 0, other: 0, scored: 0, waiting: false };
     mode = "social";
     setMenu(false);
     hideOverlays();
@@ -2554,7 +2559,6 @@
     document.getElementById("social-fb").classList.add("hidden");
     document.getElementById("social-next").classList.add("hidden");
     social.waiting = false;
-    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
     setPrompt("PRACTICE — reading lodge situations. Not an EQ score.", false);
     hudFor();
     var box = document.getElementById("social-choices");
@@ -2585,13 +2589,11 @@
     var nextBtn = document.getElementById("social-next");
     nextBtn.textContent = social.i >= social.pool.length - 1 ? "Done" : "Next";
     nextBtn.classList.remove("hidden");
+    nextBtn.disabled = false;
     snapshotRun();
-    if (social.advTimer) clearTimeout(social.advTimer);
-    social.advTimer = setTimeout(function () { nextSocial(); }, 1200);
   }
   function nextSocial() {
     if (!social) return;
-    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
     if (!social.waiting) return;
     social.i += 1;
     social.waiting = false;
@@ -2600,7 +2602,6 @@
   }
   function finishSocial() {
     if (!social) return;
-    if (social.advTimer) { clearTimeout(social.advTimer); social.advTimer = 0; }
     var idx = scoreSocial(social.pref, social.other);
     var pct = percentile(idx, SEED.social);
     patchSave({
@@ -2865,6 +2866,14 @@
       openMuseum();
     } else if (/\bgo=1\b/.test(location.search)) {
       beginPractice("reason");
+    } else if (/\bsocial=1\b/.test(location.search)) {
+      beginSocial();
+      if (/\bpick=1\b/.test(location.search)) {
+        setTimeout(function () {
+          var b = document.querySelector("#social-choices button");
+          if (b) b.click();
+        }, 400);
+      }
     } else if (loadRunSnap()) {
       showResume();
     } else {
