@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+assets/icons/_check-32.png
+_smoke/

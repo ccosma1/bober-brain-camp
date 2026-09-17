@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#3A2A6A" />
+  <meta name="description" content="Bober Brain Camp — fan game by a holder. Train at Brain Camp. Fan game skill index — not a clinical or diagnostic test." />
+  <title>Bober Brain Camp</title>
+  <link rel="icon" href="assets/icons/bober-brain-camp.ico" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Bober Brain Camp" />
+  <meta property="og:description" content="Fan game by a holder. Train at Brain Camp — puzzles, people sense, trivia. Not a clinical test." />
+  <meta property="og:image" content="https://ccosma1.github.io/bober-brain-camp/assets/splash.jpg" />
+  <style>
+    :root {
+      --sky: #3A2A6A;
+      --ink: #1A1028;
+      --fur: #8B5A2B;
+      --wood: #5C3A1A;
+      --yellow: #F5C400;
+      --cream: #F4E6C3;
+      --ice: #A8C4E8;
+      --moss: #3D6B38;
+      --danger: #E85D4C;
+      --ember: #4A2818;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; height: 100%; background: var(--ink); color: var(--cream);
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      user-select: none; -webkit-user-select: none; overflow: hidden;
+      touch-action: manipulation; overscroll-behavior: none;
+      width: 100%;
+    }
+    #app {
+      display: flex; flex-direction: column;
+      height: 100dvh; height: 100svh;
+      width: 100%; max-width: 430px; margin: 0 auto;
+      background: var(--sky); position: relative; overflow: hidden;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+    }
+    .hidden { display: none !important; }
+    #hud {
+      flex: 0 0 auto; z-index: 8; background: #1A1028;
+      padding: 8px 10px 6px; padding-top: max(8px, env(safe-area-inset-top));
+    }
+    #app.booting #hud, #app.menu #hud { visibility: hidden; }
+    .hud-row {
+      display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center; gap: 6px; min-width: 0;
+    }
+    .chip {
+      background: #2a1c4e; border: 2px solid var(--yellow); color: var(--cream);
+      border-radius: 999px; padding: 4px 8px; font-weight: 800; font-size: 12px;
+      line-height: 1.25; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chip.mode {
+      font-size: 13px; letter-spacing: 0.08em; color: var(--yellow); font-weight: 900;
+    }
+    .chip.mode.practice {
+      font-size: 14px; letter-spacing: 0.1em; background: var(--yellow); color: var(--ink);
+      border-color: var(--ink);
+    }
+    .chip.time { min-width: 52px; text-align: center; justify-self: end; }
+    .chip.time.low { border-color: var(--danger); color: var(--danger); }
+    #time-bar {
+      height: 8px; margin-top: 6px; border: 2px solid var(--cream);
+      border-radius: 999px; background: #3A2A6A; overflow: hidden;
+    }
+    #time-bar i { display: block; height: 100%; width: 100%; background: var(--yellow); transform-origin: left center; }
+    #play {
+      flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+      padding: 8px 8px 6px; gap: 8px; min-width: 0;
+    }
+    #app.booting #play, #app.menu #play { visibility: hidden; }
+    .matrix {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px; width: 100%; max-width: 340px; margin: 0 auto;
+      flex: 0 0 auto; min-width: 0;
+    }
+    .cell {
+      aspect-ratio: 1; background: var(--cream); border: 3px solid var(--wood);
+      border-radius: 12px; overflow: hidden; box-shadow: 0 3px 0 var(--wood);
+      position: relative;
+    }
+    .cell canvas { width: 100%; height: 100%; display: block; }
+    .cell.miss {
+      background: #241848; border-style: dashed; border-color: var(--yellow);
+      box-shadow: none; display: flex; align-items: center; justify-content: center;
+      color: var(--yellow); font-weight: 900; font-size: clamp(22px, 8vw, 32px);
+    }
+    .choices {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      flex: 1 1 auto; min-height: 0; align-content: stretch;
+      width: 100%; max-width: 340px; margin: 0 auto; min-width: 0;
+    }
+    .choices button {
+      appearance: none; min-height: 88px; border: 3px solid var(--wood);
+      background: var(--cream); border-radius: 16px; padding: 8px;
+      cursor: pointer; box-shadow: 0 4px 0 var(--wood);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .choices button canvas { width: min(100%, 96px); height: min(100%, 96px); display: block; }
+    .choices button:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--wood); }
+    .choices button:disabled { opacity: 0.55; cursor: default; }
+    .choices button.picked { border-color: var(--yellow); background: #fff6d6; }
+    .honest {
+      flex: 0 0 auto; text-align: center; font-size: 11px; font-weight: 800;
+      line-height: 1.3; color: var(--ice); padding: 6px 10px 8px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      background: #1A1028; z-index: 8; overflow-wrap: anywhere;
+    }
+    .overlay {
+      position: absolute; inset: 0; z-index: 20;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      padding: 12px 12px max(16px, env(safe-area-inset-bottom));
+      text-align: center; overflow: auto; min-width: 0;
+      background: linear-gradient(to top, #1a1028f4 0%, #1a1028aa 42%, #3A2A6A22 100%);
+    }
+    .overlay.center { justify-content: center; background: #1A1028; }
+    .overlay img.hero {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;
+    }
+    .overlay h1 {
+      margin: 0 0 6px; font-size: clamp(22px, 7vw, 32px); line-height: 0.95;
+      color: var(--yellow); letter-spacing: 0;
+      text-shadow: 0 3px 0 #1A1028, 0 6px 16px #000;
+      max-width: 100%; overflow-wrap: anywhere;
+    }
+    .splash-card {
+      margin-top: auto; text-align: center; padding: 12px 10px;
+    }
+    .splash-card h1 { text-shadow: 0 2px 0 #1A1028; font-size: clamp(20px, 6.4vw, 28px); }
+    .splash-card .tag, .splash-card .how { text-shadow: none; }
+    .splash-card .disc { text-shadow: none; }
+    .splash-card .end-actions { max-width: 100%; }
+    .overlay h2 {
+      margin: 0 0 8px; font-size: clamp(22px, 7vw, 30px); color: var(--yellow);
+      text-shadow: 0 3px 0 #1A1028;
+    }
+    .tag { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--cream); text-shadow: 0 2px 6px #000; }
+    .how { margin: 0 0 6px; font-size: 13px; font-weight: 800; line-height: 1.35; color: var(--cream); text-shadow: 0 2px 6px #000; max-width: 100%; overflow-wrap: anywhere; }
+    .disc {
+      margin: 0 0 10px; font-size: 11px; font-weight: 800; line-height: 1.35;
+      color: var(--ice); text-shadow: 0 1px 4px #000; max-width: 100%; overflow-wrap: anywhere;
+    }
+    .play {
+      appearance: none; border: 3px solid #1A1028; background: var(--yellow); color: var(--ink);
+      font-weight: 900; font-size: 18px; letter-spacing: 0.06em;
+      padding: 12px 18px; min-height: 50px; min-width: 160px; max-width: 100%; border-radius: 16px;
+      cursor: pointer; box-shadow: 0 4px 0 #8a6a00, 0 8px 20px #0007;
+    }
+    .play:active { transform: translateY(2px); box-shadow: 0 2px 0 #8a6a00; }
+    .play:disabled { opacity: 0.4; cursor: default; filter: grayscale(0.45); box-shadow: none; }
+    .play.ghost { background: #1A1028; color: var(--cream); border-color: var(--cream); box-shadow: 0 4px 0 #0006; }
+    .play.soon { opacity: 0.45; cursor: default; font-size: 13px; min-height: 40px; min-width: 0; padding: 8px 10px; }
+    .chip.item { text-align: center; }
+    .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; }
+    .ghost-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .holder { margin: 8px 0 0; font-size: 13px; font-weight: 800; color: var(--cream); text-shadow: 0 2px 6px #000; }
+    .hub-link { margin: 8px 0 0; font-size: 12px; font-weight: 800; }
+    .hub-link a { color: var(--ice); }
+    .tip-card {
+      width: 100%; max-width: 22em; background: #2a1c4e; border: 3px solid var(--yellow);
+      border-radius: 18px; padding: 16px 14px; box-shadow: 0 8px 24px #0008;
+    }
+    .tip-card .how { text-shadow: none; }
+    .tip-card .disc { text-shadow: none; }
+    .load-bar {
+      width: min(260px, 78%); height: 12px; border: 2px solid var(--cream);
+      border-radius: 999px; background: #3A2A6A; overflow: hidden; margin: 8px auto;
+    }
+    .load-bar i { display: block; height: 100%; width: 0; background: var(--cream); }
+    #load-err { color: var(--danger); }
+    #away {
+      position: absolute; left: 12px; right: 12px; top: 64px; z-index: 15;
+      background: var(--cream); color: var(--ink); border: 3px solid var(--yellow);
+      border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 14px;
+      text-align: center; box-shadow: 0 6px 18px #0007; pointer-events: none;
+    }
+    .bar-wrap { text-align: left; margin: 10px 0 8px; }
+    .bar-lab { display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; color: var(--yellow); }
+    .skill-bar {
+      height: 22px; border: 3px solid var(--ink); border-radius: 12px;
+      background: #1A1028; overflow: hidden; margin-top: 6px;
+    }
+    .skill-bar i { display: block; height: 100%; width: 0; background: var(--yellow); transition: width 0.6s ease; }
+    details.how-scored {
+      text-align: left; margin: 10px 0; background: #1A1028; border-radius: 12px; padding: 8px 10px;
+      border: 2px solid var(--wood);
+    }
+    details.how-scored summary {
+      cursor: pointer; font-weight: 900; color: var(--yellow); font-size: 14px;
+    }
+    details.how-scored p {
+      margin: 8px 0 0; font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--cream);
+    }
+    #last-chip { margin: 0 0 8px; font-size: 13px; font-weight: 800; color: var(--yellow); text-shadow: 0 2px 6px #000; }
+    @media (max-width: 360px) {
+      .matrix { gap: 5px; }
+      .choices { gap: 8px; }
+      .choices button { min-height: 76px; padding: 6px; }
+      .chip.mode.practice { font-size: 13px; }
+    }
+    @media (max-width: 320px) {
+      /* Keep 3 columns so the matrix still reads; shrink gutters instead of a 2×3 wrap. */
+      .matrix { gap: 4px; }
+      .cell { border-width: 2px; border-radius: 10px; }
+      .choices button { min-height: 70px; }
+    }
+    @media (max-height: 700px) {
+      .splash-card { padding: 10px 8px; }
+      .splash-card h1 { margin-bottom: 4px; }
+      .splash-card .how, .splash-card .disc { margin-bottom: 4px; font-size: 12px; }
+      .play { font-size: 16px; min-height: 46px; padding: 10px 14px; }
+      .play.soon { min-height: 36px; font-size: 12px; }
+    }
+    @media (max-height: 640px) {
+      .choices button { min-height: 68px; }
+      .overlay h1 { font-size: clamp(20px, 6.5vw, 28px); }
+      .play { font-size: 16px; min-height: 46px; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="booting menu">
+    <div id="hud">
+      <div class="hud-row">
+        <div class="chip mode" id="chip-mode">PRACTICE</div>
+        <div class="chip item" id="chip-item">Item 1/3</div>
+        <div class="chip time" id="chip-time">1:00</div>
+      </div>
+      <div id="time-bar" aria-hidden="true"><i id="time-fill"></i></div>
+    </div>
+    <div id="play">
+      <div class="matrix" id="matrix" aria-label="Camp matrix"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+    <p class="honest" id="honest-play">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+    <div id="away" class="hidden">Away — item closed.</div>
+
+    <div id="boot-load" class="overlay center" role="status" aria-live="polite">
+      <h2>Loading…</h2>
+      <div class="load-bar"><i id="load-fill"></i></div>
+      <p class="how" id="load-pct">0%</p>
+      <p class="how hidden" id="load-err">Art failed to load. Stay here — never blank grids.</p>
+      <button class="play hidden" id="btn-load-retry" type="button">RETRY</button>
+    </div>
+
+    <div id="splash" class="overlay hidden">
+      <img class="hero" src="assets/splash.jpg" alt="" />
+      <div class="tip-card splash-card">
+        <h1>BOBER<br />BRAIN CAMP</h1>
+        <p class="tag">Fan game by a holder.</p>
+        <p class="how">Train at Brain Camp — puzzles, people sense, trivia. Not an official IQ score.</p>
+        <p class="how">Short rounds. Play to improve, not to diagnose.</p>
+        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <p id="last-chip" class="hidden"></p>
+        <div class="end-actions">
+          <button class="play" id="btn-start" type="button" disabled>START CAMP</button>
+          <div class="ghost-row">
+            <button class="play soon" type="button" disabled>Train · Soon</button>
+            <button class="play soon" type="button" disabled>Trivia · Soon</button>
+            <button class="play soon" type="button" disabled>EQ · Soon</button>
+            <button class="play soon" type="button" disabled>Museum · Soon</button>
+          </div>
+        </div>
+        <p class="holder">Fan game by a holder.</p>
+        <p class="hub-link"><a href="https://ccosma1.github.io/green-home-games/">More games · Green Home Games</a></p>
+      </div>
+    </div>
+
+    <div id="confirm" class="overlay center hidden" role="dialog" aria-label="Start Assess">
+      <div class="tip-card">
+        <h2>PRACTICE DONE</h2>
+        <p class="how">That round was unscored. It does not feed your profile.</p>
+        <p class="how">Assess is 12 items · 45s each · no pause. Stay on this page.</p>
+        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <div class="end-actions">
+          <button class="play" id="btn-assess" type="button">START ASSESS</button>
+          <button class="play ghost" id="btn-confirm-back" type="button">Back to Splash</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="summary" class="overlay center hidden" role="dialog" aria-label="Assess summary">
+      <div class="tip-card">
+        <h2>CAMP BLOCK DONE</h2>
+        <p class="how" id="sum-line">0 / 12 correct</p>
+        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <button class="play" id="btn-to-profile" type="button">PROFILE</button>
+      </div>
+    </div>
+
+    <div id="profile" class="overlay hidden">
+      <img class="hero" src="assets/profile.jpg" alt="" />
+      <h1>PROFILE</h1>
+      <div class="tip-card" style="margin-bottom:10px;">
+        <div class="bar-wrap">
+          <div class="bar-lab"><span>Reasoning</span><span id="reason-num">0</span></div>
+          <div class="skill-bar" aria-label="Reasoning skill"><i id="reason-bar"></i></div>
+        </div>
+        <p class="how" id="prof-correct">0 / 12 correct</p>
+        <p class="how" id="prof-cohort">vs Brain Camp players</p>
+        <p class="disc">Beta norms (early).</p>
+        <p class="disc">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
+        <details class="how-scored">
+          <summary>How scored</summary>
+          <p>Reasoning index (0–100) uses Assess only. Practice does not count.</p>
+          <p>Accuracy: (correct ÷ 12) × 80.</p>
+          <p>Speed: average leftover time on correct items, scaled to at most 20, then multiplied by (correct ÷ 12). Fast guessing cannot fill the bar.</p>
+          <p>Index = accuracy + speed, rounded, 0–100.</p>
+          <p>Cohort line uses beta seed norms until a real camp cohort exists.</p>
+        </details>
+        <div class="end-actions">
+          <button class="play" id="btn-retry" type="button">RETRY ASSESS</button>
+          <button class="play ghost" id="btn-splash" type="button">Back to Splash</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+(function () {
+  "use strict";
+
+  var DISC = "Fan game skill index — not a clinical or diagnostic test. Not an IQ score.";
+  var SAVE_KEY = "bober-brain-camp-v1";
+  var ASSESS_N = 12;
+  var PRACTICE_N = 3;
+  var T_PRACTICE = 60;
+  var T_ASSESS = 45;
+
+  // beta seed norms — replace when real cohort exists
+  // Temporary Form A table for P0: mean 52, sd 16 on the 0–100 Reasoning index.
+  var SEED_MEAN = 52;
+  var SEED_SD = 16;
+
+  var TINT = {
+    wood: "#8B5A2B",
+    cream: "#F4E6C3",
+    ice: "#A8C4E8",
+    moss: "#3D6B38",
+    gold: "#F5C400"
+  };
+  var INK = "#1A1028";
+
+  var app = document.getElementById("app");
+  var matrixEl = document.getElementById("matrix");
+  var choicesEl = document.getElementById("choices");
+  var PRE = { total: 0, ready: 0, failed: 0, needFail: 0, done: false, blocked: true, bitmaps: {} };
+
+  function G(f, n, r, t, m) {
+    return { f: f, n: n == null ? 1 : n, r: r || 0, t: t || "wood", m: m || "none" };
+  }
+  function U(a, b) {
+    return { f: "combo", a: a, b: b, n: 1, r: 0, t: "wood", m: "none" };
+  }
+  function gk(g) {
+    if (!g) return "";
+    if (g.f === "combo") return "combo|" + gk(g.a) + "|" + gk(g.b);
+    return [g.f, g.n, g.r, g.t, g.m].join(":");
+  }
+  function mk(id, band, eight, ans, d1, d2, d3) {
+    return { id: id, band: band, cells: eight.concat([null]), ans: ans, distractors: [d1, d2, d3] };
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function fillStroke(ctx, fill) {
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = Math.max(2.5, ctx.lineWidth || 2.5);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawStick(ctx, x, y, s, fill) {
+    var w = s * 0.86, h = s * 0.18;
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, h / 2);
+    fillStroke(ctx, fill);
+  }
+  function drawDam(ctx, x, y, s, fill) {
+    var w = s * 0.88, h = s * 0.28;
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, h / 2);
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.ellipse(x - w / 2 + h * 0.45, y, h * 0.38, h * 0.38, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#5C3A1A";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2 - h * 0.45, y, h * 0.38, h * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x - w / 2 + h * 0.45, y, h * 0.16, h * 0.16, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#C4A574";
+    ctx.fill();
+  }
+  function drawSnow(ctx, x, y, s, fill) {
+    var r = s * 0.42;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = fill;
+    ctx.lineWidth = Math.max(4, s * 0.12);
+    ctx.lineCap = "round";
+    var i;
+    for (i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -r);
+      ctx.stroke();
+      ctx.rotate(Math.PI / 3);
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(x, y, r + 1, 0, Math.PI * 2);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  function drawLodge(ctx, x, y, s, fill) {
+    var w = s * 0.7, h = s * 0.42;
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.46);
+    ctx.lineTo(x + w / 2 + 4, y - s * 0.08);
+    ctx.lineTo(x - w / 2 - 4, y - s * 0.08);
+    ctx.closePath();
+    fillStroke(ctx, "#C62828");
+    roundRect(ctx, x - w / 2, y - s * 0.1, w, h, 4);
+    fillStroke(ctx, fill);
+    roundRect(ctx, x - s * 0.08, y + s * 0.02, s * 0.16, h * 0.55, 2);
+    ctx.fillStyle = "#F4E6C3";
+    ctx.fill();
+    ctx.strokeStyle = INK;
+    ctx.stroke();
+  }
+  function drawBober(ctx, x, y, s, fill) {
+    ctx.beginPath();
+    ctx.ellipse(x - s * 0.28, y + s * 0.06, s * 0.16, s * 0.1, -0.4, 0, Math.PI * 2);
+    fillStroke(ctx, "#5C3A1A");
+    ctx.beginPath();
+    ctx.ellipse(x, y + s * 0.06, s * 0.34, s * 0.26, 0, 0, Math.PI * 2);
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.ellipse(x - s * 0.12, y - s * 0.22, s * 0.11, s * 0.13, 0, 0, Math.PI * 2);
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.ellipse(x + s * 0.12, y - s * 0.22, s * 0.11, s * 0.13, 0, 0, Math.PI * 2);
+    fillStroke(ctx, fill);
+  }
+
+  function drawOne(ctx, fam, x, y, s, fill) {
+    if (fam === "stick") drawStick(ctx, x, y, s, fill);
+    else if (fam === "dam") drawDam(ctx, x, y, s, fill);
+    else if (fam === "snow") drawSnow(ctx, x, y, s, fill);
+    else if (fam === "lodge") drawLodge(ctx, x, y, s, fill);
+    else drawBober(ctx, x, y, s, fill);
+  }
+
+  function offsets(n) {
+    if (n <= 1) return [[0, 0]];
+    if (n === 2) return [[0, -0.2], [0, 0.2]];
+    return [[0, -0.24], [-0.22, 0.16], [0.22, 0.16]];
+  }
+
+  function paintGlyph(ctx, g, size) {
+    if (!g) return;
+    if (g.f === "combo") {
+      ctx.save();
+      ctx.translate(size * 0.12, size * 0.02);
+      ctx.scale(0.68, 0.68);
+      paintSimple(ctx, g.a, size);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(size * 0.12, size * 0.36);
+      ctx.scale(0.68, 0.68);
+      paintSimple(ctx, g.b, size);
+      ctx.restore();
+      return;
+    }
+    paintSimple(ctx, g, size);
+  }
+
+  function paintSimple(ctx, g, size) {
+    var fill = TINT[g.t] || TINT.wood;
+    var n = g.n || 1;
+    var pts = offsets(n);
+    var unit = n <= 1 ? size * 0.68 : size * 0.40;
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.rotate((g.r || 0) * Math.PI / 180);
+    var i, p;
+    for (i = 0; i < pts.length; i++) {
+      p = pts[i];
+      drawOne(ctx, g.f, p[0] * size, p[1] * size, unit, fill);
+    }
+    ctx.restore();
+    if (g.m === "dot") {
+      ctx.beginPath();
+      ctx.arc(size * 0.82, size * 0.18, size * 0.08, 0, Math.PI * 2);
+      ctx.fillStyle = "#F5C400";
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+    } else if (g.m === "ring") {
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+      ctx.strokeStyle = "#F5C400";
+      ctx.lineWidth = Math.max(3, size * 0.05);
+      ctx.stroke();
+    }
+  }
+
+  function raster(g) {
+    var key = gk(g) || "miss";
+    if (PRE.bitmaps[key]) return PRE.bitmaps[key];
+    var css = 128;
+    var dpr = 2;
+    var c = document.createElement("canvas");
+    c.width = css * dpr;
+    c.height = css * dpr;
+    var ctx = c.getContext("2d");
+    ctx.scale(dpr, dpr);
+    if (g) paintGlyph(ctx, g, css);
+    PRE.bitmaps[key] = c;
+    return c;
+  }
+
+  function tileCopy(g) {
+    var src = raster(g);
+    var c = document.createElement("canvas");
+    c.width = src.width;
+    c.height = src.height;
+    c.getContext("2d").drawImage(src, 0, 0);
+    return c;
+  }
+
+  var S = "stick", D = "dam", N = "snow", L = "lodge", B = "bober";
+  var W = "wood", C = "cream", I = "ice", M = "moss", Y = "gold";
+
+  var PRACTICE = [
+    mk("P1", 0,
+      [G(S,1), G(S,2), G(S,3), G(S,1), G(S,2), G(S,3), G(S,1), G(S,2)],
+      G(S,3), G(S,1), G(S,2), G(D,3)),
+    mk("P2", 0,
+      [G(D,1,0), G(D,1,45), G(D,1,90), G(D,1,0), G(D,1,45), G(D,1,90), G(D,1,0), G(D,1,45)],
+      G(D,1,90), G(D,1,0), G(D,1,45), G(D,1,135)),
+    mk("P3", 0,
+      [G(N,1,0,W), G(N,1,0,C), G(N,1,0,I), G(N,1,0,W), G(N,1,0,C), G(N,1,0,I), G(N,1,0,W), G(N,1,0,C)],
+      G(N,1,0,I), G(N,1,0,W), G(N,1,0,Y), G(S,1,0,I))
+  ];
+
+  // Form A pool (P0). Adaptive lite picks 12 without repeats. Band 1 easy / 2 mid / 3 hard.
+  var FORM_A = [
+    mk("E1", 1,
+      [G(L,1), G(L,2), G(L,3), G(L,1), G(L,2), G(L,3), G(L,1), G(L,2)],
+      G(L,3), G(L,1), G(L,2), G(S,3)),
+    mk("E2", 1,
+      [G(B,1,0,W), G(B,1,0,C), G(B,1,0,Y), G(B,1,0,W), G(B,1,0,C), G(B,1,0,Y), G(B,1,0,W), G(B,1,0,C)],
+      G(B,1,0,Y), G(B,1,0,W), G(B,1,0,I), G(L,1,0,Y)),
+    mk("E3", 1,
+      [G(S,1,0), G(S,1,45), G(S,1,90), G(S,1,0), G(S,1,45), G(S,1,90), G(S,1,0), G(S,1,45)],
+      G(S,1,90), G(S,1,0), G(S,1,135), G(S,1,45)),
+    mk("E4", 1,
+      [G(S,1), G(S,1), G(S,1), G(D,1), G(D,1), G(D,1), G(N,1), G(N,1)],
+      G(N,1), G(S,1), G(D,1), G(L,1)),
+    mk("E5", 1,
+      [G(S,1), G(D,1), G(N,1), G(D,1), G(N,1), G(S,1), G(N,1), G(S,1)],
+      G(D,1), G(S,1), G(N,1), G(L,1)),
+    mk("E6", 1,
+      [G(D,1), G(D,2), G(D,3), G(D,1), G(D,2), G(D,3), G(D,1), G(D,2)],
+      G(D,3), G(D,1), G(D,2), G(B,3)),
+    mk("E7", 1,
+      [G(B,1), G(B,1), G(B,1), G(B,2), G(B,2), G(B,2), G(B,3), G(B,3)],
+      G(B,3), G(B,1), G(B,2), G(S,3)),
+    mk("E8", 1,
+      [G(S,1,0,W), G(S,1,0,I), G(S,1,0,Y), G(S,1,0,W), G(S,1,0,I), G(S,1,0,Y), G(S,1,0,W), G(S,1,0,I)],
+      G(S,1,0,Y), G(S,1,0,W), G(S,1,0,C), G(N,1,0,Y)),
+
+    mk("M1", 2,
+      [G(S,1,0), G(S,1,45), G(S,1,90), G(D,1,0), G(D,1,45), G(D,1,90), G(L,1,0), G(L,1,45)],
+      G(L,1,90), G(L,1,0), G(S,1,90), G(L,1,45)),
+    mk("M2", 2,
+      [G(S,1,0), G(S,1,45), G(S,1,90), G(S,2,0), G(S,2,45), G(S,2,90), G(S,3,0), G(S,3,45)],
+      G(S,3,90), G(S,3,0), G(S,2,90), G(D,3,90)),
+    mk("M3", 2,
+      [G(S,1,0,W), G(D,1,0,W), G(N,1,0,W), G(S,1,0,I), G(D,1,0,I), G(N,1,0,I), G(S,1,0,Y), G(D,1,0,Y)],
+      G(N,1,0,Y), G(S,1,0,Y), G(N,1,0,W), G(L,1,0,Y)),
+    mk("M4", 2,
+      [G(S,1), G(S,1), G(S,2), G(S,1), G(S,2), G(S,3), G(S,2), G(S,1)],
+      G(S,3), G(S,1), G(S,2), G(D,3)),
+    mk("M5", 2,
+      [G(S,1), G(D,1), U(G(S,1), G(D,1)), G(N,1), G(L,1), U(G(N,1), G(L,1)), G(B,1), G(S,1)],
+      U(G(B,1), G(S,1)), U(G(B,1), G(D,1)), G(B,1), G(S,1)),
+    mk("M6", 2,
+      [G(N,1,0,W), G(N,1,0,I), G(N,1,0,Y), G(L,1,0,W), G(L,1,0,I), G(L,1,0,Y), G(D,1,0,W), G(D,1,0,I)],
+      G(D,1,0,Y), G(D,1,0,W), G(N,1,0,Y), G(B,1,0,Y)),
+    mk("M7", 2,
+      [G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot")],
+      G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(S,1,0,W,"ring")),
+    mk("M8", 2,
+      [G(S,2,45), G(D,2,45), G(N,2,45), G(S,2,45), G(D,2,45), G(N,2,45), G(S,2,45), G(D,2,45)],
+      G(N,2,45), G(S,2,45), G(L,2,45), G(N,1,45)),
+
+    mk("H1", 3,
+      [G(S,1,0), G(D,1,45), G(N,1,90), G(D,1,0), G(N,1,45), G(S,1,90), G(N,1,0), G(S,1,45)],
+      G(D,1,90), G(S,1,90), G(D,1,0), G(N,1,45)),
+    mk("H2", 3,
+      [G(S,1), G(S,2), G(S,3), G(S,2), G(S,2), G(S,2), G(S,3), G(S,1)],
+      G(S,2), G(S,1), G(S,3), G(D,2)),
+    mk("H3", 3,
+      [G(L,1), G(N,1), U(G(L,1), G(N,1)), G(D,1), G(B,1), U(G(D,1), G(B,1)), G(S,1), G(N,1)],
+      U(G(S,1), G(N,1)), U(G(S,1), G(L,1)), G(S,1), G(N,1)),
+    mk("H4", 3,
+      [G(S,1,0,W), G(S,2,0,I), G(S,3,0,Y), G(D,1,0,I), G(D,2,0,Y), G(D,3,0,W), G(L,1,0,Y), G(L,2,0,W)],
+      G(L,3,0,I), G(L,3,0,Y), G(L,3,0,W), G(S,3,0,I)),
+    mk("H5", 3,
+      [G(B,1,0), G(B,2,45), G(B,3,90), G(B,1,135), G(B,2,0), G(B,3,45), G(B,1,90), G(B,2,135)],
+      G(B,3,0), G(B,3,90), G(B,1,0), G(S,3,0)),
+    mk("H6", 3,
+      [U(G(S,1), G(D,1)), G(S,1), G(D,1), U(G(N,1), G(L,1)), G(N,1), G(L,1), U(G(B,1), G(S,1)), G(B,1)],
+      G(S,1), G(B,1), U(G(B,1), G(S,1)), G(D,1)),
+    mk("H7", 3,
+      [G(S,1,0,W,"none"), G(D,1,0,W,"dot"), G(N,1,0,W,"ring"), G(D,1,0,W,"none"), G(N,1,0,W,"dot"), G(S,1,0,W,"ring"), G(N,1,0,W,"none"), G(S,1,0,W,"dot")],
+      G(D,1,0,W,"ring"), G(S,1,0,W,"ring"), G(D,1,0,W,"dot"), G(L,1,0,W,"ring")),
+    mk("H8", 3,
+      [G(S,1,0), G(D,2,45), G(N,3,90), G(D,1,0), G(N,2,45), G(S,3,90), G(N,1,0), G(S,2,45)],
+      G(D,3,90), G(S,3,90), G(D,3,0), G(N,3,90))
+  ];
+
+  // Fix M4 distractor (no n=4). Already G(D,3) via the || path.
+  FORM_A.forEach(function (it) {
+    it.distractors = it.distractors.filter(Boolean);
+    while (it.distractors.length < 3) it.distractors.push(G(L, 1, 135, M));
+  });
+
+  function shuffle(arr) {
+    var a = arr.slice(), i, j, t;
+    for (i = a.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function collectGlyphs() {
+    var out = [], seen = {};
+    function add(g) {
+      var k = gk(g);
+      if (!k || seen[k]) return;
+      seen[k] = 1;
+      out.push(g);
+    }
+    PRACTICE.concat(FORM_A).forEach(function (it) {
+      it.cells.forEach(add);
+      add(it.ans);
+      it.distractors.forEach(add);
+    });
+    return out;
+  }
+
+  function validatePool() {
+    var ids = {}, ok = true;
+    PRACTICE.concat(FORM_A).forEach(function (it) {
+      if (ids[it.id]) ok = false;
+      ids[it.id] = 1;
+      if (it.cells.length !== 9 || it.cells[8] !== null) ok = false;
+      var ans = gk(it.ans);
+      it.distractors.forEach(function (d) { if (gk(d) === ans) ok = false; });
+      if (it.distractors.length !== 3) ok = false;
+    });
+    if (FORM_A.length < 24) ok = false;
+    return ok;
+  }
+
+  function erf(x) {
+    var s = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    var a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+    var t = 1 / (1 + p * x);
+    var y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return s * y;
+  }
+
+  // Scoring (P0). Practice excluded.
+  // accuracy = (correct / 12) * 80
+  // speedFrac = mean(remain / 45) over correct items only (0 if none)
+  // speed = speedFrac * 20 * (correct / 12)
+  //   Guess-all-fast ~3/12 instant → 20 + 5 = 25, not 100.
+  // index = round(clamp(accuracy + speed, 0, 100))
+  function scoreIndex(correct, remains) {
+    var acc = (correct / ASSESS_N) * 80;
+    var i, sum = 0, n = 0;
+    for (i = 0; i < remains.length; i++) {
+      if (remains[i] != null) {
+        sum += Math.max(0, Math.min(1, remains[i] / T_ASSESS));
+        n += 1;
+      }
+    }
+    var speedFrac = n ? (sum / n) : 0;
+    var speed = speedFrac * 20 * (correct / ASSESS_N);
+    var idx = Math.round(Math.max(0, Math.min(100, acc + speed)));
+    return { index: idx, acc: acc, speed: speed };
+  }
+
+  function percentile(x) {
+    var z = (x - SEED_MEAN) / SEED_SD;
+    var p = Math.round(100 * (0.5 * (1 + erf(z / Math.SQRT2))));
+    return Math.max(1, Math.min(99, p));
+  }
+
+  var mode = "boot";
+  var run = null;
+  var itemLocked = false;
+  var raf = 0;
+  var awayTimer = 0;
+
+  function hideOverlays() {
+    ["boot-load", "splash", "confirm", "summary", "profile"].forEach(function (id) {
+      document.getElementById(id).classList.add("hidden");
+    });
+  }
+  function showOverlay(id) {
+    hideOverlays();
+    document.getElementById(id).classList.remove("hidden");
+  }
+  function setMenu(on) {
+    app.classList.toggle("menu", on);
+    app.classList.toggle("booting", on);
+  }
+
+  function loadSave() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveProfile(p) {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+
+  function paintLast() {
+    var s = loadSave();
+    var el = document.getElementById("last-chip");
+    if (s && typeof s.reasoning === "number") {
+      el.textContent = "Last camp · Reasoning " + s.reasoning;
+      el.classList.remove("hidden");
+    } else {
+      el.classList.add("hidden");
+    }
+  }
+
+  function goSplash() {
+    stopTimer();
+    mode = "splash";
+    run = null;
+    setMenu(true);
+    showOverlay("splash");
+    paintLast();
+    document.getElementById("btn-start").disabled = PRE.blocked;
+  }
+
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.ceil(sec));
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function renderItem(it) {
+    matrixEl.innerHTML = "";
+    var i, cell, cnv, miss;
+    for (i = 0; i < 9; i++) {
+      cell = document.createElement("div");
+      if (!it.cells[i]) {
+        cell.className = "cell miss";
+        cell.textContent = "?";
+        miss = cell;
+      } else {
+        cell.className = "cell";
+        cnv = tileCopy(it.cells[i]);
+        cell.appendChild(cnv);
+      }
+      matrixEl.appendChild(cell);
+    }
+    var opts = shuffle([it.ans].concat(it.distractors));
+    it._opts = opts;
+    it._correctKey = gk(it.ans);
+    choicesEl.innerHTML = "";
+    opts.forEach(function (g, idx) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", "Choice " + (idx + 1));
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () { pickChoice(idx, b); });
+      choicesEl.appendChild(b);
+    });
+  }
+
+  function hudFor() {
+    var practice = mode === "practice";
+    var chip = document.getElementById("chip-mode");
+    chip.textContent = practice ? "PRACTICE" : "ASSESS";
+    chip.classList.toggle("practice", practice);
+    var n = practice ? PRACTICE_N : ASSESS_N;
+    document.getElementById("chip-item").textContent = "Item " + (run.i + 1) + "/" + n;
+  }
+
+  function startTimer() {
+    stopTimer();
+    run.t0 = performance.now();
+    run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
+    tickTimer();
+  }
+  function stopTimer() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+  function remainNow() {
+    if (!run || run.t0 == null) return 0;
+    return Math.max(0, run.limit - (performance.now() - run.t0) / 1000);
+  }
+  function tickTimer() {
+    if (!run || (mode !== "practice" && mode !== "assess")) return;
+    var r = remainNow();
+    var chip = document.getElementById("chip-time");
+    chip.textContent = fmtTime(r);
+    chip.classList.toggle("low", r <= 8);
+    document.getElementById("time-fill").style.transform = "scaleX(" + (r / run.limit) + ")";
+    if (r <= 0) {
+      endItem(false, 0, "time");
+      return;
+    }
+    raf = requestAnimationFrame(tickTimer);
+  }
+
+  function pickChoice(idx, btn) {
+    if (itemLocked || !run || !run.cur) return;
+    var g = run.cur._opts[idx];
+    var ok = gk(g) === run.cur._correctKey;
+    if (btn) btn.classList.add("picked");
+    endItem(ok, remainNow(), "tap");
+  }
+
+  function endItem(ok, remain, why) {
+    if (itemLocked || !run || !run.cur) return;
+    itemLocked = true;
+    stopTimer();
+    Array.prototype.forEach.call(choicesEl.querySelectorAll("button"), function (b) { b.disabled = true; });
+    if (mode === "assess") {
+      run.ok += ok ? 1 : 0;
+      run.remains.push(ok ? remain : null);
+    }
+    if (mode === "assess") {
+      if (ok) { run.corrStreak += 1; run.wrongStreak = 0; if (run.corrStreak >= 2) { run.band = Math.min(3, run.band + 1); run.corrStreak = 0; } }
+      else { run.wrongStreak += 1; run.corrStreak = 0; if (run.wrongStreak >= 2) { run.band = Math.max(1, run.band - 1); run.wrongStreak = 0; } }
+    }
+    if (why === "away") flashAway();
+    setTimeout(nextAfterItem, why === "away" ? 700 : 280);
+  }
+
+  function flashAway() {
+    var el = document.getElementById("away");
+    el.classList.remove("hidden");
+    clearTimeout(awayTimer);
+    awayTimer = setTimeout(function () { el.classList.add("hidden"); }, 900);
+  }
+
+  function pickFromBand() {
+    var band = run.band, used = run.used;
+    function cand(pred) {
+      return FORM_A.filter(function (it) { return !used[it.id] && pred(it); });
+    }
+    var pool = cand(function (it) { return it.band === band; });
+    if (!pool.length) pool = cand(function (it) { return Math.abs(it.band - band) === 1; });
+    if (!pool.length) pool = cand(function () { return true; });
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function present(it) {
+    run.cur = it;
+    run.used[it.id] = 1;
+    itemLocked = false;
+    renderItem(it);
+    hudFor();
+    startTimer();
+  }
+
+  function nextAfterItem() {
+    if (!run) return;
+    run.i += 1;
+    if (mode === "practice") {
+      if (run.i >= PRACTICE_N) {
+        mode = "confirm";
+        setMenu(true);
+        showOverlay("confirm");
+        return;
+      }
+      present(PRACTICE[run.i]);
+      return;
+    }
+    if (run.i >= ASSESS_N) {
+      finishAssess();
+      return;
+    }
+    var it = pickFromBand();
+    if (!it) { finishAssess(); return; }
+    present(it);
+  }
+
+  function beginPractice() {
+    if (PRE.blocked) return;
+    hideOverlays();
+    setMenu(false);
+    mode = "practice";
+    run = { i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0, ok: 0, remains: [], cur: null };
+    PRACTICE.forEach(function (it) { run.used[it.id] = 1; });
+    present(PRACTICE[0]);
+  }
+
+  function beginAssess() {
+    if (PRE.blocked) return;
+    hideOverlays();
+    setMenu(false);
+    mode = "assess";
+    run = { i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0, ok: 0, remains: [], cur: null };
+    var it = pickFromBand();
+    present(it);
+  }
+
+  function finishAssess() {
+    stopTimer();
+    var sc = scoreIndex(run.ok, run.remains);
+    var pct = percentile(sc.index);
+    run.result = {
+      reasoning: sc.index,
+      correct: run.ok,
+      total: ASSESS_N,
+      pct: pct,
+      at: Date.now(),
+      speed: Math.round(sc.speed * 10) / 10
+    };
+    saveProfile(run.result);
+    document.getElementById("sum-line").textContent = run.ok + " / " + ASSESS_N + " correct";
+    mode = "summary";
+    setMenu(true);
+    showOverlay("summary");
+  }
+
+  function showProfile(data) {
+    var p = data || loadSave();
+    if (!p) p = { reasoning: 0, correct: 0, total: 12, pct: percentile(0) };
+    document.getElementById("reason-num").textContent = String(p.reasoning);
+    document.getElementById("reason-bar").style.width = p.reasoning + "%";
+    document.getElementById("prof-correct").textContent = p.correct + " / " + (p.total || 12) + " correct";
+    document.getElementById("prof-cohort").textContent = "vs Brain Camp players · " + p.pct + "th percentile";
+    mode = "profile";
+    setMenu(true);
+    showOverlay("profile");
+  }
+
+  function onAway() {
+    if (itemLocked) return;
+    if (mode !== "assess") return;
+    if (!run || !run.cur) return;
+    if (document.visibilityState !== "hidden") return;
+    endItem(false, 0, "away");
+  }
+
+  document.addEventListener("visibilitychange", onAway);
+  window.addEventListener("pagehide", function () {
+    if (document.visibilityState === "hidden") onAway();
+  });
+
+  document.getElementById("btn-start").addEventListener("click", beginPractice);
+  document.getElementById("btn-assess").addEventListener("click", beginAssess);
+  document.getElementById("btn-confirm-back").addEventListener("click", goSplash);
+  document.getElementById("btn-to-profile").addEventListener("click", function () {
+    showProfile(run && run.result);
+  });
+  document.getElementById("btn-retry").addEventListener("click", beginAssess);
+  document.getElementById("btn-splash").addEventListener("click", goSplash);
+  document.getElementById("btn-load-retry").addEventListener("click", function () { bootAssets(); });
+
+  function setPlayLocked(on) {
+    PRE.blocked = on;
+    document.getElementById("btn-start").disabled = on;
+  }
+
+  function bootTick() {
+    var pct = PRE.total ? Math.round(100 * PRE.ready / PRE.total) : 0;
+    document.getElementById("load-fill").style.width = pct + "%";
+    document.getElementById("load-pct").textContent = PRE.failed ? (PRE.ready + "/" + PRE.total) : (pct + "%");
+    if (PRE.ready + PRE.failed < PRE.total) return;
+    PRE.done = true;
+    if (PRE.needFail > 0) {
+      setPlayLocked(true);
+      document.getElementById("load-err").classList.remove("hidden");
+      document.getElementById("btn-load-retry").classList.remove("hidden");
+      document.getElementById("boot-load").classList.remove("hidden");
+      return;
+    }
+    setPlayLocked(false);
+    document.getElementById("boot-load").classList.add("hidden");
+    if (/\bplaytest=1\b/.test(location.search)) {
+      runPlaytest();
+    } else if (/\bprofile=1\b/.test(location.search)) {
+      showProfile({ reasoning: 64, correct: 9, total: 12, pct: percentile(64) });
+    } else if (/\bassess=1\b/.test(location.search)) {
+      beginAssess();
+    } else if (/\bgo=1\b/.test(location.search)) {
+      beginPractice();
+    } else {
+      goSplash();
+    }
+  }
+
+  function loadImg(src, required) {
+    PRE.total += 1;
+    var im = new Image();
+    im.onload = function () { PRE.ready += 1; bootTick(); };
+    im.onerror = function () {
+      PRE.failed += 1;
+      if (required) PRE.needFail += 1;
+      bootTick();
+    };
+    im.src = src;
+  }
+
+  function bootAssets() {
+    PRE.total = 0; PRE.ready = 0; PRE.failed = 0; PRE.needFail = 0; PRE.done = false; PRE.bitmaps = {};
+    document.getElementById("load-err").classList.add("hidden");
+    document.getElementById("btn-load-retry").classList.add("hidden");
+    document.getElementById("boot-load").classList.remove("hidden");
+    document.getElementById("load-fill").style.width = "0%";
+    hideOverlays();
+    document.getElementById("boot-load").classList.remove("hidden");
+    setPlayLocked(true);
+    loadImg("assets/splash.jpg", true);
+    loadImg("assets/profile.jpg", true);
+    loadImg("assets/icons/icon-192.png", false);
+    var glyphs = collectGlyphs();
+    var i;
+    for (i = 0; i < glyphs.length; i++) {
+      PRE.total += 1;
+      try {
+        raster(glyphs[i]);
+        PRE.ready += 1;
+      } catch (e) {
+        PRE.failed += 1;
+        PRE.needFail += 1;
+      }
+    }
+    bootTick();
+  }
+
+  function selfTest() {
+    var fails = [];
+    if (!validatePool()) fails.push("pool");
+    if (FORM_A.length < 24) fails.push("pool-size");
+    var guess = scoreIndex(3, [45, 45, 45]);
+    if (guess.index > 30) fails.push("guess-cap " + guess.index);
+    var maxed = scoreIndex(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
+    if (maxed.index !== 100) fails.push("max " + maxed.index);
+    var slow = scoreIndex(12, [0,0,0,0,0,0,0,0,0,0,0,0]);
+    if (slow.index !== 80) fails.push("slow " + slow.index);
+    var body = document.body.innerText;
+    var iq = (body.match(/IQ/g) || []).length;
+    if (iq < 1) fails.push("missing-disc");
+    if (/intelligence quotient/i.test(body)) fails.push("iq-words");
+    if (/WAIS|Raven|Mensa/i.test(body)) fails.push("clinical");
+    return fails;
+  }
+
+  window.BBC = {
+    scoreIndex: scoreIndex,
+    percentile: percentile,
+    FORM_A: FORM_A,
+    PRACTICE: PRACTICE,
+    validatePool: validatePool,
+    selfTest: selfTest,
+    DISC: DISC,
+    SEED_MEAN: SEED_MEAN,
+    SEED_SD: SEED_SD,
+    voidCurrent: function () { endItem(false, 0, "away"); },
+    getMode: function () { return mode; },
+    getRun: function () { return run; }
+  };
+
+  function runPlaytest() {
+    function tap(ok) {
+      if (!run || !run.cur || itemLocked) return false;
+      var opts = run.cur._opts, i, idx = -1;
+      for (i = 0; i < opts.length; i++) {
+        var match = gk(opts[i]) === run.cur._correctKey;
+        if (ok && match) { idx = i; break; }
+        if (!ok && !match) { idx = i; break; }
+      }
+      if (idx < 0) return false;
+      pickChoice(idx, choicesEl.querySelectorAll("button")[idx]);
+      return true;
+    }
+    beginPractice();
+    function step() {
+      if (mode === "practice") { tap(true); setTimeout(step, 360); return; }
+      if (mode === "confirm") { beginAssess(); setTimeout(step, 80); return; }
+      if (mode === "assess") {
+        if (run.i === 4 && run.cur && !itemLocked) {
+          window.BBC.voidCurrent();
+          setTimeout(step, 800);
+          return;
+        }
+        tap(run.i % 3 !== 0);
+        setTimeout(step, 360);
+        return;
+      }
+      if (mode === "summary") { showProfile(run.result); setTimeout(step, 80); return; }
+      if (mode === "profile") {
+        var p = loadSave();
+        var text = document.body.innerText;
+        var fails = [];
+        if (!/Reasoning/.test(text)) fails.push("no-reason");
+        if (!/Beta norms/.test(text)) fails.push("no-beta");
+        if (!/vs Brain Camp players/.test(text)) fails.push("no-cohort");
+        if (/intelligence quotient/i.test(text)) fails.push("iq-words");
+        if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
+        if (!p || typeof p.reasoning !== "number") fails.push("no-save");
+        if (typeof p.correct !== "number") fails.push("no-correct");
+        reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK " + p.correct + "/12 " + p.reasoning));
+        return;
+      }
+      reportTest("playtest-out", "PLAYTEST_FAIL mode=" + mode);
+    }
+    setTimeout(step, 200);
+  }
+
+  function reportTest(id, text) {
+    var el = document.getElementById(id) || document.createElement("pre");
+    el.id = id;
+    el.textContent = text;
+    el.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:99;background:#000;color:#0f0;font:12px monospace;padding:6px;white-space:pre-wrap;";
+    document.body.appendChild(el);
+  }
+
+  if (!validatePool()) console.warn("Brain Camp pool check failed");
+  bootAssets();
+
+  if (/\bselftest=1\b/.test(location.search)) {
+    setTimeout(function () {
+      var f = selfTest();
+      reportTest("selftest-out", f.length ? "FAIL " + f.join(",") : "SELFTEST_OK");
+    }, 80);
+  }
+})();
+</script>
+</body>
+</html>
