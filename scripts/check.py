@@ -55,6 +55,10 @@ if "Assess Speed" not in html:
     fails.append("missing Assess Speed")
 if "How we score" not in html:
     fails.append("missing How we score")
+if html.count("<summary>How scored</summary>") > 0:
+    fails.append("How scored accordion should be gone")
+if html.count('data-about') > 8:
+    fails.append("too many About scoring controls")
 if "About scoring" not in html:
     fails.append("missing About scoring")
 if "bober-brain-camp-run-v1" not in html:

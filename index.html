@@ -213,16 +213,10 @@
       background: #1A1028; overflow: hidden; margin-top: 6px;
     }
     .skill-bar i { display: block; height: 100%; width: 0; background: var(--yellow); transition: width 0.6s ease; }
-    details.how-scored {
-      text-align: left; margin: 10px 0; background: #1A1028; border-radius: 12px; padding: 8px 10px;
-      border: 2px solid var(--wood);
-    }
-    details.how-scored summary {
-      cursor: pointer; font-weight: 900; color: var(--yellow); font-size: 14px;
-    }
-    details.how-scored p {
-      margin: 8px 0 0; font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--cream);
-    }
+    #about-inner { text-align: left; max-height: min(78dvh, 640px); overflow: auto; }
+    #about-inner h2 { text-align: center; }
+    #about-inner .how { font-size: 13px; }
+    #about-inner .play { display: block; margin: 10px auto 0; }
     #last-chip { margin: 0 0 8px; font-size: 13px; font-weight: 800; color: var(--yellow); text-shadow: 0 2px 6px #000; }
     @media (max-width: 360px) {
       .matrix { gap: 5px; }
@@ -547,16 +541,6 @@
         </div>
         <p class="bar-meta">Beta norms (early). Assess bars stay separate. Social Read is practice only.</p>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
-        <details class="how-scored">
-          <summary>How scored</summary>
-          <p>Each bar uses its own Assess only. Practice never counts. Bars are not averaged.</p>
-          <p><b>Reasoning:</b> (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
-          <p><b>Memory:</b> (correct ÷ 10) × 85, plus leftover response time on correct items scaled to at most 15 then × (correct ÷ 10). Sequence must match; mashing cannot fill the bar.</p>
-          <p><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
-          <p>Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
-          <p>Train (drills and trivia) never feeds these bars or the cohort line.</p>
-          <p><b>Social Read:</b> practice index from 10 lodge scenarios. Preferred (kind-effective) choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6. Not an EQ score. Does not change Reasoning, Memory, or Speed.</p>
-        </details>
         <div class="end-actions">
           <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
           <button class="play camp ghost" id="btn-splash" type="button">Back to Splash</button>
@@ -571,7 +555,6 @@
         <p class="how">Camp cards. Fan game by a holder.</p>
         <div id="museum-grid"></div>
         <button class="play ghost" id="btn-museum-back" type="button">Back</button>
-        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
       </div>
     </div>
 
@@ -595,11 +578,17 @@
         <div class="tip-card" id="about-inner">
           <h2>About scoring</h2>
           <p class="how">Fan game skill index — not a clinical or diagnostic test. Not an IQ score.</p>
-          <p class="how">Assess = snapshot today. Practice does not feed the score.</p>
+          <p class="how">Assess = snapshot today. Practice does not feed Assess.</p>
           <p class="how">Cohort % = vs Brain Camp players (beta), rough not gospel.</p>
           <p class="how">Play for fun, not credentials. Fan game by a holder.</p>
           <p class="how">Train does not feed Assess bars or cohort %.</p>
           <p class="how">Social Read is lodge-scenario practice — not an EQ score. It does not change Assess bars.</p>
+          <p class="how">Bars are never averaged into one number.</p>
+          <p class="how"><b>Reasoning:</b> (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
+          <p class="how"><b>Memory:</b> (correct ÷ 10) × 85, plus leftover response time on correct items scaled to at most 15 then × (correct ÷ 10). Sequence must match; mashing cannot fill the bar.</p>
+          <p class="how"><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
+          <p class="how"><b>Social Read:</b> 10 lodge scenarios. Preferred choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6.</p>
+          <p class="how">Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
         </div>
       </div>
@@ -2690,7 +2679,10 @@
       b.innerHTML = '<div class="mus-art"><img alt="" src="' + c.thumb + '" /></div><div class="mus-body"><span class="mus-tag">' +
         (locked ? "Soon" : c.tag) + "</span><h3>" + c.name + "</h3><p>" +
         (locked ? c.tease : c.tease) + "</p></div>";
-      b.addEventListener("click", function () { openMusCard(c); });
+      b.addEventListener("click", function () {
+        if (c.id === "how") openAbout();
+        else openMusCard(c);
+      });
       grid.appendChild(b);
     });
   }
@@ -3071,8 +3063,11 @@
           var fails = [];
           if (!/Reasoning/.test(text) && !/How we score/.test(text)) fails.push("museum");
           if (!document.getElementById("museum-grid").children.length) fails.push("no-cards");
-          var card = document.querySelector(".mus-card");
-          if (card) card.click();
+          var cards = document.querySelectorAll(".mus-card");
+          if (cards[0]) cards[0].click();
+          if (document.getElementById("about").classList.contains("hidden")) fails.push("how-opens-about");
+          closeAbout();
+          if (cards[1]) cards[1].click();
           if (document.getElementById("mus-detail").classList.contains("hidden")) fails.push("mus-open");
           document.getElementById("mus-detail").click();
           if (!document.getElementById("mus-detail").classList.contains("hidden")) fails.push("mus-away");
@@ -3089,6 +3084,7 @@
             if (!/Social Read/.test(text)) fails.push("no-social-bar");
             if (!/Beta norms/.test(text)) fails.push("no-beta");
             if (!/About scoring/.test(text)) fails.push("no-about");
+            if (/How scored/.test(text)) fails.push("double-how-scored");
             if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");
             if (/\d+th percentile/.test(text) && !/\d+(1[123]th|st|nd|rd) percentile/.test(text)) {
               /* 11th/12th/13th are fine; 1th/2th/3th/23th are not */
