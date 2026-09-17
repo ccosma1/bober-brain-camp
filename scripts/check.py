@@ -61,9 +61,16 @@ if "bober-brain-camp-run-v1" not in html:
     fails.append("missing run save key")
 if "function ordinal" not in html:
     fails.append("missing ordinal helper")
-for stub in ("Train · Soon", "Trivia · Soon", "EQ · Soon"):
-    if stub not in html:
-        fails.append(f"missing stub {stub}")
+if 'id="btn-train"' not in html:
+    fails.append("missing Train button")
+if "EQ · Soon" not in html:
+    fails.append("missing EQ Soon")
+if "TRAIN_KEY" not in html:
+    fails.append("missing train save key")
+if "PRACTICE ONLY" not in html:
+    fails.append("missing practice-only chip")
+if html.count('TQ') < 40:
+    fails.append("trivia pool too small")
 if re.search(r"connect wallet|wallet connect", html, re.I):
     fails.append("wallet connect string")
 

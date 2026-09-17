@@ -329,6 +329,49 @@
     #mus-detail.locked .mus-detail-art img { filter: brightness(0); opacity: 0.45; }
     .bar-meta { margin: 4px 0 0; font-size: 12px; font-weight: 800; color: var(--ice); }
     .splash-copy .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
+    #train-hub {
+      z-index: 22; justify-content: flex-start; align-items: stretch;
+      overflow: hidden; background: #1a1028f4;
+      padding: 10px 10px max(18px, env(safe-area-inset-bottom));
+    }
+    .train-tabs { display: flex; gap: 8px; justify-content: center; margin: 8px 0 10px; }
+    .train-tabs button {
+      appearance: none; border: 2px solid var(--cream); background: transparent;
+      color: var(--cream); font-family: inherit; font-weight: 800; font-size: 13px;
+      padding: 6px 14px; border-radius: 10px; cursor: pointer;
+    }
+    .train-tabs button.on { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+    .cat-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 10px; }
+    .cat-row button {
+      appearance: none; border: 2px solid var(--ice); background: #2a1c4e; color: var(--cream);
+      font-family: inherit; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .cat-row button.on { background: var(--ice); color: var(--ink); }
+    .train-stat { margin: 0 0 8px; font-weight: 900; color: var(--yellow); font-size: 15px; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 10px; min-height: 22px; }
+    .badge-chip {
+      display: inline-block; border: 2px solid var(--yellow); color: var(--yellow);
+      border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800;
+    }
+    #app.train .chip.mode { font-size: 18px; letter-spacing: 0.12em; background: var(--yellow); color: var(--ink); border-color: var(--ink); }
+    #train-fb {
+      position: absolute; left: 12px; right: 12px; bottom: 72px; z-index: 16;
+      background: var(--cream); color: var(--ink); border: 3px solid var(--yellow);
+      border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 14px;
+      text-align: center; box-shadow: 0 6px 18px #0007; pointer-events: none;
+    }
+    #train-fb.bad { border-color: var(--danger); }
+    #trivia-q { margin: 0 8px; font-weight: 800; font-size: 16px; line-height: 1.35; text-align: center; color: var(--cream); }
+    #trivia-choices { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-width: 340px; margin: 0 auto; flex: 1 1 auto; }
+    #trivia-choices button {
+      appearance: none; min-height: 52px; border: 3px solid var(--wood); background: var(--cream);
+      color: var(--ink); border-radius: 14px; padding: 10px 12px; font-family: inherit;
+      font-weight: 800; font-size: 15px; text-align: left; cursor: pointer; box-shadow: 0 3px 0 var(--wood);
+    }
+    #trivia-choices button.ok { border-color: #3D6B38; background: #d7efc8; }
+    #trivia-choices button.bad { border-color: var(--danger); background: #f6d0c8; }
+    #btn-train-exit { display: none; }
+    #app.train #btn-train-exit { display: inline-block; }
   </style>
 </head>
 <body>
@@ -338,6 +381,7 @@
         <div class="chip mode" id="chip-mode">PRACTICE</div>
         <div class="chip item" id="chip-item">Item 1/3</div>
         <div class="chip time" id="chip-time">1:00</div>
+        <button class="chip" id="btn-train-exit" type="button">Back to Train</button>
       </div>
       <div id="time-bar" aria-hidden="true"><i id="time-fill"></i></div>
     </div>
@@ -349,7 +393,11 @@
       <div id="mem-pad" class="mem-pad hidden"></div>
       <div id="speed-target" class="cell big hidden"></div>
       <div id="speed-grid" class="speed-grid hidden"></div>
+      <div id="trivia-illu" class="cell big hidden"></div>
+      <p id="trivia-q" class="hidden"></p>
+      <div id="trivia-choices" class="hidden"></div>
     </div>
+    <div id="train-fb" class="hidden"></div>
     <p class="hud-link"><button type="button" class="text-link" data-about>About scoring</button></p>
     <div id="away" class="hidden">Away — item closed.</div>
 
@@ -375,9 +423,9 @@
           <button class="play camp" id="btn-speed" type="button" disabled>Assess Speed</button>
           <button class="play camp ghost" id="btn-museum" type="button" disabled>Museum</button>
           <button class="play camp ghost hidden" id="btn-open-profile" type="button">Profile</button>
+          <button class="play camp" id="btn-train" type="button" disabled>Train</button>
           <div class="ghost-row">
-            <button class="play soon" type="button" disabled>Train · Soon</button>
-            <button class="play soon" type="button" disabled>Trivia · Soon</button>
+            <button class="play ghost" id="btn-trivia" type="button" disabled>Trivia</button>
             <button class="play soon" type="button" disabled>EQ · Soon</button>
           </div>
         </div>
@@ -438,6 +486,7 @@
           <p><b>Memory:</b> (correct ÷ 10) × 85, plus leftover response time on correct items scaled to at most 15 then × (correct ÷ 10). Sequence must match; mashing cannot fill the bar.</p>
           <p><b>Speed:</b> (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p>Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
+          <p>Train (drills and trivia) never feeds these bars or the cohort line.</p>
         </details>
         <div class="end-actions">
           <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
@@ -480,7 +529,49 @@
           <p class="how">Assess = snapshot today. Practice does not feed the score.</p>
           <p class="how">Cohort % = vs Brain Camp players (beta), rough not gospel.</p>
           <p class="how">Play for fun, not credentials. Fan game by a holder.</p>
+          <p class="how">Train does not feed Assess bars or cohort %.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="train-hub" class="overlay hidden" role="dialog" aria-label="Train">
+      <div class="museum-panel">
+        <h2>TRAIN</h2>
+        <p class="how">Practice only. Does not change your Assess scores.</p>
+        <p class="train-stat" id="train-watermark">PRACTICE ONLY — not Assess</p>
+        <p class="train-stat" id="train-stats">XP 0 · Streak 0</p>
+        <div class="badge-row" id="train-badges"></div>
+        <div class="train-tabs">
+          <button type="button" id="tab-drills" class="on">Drills</button>
+          <button type="button" id="tab-trivia">Trivia</button>
+        </div>
+        <div id="pane-drills">
+          <div class="end-actions">
+            <button class="play camp" id="btn-drill-pattern" type="button">Pattern Warmup</button>
+            <button class="play camp" id="btn-drill-memory" type="button">Memory Warmup</button>
+            <button class="play camp" id="btn-drill-speed" type="button">Speed Warmup</button>
+          </div>
+        </div>
+        <div id="pane-trivia" class="hidden">
+          <div class="cat-row" id="trivia-cats"></div>
+          <div class="end-actions">
+            <button class="play camp" id="btn-play-trivia" type="button">Play Trivia</button>
+          </div>
+        </div>
+        <button class="play ghost" id="btn-train-hub-back" type="button">Back to Splash</button>
+        <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
+      </div>
+    </div>
+
+    <div id="train-pause" class="overlay center hidden" role="dialog" aria-label="Train paused">
+      <div class="tip-card">
+        <h2>PAUSED</h2>
+        <p class="how">Train is friendly practice. Take your time.</p>
+        <p class="how">PRACTICE ONLY — not Assess.</p>
+        <div class="end-actions">
+          <button class="play" id="btn-train-unpause" type="button">CONTINUE</button>
+          <button class="play ghost" id="btn-train-pause-hub" type="button">Back to Train</button>
         </div>
       </div>
     </div>
@@ -504,6 +595,7 @@
   var SAVE_KEY = "bober-brain-camp-v2";
   var SAVE_KEY_OLD = "bober-brain-camp-v1";
   var RUN_KEY = "bober-brain-camp-run-v1";
+  var TRAIN_KEY = "bober-brain-camp-train-v1";
   var ASSESS_N = 12;
   var PRACTICE_N = 3;
   var MEM_ASSESS_N = 10;
@@ -954,6 +1046,104 @@
   var SPEED_PRACTICE = SPEED_BUILT.practice;
   var SPEED_POOL = SPEED_BUILT.pool;
 
+  function buildTrainPattern() {
+    var items = [], n = 0, fams = [S, D, N, L, B], tints = [W, C, I, Y];
+    function odd(tiles, ans) {
+      n += 1;
+      items.push({ id: "TWP" + n, kind: "odd", tiles: tiles, ans: ans, limit: 6, prompt: "TAP THE ODD ONE" });
+    }
+    var i, f, o, t;
+    for (i = 0; i < fams.length; i++) {
+      f = fams[i]; o = fams[(i + 2) % fams.length];
+      odd([G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1));
+      odd([G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1));
+      t = tints[i % tints.length];
+      odd([G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tints[(i + 1) % tints.length])], G(f,1,0,tints[(i + 1) % tints.length]));
+      odd([G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90));
+    }
+    return items;
+  }
+  function buildTrainMemory() {
+    var items = [], n = 0;
+    function add(span) {
+      var seq = [], i;
+      for (i = 0; i < span; i++) seq.push(MEM_ICONS[(n + i * 2) % MEM_ICONS.length]);
+      var pad = seq.slice();
+      MEM_ICONS.forEach(function (g) {
+        if (pad.length >= 4) return;
+        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+      });
+      n += 1;
+      items.push({ id: "TWM" + n, span: span, reverse: false, seq: seq, pad: pad, studyEach: 1.3, respond: 12 });
+    }
+    var k;
+    for (k = 0; k < 12; k++) add(2);
+    for (k = 0; k < 10; k++) add(3);
+    return items;
+  }
+  function buildTrainSpeed() {
+    var items = [], n = 0, fams = [S, D, N, L, B];
+    var i, f, o;
+    for (i = 0; i < 24; i++) {
+      f = fams[i % fams.length]; o = fams[(i + 1) % fams.length];
+      n += 1;
+      items.push({
+        id: "TWS" + n, kind: "odd",
+        tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
+        ans: G(o,1), limit: 4.2, prompt: "TAP THE ODD ONE"
+      });
+    }
+    return items;
+  }
+  var TRAIN_PATTERN = buildTrainPattern();
+  var TRAIN_MEMORY = buildTrainMemory();
+  var TRAIN_SPEED = buildTrainSpeed();
+
+  var TRIVIA = [
+    { id: "TQ01", cat: "Lodge", q: "A beaver lodge is mostly built from what?", choices: ["Woven sticks and mud", "Cut stone blocks", "Ice bricks", "Iron plates"], ans: 0, teach: "A lodge is a stick-and-mud house on the water." },
+    { id: "TQ02", cat: "Lodge", q: "Where does a lodge usually sit?", choices: ["On the water, with a dive-in door", "On a mountain peak", "Inside a cave of iron", "On a desert dune"], ans: 0, teach: "The doorway is underwater. That's the point." },
+    { id: "TQ03", cat: "Lodge", q: "What is the warm room in a lodge for?", choices: ["Dry rest and kits", "Storing gold bars", "Firing a kiln", "Parking a wagon"], ans: 0, teach: "Dry chamber, family, quiet chew." },
+    { id: "TQ04", cat: "Lodge", q: "A dam across a stream is meant to…", choices: ["Hold a still pond", "Look pretty for boats", "Cut all rain", "Summon winter"], ans: 0, teach: "Still water makes the lodge safer." },
+    { id: "TQ05", cat: "Lodge", q: "Bober's big front teeth are mainly for…", choices: ["Chewing wood", "Fishing with a net", "Writing letters", "Holding a crown"], ans: 0, teach: "Wood first. Always wood." },
+    { id: "TQ06", cat: "Lodge", q: "A lodge roof often looks like…", choices: ["A mound of sticks", "A glass dome", "A tiled church", "A metal silo"], ans: 0, teach: "Mound, not a steeple." },
+    { id: "TQ07", cat: "Lodge", q: "In Green Home stories, winter is something you…", choices: ["Hold and then end", "Buy with a wallet", "Diagnose", "Skip with a code"], ans: 0, teach: "Hold the fire. Then summer." },
+    { id: "TQ08", cat: "Lodge", q: "Dam Defense is about holding…", choices: ["The wooden dam", "A stock chart", "A clinic form", "A gacha roll"], ans: 0, teach: "Twin posts. Hold the flood." },
+    { id: "TQ09", cat: "Lodge", q: "Nightfall's sword is made of…", choices: ["A wooden stick-blade", "A neon lightsaber", "A paper fan", "A credit card"], ans: 0, teach: "Chunky wood. Ice later." },
+    { id: "TQ10", cat: "Lodge", q: "A camp slate with one missing square is for…", choices: ["Finding the missing tile", "Scoring a clinical number", "Connecting a wallet", "Reading a prescription"], ans: 0, teach: "Fill the hole. That's the puzzle." },
+    { id: "TQ11", cat: "Patterns", q: "If a row shows 1 stick, then 2 sticks, the next is…", choices: ["3 sticks", "A snowflake", "Zero sticks", "A crown"], ans: 0, teach: "Count goes up by one." },
+    { id: "TQ12", cat: "Patterns", q: "Three brown logs and one ice burst. The odd one is…", choices: ["The ice burst", "All four equally", "The middle log", "There is no odd one"], ans: 0, teach: "Three match. One breaks the family." },
+    { id: "TQ13", cat: "Patterns", q: "A stick pointing right, then down, then left. Next points…", choices: ["Up", "Right again", "Into a circle", "Nowhere"], ans: 0, teach: "Quarter turns around the clock." },
+    { id: "TQ14", cat: "Patterns", q: "Same lodge mark, three times, then a beaver. The beaver is…", choices: ["The odd tile", "The average", "A clinical score", "A wallet"], ans: 0, teach: "Odd-one-out. Family vs stranger." },
+    { id: "TQ15", cat: "Patterns", q: "If every column is wood, cream, ice, the last cell of that rule is…", choices: ["Ice", "A random color", "Blank forever", "Gold only"], ans: 0, teach: "Finish the tint cycle." },
+    { id: "TQ16", cat: "Patterns", q: "Two tiles stacked in one cell usually means…", choices: ["Both marks together", "A broken save", "A clinic stamp", "A pause menu"], ans: 0, teach: "Union: you see both families." },
+    { id: "TQ17", cat: "Patterns", q: "A gold ring around a tile is…", choices: ["An extra mark on the same family", "A medical stamp", "A paywall", "A skip"], ans: 0, teach: "Ring is just another lodge mark." },
+    { id: "TQ18", cat: "Patterns", q: "If left plus middle makes the right, 1 stick + 1 stick makes…", choices: ["2 sticks", "A dam log", "Snow", "Nothing"], ans: 0, teach: "Add the counts." },
+    { id: "TQ19", cat: "Patterns", q: "Three snow bursts of growing size. Next is…", choices: ["The biggest burst", "A tiny stick", "A blank", "A crown"], ans: 0, teach: "Keep growing." },
+    { id: "TQ20", cat: "Patterns", q: "A missing cell in the bottom-right of a 3×3 is asking you to…", choices: ["Complete the rule", "Guess a clinical score", "Leave the tab", "Pay XP"], ans: 0, teach: "Read the eight. Fill the ninth." },
+    { id: "TQ21", cat: "Patterns", q: "Stick is to dam as snow is to…", choices: ["Lodge roof-white", "A wallet", "A stethoscope", "A spreadsheet"], ans: 0, teach: "Camp families sit together." },
+    { id: "TQ22", cat: "Patterns", q: "If every row has one stick, one dam, one snow, the last row needs…", choices: ["The family not yet used in that row", "Three sticks", "A random beaver", "A blank"], ans: 0, teach: "Each family once per row." },
+    { id: "TQ23", cat: "Camp life", q: "Best wood for a small campfire is…", choices: ["Dry sticks", "Wet moss only", "River stones", "Snowballs"], ans: 0, teach: "Dry first. Then a little more." },
+    { id: "TQ24", cat: "Camp life", q: "A picnic table at Brain Camp is for…", choices: ["Puzzle slates", "Tax forms", "Crypto trades", "Clinic charts"], ans: 0, teach: "Slates and snacks. That's camp." },
+    { id: "TQ25", cat: "Camp life", q: "Canvas tents at dusk mean…", choices: ["Someone is staying the night", "A server crash", "A diagnosis", "A gacha banner"], ans: 0, teach: "Sleep near the lodge." },
+    { id: "TQ26", cat: "Camp life", q: "A cream moon over pines is a sign of…", choices: ["Night at camp", "Market open", "A lab result", "A password"], ans: 0, teach: "Night purple sky. Cream moon." },
+    { id: "TQ27", cat: "Camp life", q: "If your boots are wet, you…", choices: ["Dry them by the fire", "Throw them in the pond", "Eat them", "Mail them"], ans: 0, teach: "Fire first. Then socks." },
+    { id: "TQ28", cat: "Camp life", q: "A gold tack on a wooden slate is…", choices: ["A camp nail, not a prize score", "A clinic pin", "A wallet badge", "A medical clip"], ans: 0, teach: "It's just a tack." },
+    { id: "TQ29", cat: "Camp life", q: "Green Home Games are…", choices: ["Fan games by a holder", "Official clinic tools", "Chain wallets", "Paid diagnoses"], ans: 0, teach: "Unofficial. Play for fun." },
+    { id: "TQ30", cat: "Camp life", q: "The right way to treat a wrong Train answer is…", choices: ["Read the teach line and go again", "Write it on a clinical chart", "Quit the camp forever", "Buy a higher bar"], ans: 0, teach: "Wrong answers teach. They don't brand you." },
+    { id: "TQ31", cat: "Lodge", q: "A beaver's paddle tail helps with…", choices: ["Steering in water and warning slaps", "Holding a pen", "Mining coin", "Taking attendance"], ans: 0, teach: "Slap the water. Swim straight." },
+    { id: "TQ32", cat: "Lodge", q: "Mud on a dam is useful because it…", choices: ["Seals gaps between sticks", "Attracts tourists", "Raises a clinical score", "Cools a GPU"], ans: 0, teach: "Mud is mortar." },
+    { id: "TQ33", cat: "Lodge", q: "Kits in a lodge are…", choices: ["Young beavers", "Download packs", "Clinic samples", "Loot boxes"], ans: 0, teach: "Kids. In the dry room." },
+    { id: "TQ34", cat: "Camp life", q: "A good Brain Camp round is…", choices: ["Short, then you stop", "An all-night official exam", "A paid diagnosis", "A PvP duel"], ans: 0, teach: "Short rounds. Play to improve." },
+    { id: "TQ35", cat: "Camp life", q: "Train XP is for…", choices: ["Streaks and camp badges", "Raising Assess bars", "Buying cohort %", "Unlocking a clinic"], ans: 0, teach: "Cosmetics and streak. Not Assess." },
+    { id: "TQ36", cat: "Patterns", q: "Four tiles, three match, one does not. You tap…", choices: ["The one that breaks the rule", "All four as fast as possible", "The prettiest", "None, and wait"], ans: 0, teach: "Odd-one-out. That's Speed and Train." },
+    { id: "TQ37", cat: "Patterns", q: "Watch three icons, then tap them in order. That drill is…", choices: ["Memory warmup", "A clinical span exam", "A wallet check", "Trivia only"], ans: 0, teach: "Train Memory. Practice only." },
+    { id: "TQ38", cat: "Camp life", q: "If you leave a Train drill to check the sky, Train should…", choices: ["Pause kindly", "Void the item as Assess does", "Erase your Profile", "Ban the device"], ans: 0, teach: "Train pauses. Assess does not." },
+    { id: "TQ39", cat: "Lodge", q: "Crown chapter weather is…", choices: ["Summer on the grass", "Endless night purple only", "A blizzard in the shop", "A sterile white lab"], ans: 0, teach: "Summer stays. Hold the town." },
+    { id: "TQ40", cat: "Camp life", q: "Fan game by a holder means…", choices: ["Unofficial, made with love, no wallet", "Official medical software", "A listed token sale", "A school exam board"], ans: 0, teach: "Holder. Fan. Not the project team." },
+    { id: "TQ41", cat: "Patterns", q: "A 2×2 of fat tiles is usually…", choices: ["Four choices, one tap", "A spreadsheet", "A brain scan", "Nine matrix cells"], ans: 0, teach: "Speed and Train use a 2×2 pad." },
+    { id: "TQ42", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "Snow hat. Then it melts." }
+  ];
+
   function shuffle(arr) {
     var a = arr.slice(), i, j, t;
     for (i = a.length - 1; i > 0; i--) {
@@ -982,6 +1172,14 @@
       add(it.ans);
       if (it.target) add(it.target);
     });
+    TRAIN_PATTERN.concat(TRAIN_SPEED).forEach(function (it) {
+      it.tiles.forEach(add);
+      add(it.ans);
+    });
+    TRAIN_MEMORY.forEach(function (it) {
+      it.seq.forEach(add);
+      it.pad.forEach(add);
+    });
     return out;
   }
 
@@ -999,6 +1197,8 @@
     if (FORM_A.length !== 12 || FORM_B.length !== 12) ok = false;
     if (MEM_POOL.length < 30) ok = false;
     if (SPEED_POOL.length < 60) ok = false;
+    if (TRAIN_PATTERN.length < 20 || TRAIN_MEMORY.length < 20 || TRAIN_SPEED.length < 20) ok = false;
+    if (TRIVIA.length < 40) ok = false;
     return ok;
   }
 
@@ -1076,9 +1276,11 @@
   var awayTimer = 0;
   var studyTimer = 0;
   var lastTrack = "reason";
+  var train = null;
+  var trainFbTimer = 0;
 
   function hideOverlays() {
-    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume"].forEach(function (id) {
+    ["boot-load", "splash", "confirm", "summary", "profile", "museum", "mus-detail", "about", "resume", "train-hub", "train-pause"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -1223,6 +1425,8 @@
     clearTimeout(studyTimer);
     mode = "splash";
     run = null;
+    train = null;
+    app.classList.remove("train");
     setTrackClass(null);
     setMenu(true);
     showOverlay("splash");
@@ -1342,7 +1546,7 @@
   }
 
   function hidePlayBits() {
-    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt"].forEach(function (id) {
+    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
     document.getElementById("matrix").innerHTML = "";
@@ -1351,15 +1555,24 @@
     document.getElementById("mem-pad").innerHTML = "";
     document.getElementById("speed-target").innerHTML = "";
     document.getElementById("speed-grid").innerHTML = "";
+    document.getElementById("trivia-illu").innerHTML = "";
+    document.getElementById("trivia-q").textContent = "";
+    document.getElementById("trivia-choices").innerHTML = "";
   }
 
   function hudFor() {
-    var practice = mode === "practice";
     var chip = document.getElementById("chip-mode");
+    if (mode === "train") {
+      chip.textContent = "TRAIN";
+      chip.classList.add("practice");
+      document.getElementById("chip-item").textContent = "PRACTICE ONLY";
+      return;
+    }
+    var practice = mode === "practice";
     chip.textContent = practice ? "PRACTICE" : "ASSESS";
     chip.classList.toggle("practice", practice);
-    var n = run.totalN;
-    document.getElementById("chip-item").textContent = "Item " + (run.i + 1) + "/" + n;
+    var n = run && run.totalN;
+    document.getElementById("chip-item").textContent = "Item " + ((run && run.i) + 1) + "/" + n;
   }
 
   function startTimer() {
@@ -1713,6 +1926,302 @@
     showOverlay("profile");
   }
 
+  function emptyTrain() {
+    return { xp: 0, streak: 0, best: 0, played: false, badges: [], lastIds: [], cat: "All" };
+  }
+  function loadTrain() {
+    var t = emptyTrain();
+    try {
+      var raw = localStorage.getItem(TRAIN_KEY);
+      if (!raw) return t;
+      var s = JSON.parse(raw);
+      if (typeof s.xp === "number") t.xp = s.xp;
+      if (typeof s.streak === "number") t.streak = s.streak;
+      if (typeof s.best === "number") t.best = s.best;
+      t.played = !!s.played;
+      t.badges = s.badges || [];
+      t.lastIds = s.lastIds || [];
+      t.cat = s.cat || "All";
+      return t;
+    } catch (e) { return t; }
+  }
+  function saveTrain(t) {
+    try { localStorage.setItem(TRAIN_KEY, JSON.stringify(t)); } catch (e) {}
+  }
+  function awardTrain(ok) {
+    var t = loadTrain();
+    t.played = true;
+    if (ok) {
+      t.streak += 1;
+      if (t.streak > t.best) t.best = t.streak;
+      t.xp += 6 + Math.min(t.streak, 8);
+    } else {
+      t.streak = 0;
+    }
+    if (t.xp >= 40 && t.badges.indexOf("Camp stitch") < 0) t.badges.push("Camp stitch");
+    if (t.xp >= 100 && t.badges.indexOf("Ember frame") < 0) t.badges.push("Ember frame");
+    saveTrain(t);
+    return t;
+  }
+  function paintTrainHub() {
+    var t = loadTrain();
+    document.getElementById("train-stats").textContent = "XP " + t.xp + " · Streak " + t.streak + " · Best " + t.best;
+    var row = document.getElementById("train-badges");
+    row.innerHTML = "";
+    (t.badges || []).forEach(function (name) {
+      var s = document.createElement("span");
+      s.className = "badge-chip";
+      s.textContent = name;
+      row.appendChild(s);
+    });
+    var cats = document.getElementById("trivia-cats");
+    if (!cats.childNodes.length) {
+      ["All", "Lodge", "Patterns", "Camp life"].forEach(function (c) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = c;
+        b.addEventListener("click", function () {
+          var tr = loadTrain();
+          tr.cat = c;
+          saveTrain(tr);
+          Array.prototype.forEach.call(cats.querySelectorAll("button"), function (x) {
+            x.classList.toggle("on", x.textContent === c);
+          });
+        });
+        cats.appendChild(b);
+      });
+    }
+    Array.prototype.forEach.call(cats.querySelectorAll("button"), function (x) {
+      x.classList.toggle("on", x.textContent === t.cat);
+    });
+  }
+  function openTrainHub(tab) {
+    mode = "train-hub";
+    train = null;
+    app.classList.remove("train");
+    setMenu(true);
+    setTrackClass(null);
+    paintTrainHub();
+    showTrainTab(tab === "trivia" ? "trivia" : "drills");
+    showOverlay("train-hub");
+  }
+  function showTrainTab(which) {
+    document.getElementById("tab-drills").classList.toggle("on", which === "drills");
+    document.getElementById("tab-trivia").classList.toggle("on", which === "trivia");
+    document.getElementById("pane-drills").classList.toggle("hidden", which !== "drills");
+    document.getElementById("pane-trivia").classList.toggle("hidden", which !== "trivia");
+  }
+  function showTrainFb(ok, line) {
+    var el = document.getElementById("train-fb");
+    el.textContent = line;
+    el.classList.toggle("bad", !ok);
+    el.classList.remove("hidden");
+    clearTimeout(trainFbTimer);
+    trainFbTimer = setTimeout(function () { el.classList.add("hidden"); }, 900);
+  }
+  function beginTrain(kind) {
+    var pool, i, filtered;
+    if (kind === "trivia") {
+      var cat = loadTrain().cat || "All";
+      filtered = TRIVIA.filter(function (q) { return cat === "All" || q.cat === cat; });
+      pool = shuffle(filtered);
+    } else if (kind === "memory") pool = shuffle(TRAIN_MEMORY);
+    else if (kind === "speed") pool = shuffle(TRAIN_SPEED);
+    else pool = shuffle(TRAIN_PATTERN);
+    var last = loadTrain().lastIds || [];
+    pool.sort(function (a, b) {
+      return (last.indexOf(a.id) >= 0 ? 1 : 0) - (last.indexOf(b.id) >= 0 ? 1 : 0);
+    });
+    train = { kind: kind, pool: pool, i: 0, pausedRemain: null };
+    mode = "train";
+    app.classList.add("train");
+    setMenu(false);
+    hideOverlays();
+    presentTrain();
+  }
+  function presentTrain() {
+    if (!train) return;
+    var it = train.pool[train.i % train.pool.length];
+    train.cur = it;
+    hudFor();
+    document.getElementById("chip-time").textContent = loadTrain().streak + " str";
+    document.getElementById("time-fill").style.transform = "scaleX(1)";
+    if (train.kind === "trivia") presentTrainTrivia(it);
+    else if (train.kind === "memory") presentTrainMemory(it);
+    else if (train.kind === "speed") presentTrainSpeed(it);
+    else presentTrainPattern(it);
+  }
+  function presentTrainPattern(it) {
+    hidePlayBits();
+    setPrompt(it.prompt || "TAP THE ODD ONE", false);
+    var grid = document.getElementById("speed-grid");
+    grid.classList.remove("hidden");
+    var tiles = shuffle(it.tiles);
+    var ansKey = gk(it.ans);
+    tiles.forEach(function (g) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () {
+        if (mode !== "train" || train.locked) return;
+        trainPick(gk(g) === ansKey, b, ansKey, "Lodge family vs the odd tile.");
+      });
+      grid.appendChild(b);
+    });
+  }
+  function presentTrainSpeed(it) {
+    hidePlayBits();
+    setPrompt(it.prompt || "TAP THE ODD ONE", false);
+    var grid = document.getElementById("speed-grid");
+    grid.classList.remove("hidden");
+    var tiles = shuffle(it.tiles);
+    var ansKey = gk(it.ans);
+    tiles.forEach(function (g) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () {
+        if (mode !== "train" || train.locked) return;
+        trainPick(gk(g) === ansKey, b, ansKey, "Tap the one that breaks the set.");
+      });
+      grid.appendChild(b);
+    });
+    train.limit = it.limit || 4.2;
+    train.t0 = performance.now();
+    trainTick();
+  }
+  function presentTrainMemory(it) {
+    hidePlayBits();
+    train.phase = "study";
+    train.studyI = 0;
+    train.taps = [];
+    train.want = it.seq.map(gk);
+    setPrompt("WATCH, then tap the same order", false);
+    document.getElementById("chip-time").textContent = "WATCH";
+    stepTrainStudy();
+  }
+  function stepTrainStudy() {
+    if (!train || mode !== "train" || train.phase !== "study") return;
+    var it = train.cur;
+    if (train.studyI >= it.seq.length) {
+      beginTrainMemPad();
+      return;
+    }
+    var box = document.getElementById("mem-study");
+    box.classList.remove("hidden");
+    box.innerHTML = "";
+    box.appendChild(tileCopy(it.seq[train.studyI]));
+    train.studyI += 1;
+    studyTimer = setTimeout(stepTrainStudy, it.studyEach * 1000);
+  }
+  function beginTrainMemPad() {
+    train.phase = "respond";
+    document.getElementById("mem-study").classList.add("hidden");
+    var padEl = document.getElementById("mem-pad");
+    padEl.classList.remove("hidden");
+    padEl.innerHTML = "";
+    shuffle(train.cur.pad).forEach(function (g) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.appendChild(tileCopy(g));
+      b.addEventListener("click", function () {
+        if (mode !== "train" || train.locked || train.phase !== "respond") return;
+        train.taps.push(gk(g));
+        b.classList.add("picked");
+        if (train.taps.length >= train.want.length) {
+          var ok = train.taps.join("|") === train.want.join("|");
+          trainPick(ok, b, null, ok ? "Same order. Nice." : "Watch again — same order, not shuffled.");
+        }
+      });
+      padEl.appendChild(b);
+    });
+    setPrompt("TAP THE ORDER", false);
+    train.limit = train.cur.respond || 12;
+    train.t0 = performance.now();
+    trainTick();
+  }
+  function presentTrainTrivia(it) {
+    hidePlayBits();
+    setPrompt((it.cat || "Camp") + " · PRACTICE ONLY", false);
+    var illu = document.getElementById("trivia-illu");
+    illu.classList.remove("hidden");
+    var mark = it.cat === "Patterns" ? G(S, 1, 45, Y) : it.cat === "Lodge" ? G(L, 1, 0, W) : G(N, 1, 0, I);
+    illu.appendChild(tileCopy(mark));
+    var q = document.getElementById("trivia-q");
+    q.textContent = it.q;
+    q.classList.remove("hidden");
+    var box = document.getElementById("trivia-choices");
+    box.classList.remove("hidden");
+    var order = [0, 1, 2, 3];
+    shuffle(order).forEach(function (idx) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = it.choices[idx];
+      b.addEventListener("click", function () {
+        if (mode !== "train" || train.locked) return;
+        var ok = idx === it.ans;
+        if (ok) b.classList.add("ok"); else b.classList.add("bad");
+        trainPick(ok, b, null, it.teach);
+      });
+      box.appendChild(b);
+    });
+  }
+  function trainTick() {
+    if (mode !== "train" || !train || train.paused || !train.t0) return;
+    var r = Math.max(0, train.limit - (performance.now() - train.t0) / 1000);
+    document.getElementById("chip-time").textContent = fmtTime(r);
+    document.getElementById("time-fill").style.transform = "scaleX(" + (train.limit ? r / train.limit : 0) + ")";
+    if (r <= 0) {
+      trainPick(false, null, null, "Time. Try the next one.");
+      return;
+    }
+    raf = requestAnimationFrame(trainTick);
+  }
+  function trainPick(ok, btn, ansKey, teach) {
+    if (!train || train.locked) return;
+    train.locked = true;
+    if (raf) cancelAnimationFrame(raf);
+    clearTimeout(studyTimer);
+    if (btn && ok) btn.classList.add("ok");
+    if (btn && !ok) btn.classList.add("bad");
+    var t = awardTrain(ok);
+    var line = (ok ? "Yes. " : "Not that. ") + (teach || "") + "  +" + (ok ? (6 + Math.min(t.streak, 8)) : 0) + " XP";
+    if (!ok) line = (teach || "Miss.") + " Streak reset.";
+    showTrainFb(ok, line);
+    var ids = t.lastIds || [];
+    if (train.cur) ids.push(train.cur.id);
+    t.lastIds = ids.slice(-24);
+    saveTrain(t);
+    setTimeout(function () {
+      if (mode !== "train" || !train) return;
+      train.i += 1;
+      train.locked = false;
+      train.t0 = null;
+      presentTrain();
+    }, 850);
+  }
+  function pauseTrain() {
+    if (mode !== "train" || !train || train.paused) return;
+    train.paused = true;
+    if (train.t0) train.pausedRemain = Math.max(0.5, train.limit - (performance.now() - train.t0) / 1000);
+    if (raf) cancelAnimationFrame(raf);
+    clearTimeout(studyTimer);
+    document.getElementById("train-pause").classList.remove("hidden");
+  }
+  function unpauseTrain() {
+    document.getElementById("train-pause").classList.add("hidden");
+    if (!train) { openTrainHub(); return; }
+    train.paused = false;
+    if (train.pausedRemain != null) {
+      train.limit = train.pausedRemain;
+      train.t0 = performance.now();
+      train.pausedRemain = null;
+      trainTick();
+    } else if (train.kind === "memory" && train.phase === "study") {
+      stepTrainStudy();
+    }
+  }
+
   var MUS_CARDS = [
     {
       id: "how",
@@ -1722,7 +2231,7 @@
       lock: function () { return false; },
       tease: "Skill bars for Pattern · Memory · Speed — not a clinical number.",
       unlock: "Always unlocked.",
-      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
+      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nTrain (drills and trivia) never feeds those bars or cohort %.\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
     },
     {
       id: "stick",
@@ -1753,6 +2262,16 @@
       tease: "Unlock after a Speed Assess.",
       unlock: "Unlocked after a Speed Assess.",
       body: "A fat camp ember. Short trials, quick tap. Finish a Speed Assess to keep it on the shelf."
+    },
+    {
+      id: "badge",
+      name: "Train Badge",
+      tag: "Camp flair",
+      thumb: "assets/museum/badge.jpg",
+      lock: function () { return !loadTrain().played; },
+      tease: "Unlock after your first Train session.",
+      unlock: "Unlocked after a Train session.",
+      body: "A pine camp badge with cream stitching. Train XP and streaks live here — cosmetics and effort, never an Assess bar."
     }
   ];
 
@@ -1802,6 +2321,7 @@
 
   function onAway() {
     if (unloading) { snapshotRun(); return; }
+    if (mode === "train") { pauseTrain(); return; }
     if (itemLocked) return;
     if (mode !== "assess" && mode !== "practice") return;
     if (!run || !run.cur) return;
@@ -1826,7 +2346,8 @@
   document.addEventListener("keydown", function (ev) {
     if (ev.key !== "Escape") return;
     if (!document.getElementById("about").classList.contains("hidden")) { closeAbout(); return; }
-    if (!document.getElementById("mus-detail").classList.contains("hidden")) { closeMusDetail(); }
+    if (!document.getElementById("mus-detail").classList.contains("hidden")) { closeMusDetail(); return; }
+    if (!document.getElementById("train-pause").classList.contains("hidden")) { unpauseTrain(); }
   });
   app.addEventListener("click", function (ev) {
     var t = ev.target;
@@ -1839,6 +2360,21 @@
   document.getElementById("btn-reason").addEventListener("click", function () { startOrResume("reason"); });
   document.getElementById("btn-memory").addEventListener("click", function () { startOrResume("memory"); });
   document.getElementById("btn-speed").addEventListener("click", function () { startOrResume("speed"); });
+  document.getElementById("btn-train").addEventListener("click", function () { openTrainHub("drills"); });
+  document.getElementById("btn-trivia").addEventListener("click", function () { openTrainHub("trivia"); });
+  document.getElementById("tab-drills").addEventListener("click", function () { showTrainTab("drills"); });
+  document.getElementById("tab-trivia").addEventListener("click", function () { showTrainTab("trivia"); });
+  document.getElementById("btn-drill-pattern").addEventListener("click", function () { beginTrain("pattern"); });
+  document.getElementById("btn-drill-memory").addEventListener("click", function () { beginTrain("memory"); });
+  document.getElementById("btn-drill-speed").addEventListener("click", function () { beginTrain("speed"); });
+  document.getElementById("btn-play-trivia").addEventListener("click", function () { beginTrain("trivia"); });
+  document.getElementById("btn-train-hub-back").addEventListener("click", goSplash);
+  document.getElementById("btn-train-exit").addEventListener("click", function () { openTrainHub(train && train.kind === "trivia" ? "trivia" : "drills"); });
+  document.getElementById("btn-train-unpause").addEventListener("click", unpauseTrain);
+  document.getElementById("btn-train-pause-hub").addEventListener("click", function () {
+    document.getElementById("train-pause").classList.add("hidden");
+    openTrainHub(train && train.kind === "trivia" ? "trivia" : "drills");
+  });
   document.getElementById("btn-museum").addEventListener("click", openMuseum);
   document.getElementById("btn-open-profile").addEventListener("click", showProfile);
   document.getElementById("btn-continue-splash").addEventListener("click", function () { showResume(); });
@@ -1875,7 +2411,7 @@
 
   function setPlayLocked(on) {
     PRE.blocked = on;
-    ["btn-reason", "btn-memory", "btn-speed", "btn-museum"].forEach(function (id) {
+    ["btn-reason", "btn-memory", "btn-speed", "btn-museum", "btn-train", "btn-trivia"].forEach(function (id) {
       document.getElementById(id).disabled = on;
     });
   }
@@ -1939,6 +2475,7 @@
     loadImg("assets/museum/stick.jpg", false);
     loadImg("assets/museum/twig.jpg", false);
     loadImg("assets/museum/ember.jpg", false);
+    loadImg("assets/museum/badge.jpg", false);
     var glyphs = collectGlyphs();
     var i;
     for (i = 0; i < glyphs.length; i++) {
@@ -1961,6 +2498,10 @@
     if (FORM_A.length !== 12 || FORM_B.length !== 12) fails.push("forms");
     if (MEM_POOL.length < 30) fails.push("mem-pool");
     if (SPEED_POOL.length < 60) fails.push("spd-pool");
+    if (TRAIN_PATTERN.length < 20) fails.push("train-pattern");
+    if (TRAIN_MEMORY.length < 20) fails.push("train-memory");
+    if (TRAIN_SPEED.length < 20) fails.push("train-speed");
+    if (TRIVIA.length < 40) fails.push("trivia");
     var guess = scoreReason(3, [45, 45, 45]);
     if (guess.index > 30) fails.push("guess-cap " + guess.index);
     var maxed = scoreReason(12, [45,45,45,45,45,45,45,45,45,45,45,45]);
@@ -2114,7 +2655,21 @@
             if (typeof p.reasoning !== "number") fails.push("no-r");
             if (typeof p.memory !== "number") fails.push("no-m");
             if (typeof p.speed !== "number") fails.push("no-s");
-            reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p.reasoning + " M" + p.memory + " S" + p.speed));
+            var r0 = p.reasoning, m0 = p.memory, s0 = p.speed;
+            openTrainHub("trivia");
+            beginTrain("trivia");
+            setTimeout(function () {
+              var btn = document.querySelector("#trivia-choices button");
+              if (btn) btn.click();
+              setTimeout(function () {
+                var p2 = loadSave();
+                var tr = loadTrain();
+                if (p2.reasoning !== r0 || p2.memory !== m0 || p2.speed !== s0) fails.push("train-leaked");
+                if (!tr.played) fails.push("train-not-played");
+                if (document.getElementById("chip-mode").textContent !== "TRAIN") fails.push("no-train-chip");
+                reportTest("playtest-out", fails.length ? ("PLAYTEST_FAIL " + fails.join(",")) : ("PLAYTEST_OK R" + p2.reasoning + " M" + p2.memory + " S" + p2.speed + " XP" + tr.xp));
+              }, 200);
+            }, 120);
           }, 80);
         }, 80);
         return;
