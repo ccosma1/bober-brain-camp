@@ -211,6 +211,21 @@
       border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 14px;
       text-align: center; box-shadow: 0 6px 18px #0007; pointer-events: none;
     }
+    #profile.overlay {
+      justify-content: flex-end;
+      background: linear-gradient(to top, #1a1028cc 0%, #1a102866 36%, #3A2A6A00 72%);
+      padding-top: 8px;
+    }
+    #profile h1 { margin-bottom: 4px; }
+    #profile .tip-card {
+      background: rgba(42, 28, 78, 0.72);
+      backdrop-filter: blur(8px);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    #profile .bar-wrap { margin: 6px 0 4px; }
+    #profile .end-actions { gap: 6px; margin-top: 6px; }
+    #profile .play.camp { min-height: 42px; font-size: 15px; padding: 8px 12px; }
     .bar-wrap { text-align: left; margin: 10px 0 8px; }
     .bar-lab { display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; color: var(--yellow); }
     .skill-bar {
@@ -678,7 +693,6 @@
             </div>
           </details>
         </div>
-        <p class="bar-meta">Beta norms (early). Assess bars stay separate. Social Read is practice only.</p>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <div class="end-actions">
           <button class="play camp" id="btn-retry" type="button">RETRY ASSESS</button>
@@ -725,10 +739,11 @@
           <p class="how">Bars are never averaged into one number.</p>
           <p class="how">Skill facets inside Brain Camp — not a clinical or certified IQ test.</p>
           <p class="how"><b>Reasoning:</b> 12 items, 50s each, one of six camp forms (A–F). Families: Row March, Trio Deal, Snow Fade, Stack Add, Dam XOR, Rotate Lodge, Mirror Creek, Beaver Orbit. (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar. Optional facet tags (Visual Perception, Abstract Reasoning, Pattern Recognition, Spatial Orientation, Analytical Thinking) describe that run’s mix only — never averaged, never a credential.</p>
-          <p class="how"><b>Memory:</b> 10 trials from lodge tools, snow marks, dam posts, fish, and embers. Study 1.8s per icon, 12s to tap. Starts at span 3; span rises after 3 correct at that span, drops after 2 wrong. Reverse is labeled at the start of a trial and never flips mid-item. Some trials are fill-the-gap or tap-what-changed. (correct ÷ 10) × 85, plus leftover tap time on correct trials scaled to at most 15 then × (correct ÷ 10).</p>
+          <p class="how"><b>Memory:</b> 10 trials from lodge tools, snow marks, dam posts, fish, and embers. Study 1.8s per icon, 12s to tap. Starts at span 3; span rises after 3 correct at that span, drops after 2 wrong. Watch the order, then tap the same order. Reverse, when it appears, is labeled on the SPAN banner. (correct ÷ 10) × 85, plus leftover tap time on correct trials scaled to at most 15 then × (correct ÷ 10).</p>
           <p class="how"><b>Speed:</b> 20 trials, 3.2s each. Templates mix odd-one-out (shape, color, count, tilt, pattern break, mark) plus match-target and twins. (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p class="how"><b>Social Read:</b> 10 lodge scenarios. Preferred choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6.</p>
           <p class="how">Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
+          <p class="how">Beta norms (early). Assess bars stay separate. Social Read is practice only.</p>
           <p class="how"><b>What these skills can be useful for</b></p>
           <p class="how">Soft “often helps with” notes. Camp indices and Brain Camp percentiles only — not a clinical score, not an IQ number, not certified.</p>
           <p class="how"><b>Reasoning:</b> spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.</p>
@@ -1413,33 +1428,19 @@
     }
   }
   function buildMemoryPool() {
-    var items = [], n = 0, kinds = ["forward", "reverse", "gap", "change"];
+    var items = [], n = 0, kinds = ["forward", "reverse"];
     var spans = [3,3,3,3,4,4,4,5,5,6,7,3];
     function add(pack, span, kind, practice) {
       n += 1;
       var icons = pack.icons;
-      var seq = [], i, idx;
+      var seq = [], i;
       for (i = 0; i < span; i++) seq.push(icons[(n + i * 2) % icons.length]);
-      var it = {
+      items.push({
         id: (practice ? "MP" : "MX") + n + "s" + span + kind.charAt(0) + pack.name.slice(0, 2),
         span: span, reverse: kind === "reverse", kind: kind, pack: pack.name,
         seq: seq, pad: memPad(seq, icons),
         studyEach: MEM_STUDY, respond: MEM_PROBE, practice: !!practice
-      };
-      if (kind === "gap") {
-        it.gapAt = 1 % span;
-        it.missing = seq[it.gapAt];
-      }
-      if (kind === "change") {
-        idx = Math.min(span - 1, 1);
-        it.changeAt = idx;
-        it.changedGlyph = icons[(n + 5) % icons.length];
-        if (gk(it.changedGlyph) === gk(seq[idx])) it.changedGlyph = icons[(n + 3) % icons.length];
-        it.changedSeq = seq.slice();
-        it.changedSeq[idx] = it.changedGlyph;
-        if (!it.pad.some(function (x) { return gk(x) === gk(it.changedGlyph); })) it.pad.push(it.changedGlyph);
-      }
-      items.push(it);
+      });
     }
     add(MEM_PACKS[0], 3, "forward", true);
     add(MEM_PACKS[3], 3, "forward", true);
@@ -2589,11 +2590,11 @@
   }
   function showSpanBanner(it, then) {
     var ban = document.getElementById("span-banner");
-    ban.textContent = (it.kind === "gap" ? "GAP · " : it.kind === "change" ? "CHANGED · " : it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
+    ban.textContent = (it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
     ban.classList.remove("hidden");
     document.getElementById("chip-time").textContent = "SPAN " + it.span;
     document.getElementById("time-fill").style.transform = "scaleX(1)";
-    setPrompt("WATCH", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     setMemWatch(true);
     clearTimeout(studyTimer);
     studyTimer = setTimeout(function () {
@@ -2610,26 +2611,18 @@
       run.studyI = 0;
     }
     run.limit = it.respond == null ? MEM_PROBE : Math.max(MEM_PROBE, it.respond);
-    if (it.kind === "gap") run.want = [gk(it.missing || it.seq[it.gapAt || 0])];
-    else if (it.kind === "change") run.want = [gk(it.changedGlyph)];
-    else {
-      var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
-      run.want = want.map(gk);
-    }
+    var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
+    run.want = want.map(gk);
     hudFor();
     document.getElementById("chip-time").textContent = "WATCH";
     document.getElementById("time-fill").style.transform = "scaleX(1)";
-    setPrompt("WATCH", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     setMemWatch(true);
     if (resume && run.phase === "study") {
       stepStudy();
       return;
     }
-    if (resume && run.phase === "flash") {
-      beginMemFlash();
-      return;
-    }
-    if (resume && (run.phase === "respond" || run.phase === "ready")) {
+    if (resume && (run.phase === "respond" || run.phase === "ready" || run.phase === "flash")) {
       beginMemReady();
       return;
     }
@@ -2645,39 +2638,15 @@
     if (!run || !run.cur || run.phase !== "study") return;
     var it = run.cur;
     if (run.studyI >= it.seq.length) {
-      if (it.kind === "change" && it.changedSeq) { beginMemFlash(); return; }
       beginMemReady();
       return;
     }
     var box = document.getElementById("mem-study");
     box.classList.remove("hidden");
     box.innerHTML = "";
-    var show = it.seq[run.studyI];
-    if (it.kind === "gap" && run.studyI === it.gapAt) show = G("empty");
-    box.appendChild(tileCopy(show));
+    box.appendChild(tileCopy(it.seq[run.studyI]));
     run.studyI += 1;
     studyTimer = setTimeout(stepStudy, it.studyEach * 1000);
-  }
-  function beginMemFlash() {
-    if (!run || !run.cur) return;
-    run.phase = "flash";
-    run.studyI = 0;
-    stepFlash();
-  }
-  function stepFlash() {
-    if (!run || !run.cur || run.phase !== "flash") return;
-    var it = run.cur;
-    var seq = it.changedSeq || it.seq;
-    if (run.studyI >= seq.length) {
-      beginMemReady();
-      return;
-    }
-    var box = document.getElementById("mem-study");
-    box.classList.remove("hidden");
-    box.innerHTML = "";
-    box.appendChild(tileCopy(seq[run.studyI]));
-    run.studyI += 1;
-    studyTimer = setTimeout(stepFlash, it.studyEach * 1000);
   }
 
   function beginMemReady() {
@@ -2690,7 +2659,7 @@
     document.getElementById("span-banner").classList.add("hidden");
     document.getElementById("mem-ready").classList.remove("hidden");
     document.getElementById("chip-time").textContent = "READY";
-    setPrompt("Get ready", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     clearTimeout(studyTimer);
     studyTimer = setTimeout(beginMemRespond, MEM_READY);
     snapshotRun();
@@ -2724,7 +2693,7 @@
     var sub = document.getElementById("mem-submit");
     sub.classList.remove("hidden");
     sub.disabled = true;
-    setPrompt(run.cur.kind === "gap" ? "TAP THE MISSING ICON, then Submit" : run.cur.kind === "change" ? "TAP WHAT CHANGED, then Submit" : run.cur.reverse ? "TAP BACKWARD, then Submit" : "TAP THE ORDER, then Submit", !!run.cur.reverse && run.cur.kind !== "gap" && run.cur.kind !== "change");
+    setPrompt("Watch the order, then tap the same order.", !!run.cur.reverse);
     snapshotRun();
     studyTimer = setTimeout(function () {
       if (!run || run.phase !== "respond") return;
@@ -2837,7 +2806,7 @@
     mode = "confirm";
     setMenu(true);
     var meta = document.getElementById("confirm-meta");
-    if (run.track === "memory") meta.textContent = "Assess is 10 trials · study 1.8s per icon · 12s to tap · start span 3. Stay on this page.";
+    if (run.track === "memory") meta.textContent = "Assess is 10 trials · study 1.8s per icon · 12s to tap · start span 3. Watch the order, then tap the same order. Stay on this page.";
     else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 3.2s each. Stay on this page.";
     else meta.textContent = "Assess is 12 items · 50s each · one camp form · no pause. Stay on this page.";
     showOverlay("confirm");
@@ -3275,7 +3244,7 @@
     train.studyI = 0;
     train.taps = [];
     train.want = it.seq.map(gk);
-    setPrompt("WATCH", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     document.getElementById("chip-time").textContent = "WATCH";
     setMemWatch(true);
     showSpanBanner(it, function () {
@@ -3307,7 +3276,7 @@
     document.getElementById("mem-pad").classList.add("hidden");
     document.getElementById("mem-ready").classList.remove("hidden");
     document.getElementById("chip-time").textContent = "READY";
-    setPrompt("Get ready", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     clearTimeout(studyTimer);
     studyTimer = setTimeout(beginTrainMemPad, MEM_READY);
   }
@@ -3340,7 +3309,7 @@
       });
       padEl.appendChild(b);
     });
-    setPrompt("TAP THE ORDER", false);
+    setPrompt("Watch the order, then tap the same order.", false);
     train.limit = Math.max(TRAIN_MEM_PROBE, train.cur.respond || TRAIN_MEM_PROBE);
     studyTimer = setTimeout(function () {
       if (!train || train.phase !== "respond") return;
@@ -3607,9 +3576,29 @@
       tag: "Always open",
       thumb: "assets/museum/how.jpg",
       lock: function () { return false; },
-      tease: "Skill bars for Pattern · Memory · Speed — not a clinical number.",
+      tease: "Beta norms, separate bars, not an IQ number.",
       unlock: "Always unlocked.",
-      body: "Skill bars for Pattern · Memory · Speed — not an IQ number.\n\nSocial Read is lodge-scenario practice — not an EQ score — and never changes Assess.\n\nAssess = snapshot today. Practice = warm-up only (does not feed score).\n\nTrain (drills and trivia) never feeds those bars or cohort %.\n\nCohort % = vs other campers (beta), rough not gospel.\n\nStreaks/unlocks (later) show effort, not a diagnosis.\n\nWrong answers teach; they don’t brand you.\n\nFan game by a holder — play for fun, not credentials."
+      body: "Beta norms (early). Assess bars stay separate. Social Read is practice only.\n\nFan game skill index — not a clinical or diagnostic test. Not an IQ score. Not certified.\n\nAssess = snapshot today. Practice does not feed Assess.\nCohort % = vs Brain Camp players (beta), rough not gospel.\nBars are never averaged into one number.\nTrain never feeds Assess bars.\nSocial Read is lodge-scenario practice — not an EQ score — and never changes Assess.\n\nFan game by a holder — play for fun, not credentials."
+    },
+    {
+      id: "dinner",
+      name: "Lodge Dinner",
+      tag: "Camp still",
+      thumb: "assets/profile.jpg",
+      lock: function () { return false; },
+      tease: "The camp table this lodge is built around.",
+      unlock: "Always unlocked.",
+      body: "Supper light, puzzle boards, a square-headed host at the picnic table. This is the lodge dinner the camp sits on — a fan still, not a clinic plate. Pull up a bench. The stew is for looking, the boards are for play."
+    },
+    {
+      id: "useful",
+      name: "What skills are useful for",
+      tag: "Always open",
+      thumb: "assets/museum/useful.jpg",
+      lock: function () { return false; },
+      tease: "Soft “often helps with” notes for each bar.",
+      unlock: "Always unlocked.",
+      body: "Camp snapshots vs Brain Camp players — not a clinical score, not an IQ number, not certified.\n\nReasoning: spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.\n\nVisual Perception: noticing small visual differences. Often helps with design, detail checks, charts or maps.\nAbstract Reasoning: fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.\nPattern Recognition: finding order in noise. Often helps with forecasting, code or rhythm, spotting trends.\nSpatial Orientation: rotating objects in space. Often helps with navigation, building, packing.\nAnalytical Thinking: breaking a problem into parts. Often helps with planning and stepwise fixes.\n\nMemory: holding and replaying a short sequence. Often helps with multi-step instructions, mental notes, procedures.\n\nSpeed: fast, accurate simple decisions on a short clock. Often helps with quick checks when time is tight. Not a claim about sport or health.\n\nSocial Read: practice choosing a kind-effective lodge response. Often helps with teamwork and noticing needs. Practice only — not an EQ score, not a personality type.\n\nNone of this proves a job, a clinic chart, or a type."
     },
     {
       id: "stick",
@@ -3927,11 +3916,13 @@
     loadImg("assets/profile.jpg", true);
     loadImg("assets/icons/icon-192.png", false);
     loadImg("assets/museum/how.jpg", false);
+    loadImg("assets/museum/useful.jpg", false);
     loadImg("assets/museum/stick.jpg", false);
     loadImg("assets/museum/twig.jpg", false);
     loadImg("assets/museum/ember.jpg", false);
     loadImg("assets/museum/badge.jpg", false);
     loadImg("assets/museum/word.jpg", false);
+    loadImg("assets/profile.jpg", false);
     ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"].forEach(function (n) {
       loadImg("assets/social/sr" + n + ".jpg", false);
     });
@@ -3981,6 +3972,8 @@
     var st = easy.filter(function (it) { return it.family === FAM_SNOW || it.family === FAM_TRIO; });
     if (!easy.length || st.length < easy.length * 0.25) fails.push("easy-mix");
     if (MEM_POOL.length < 60) fails.push("mem-pool");
+    if (MEM_POOL.some(function (it) { return it.kind === "change" || it.kind === "gap"; })) fails.push("mem-change-gap");
+    if (/TAP WHAT CHANGED/.test(document.body.innerText)) fails.push("mem-change-copy");
     if (MEM_PACKS.length < 5) fails.push("mem-packs");
     if (SPEED_POOL.length < 100) fails.push("spd-pool");
     if (SPEED_TEMPLATES.length < 8) fails.push("spd-templates");
@@ -4022,6 +4015,8 @@
     var about = document.getElementById("about").textContent;
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
     if (about.indexOf("not a clinical or certified IQ test") < 0) fails.push("missing-facets-honesty");
+    if (about.indexOf("Beta norms") < 0) fails.push("about-beta");
+    if (MUS_CARDS.length < 8) fails.push("museum-thin");
     if (about.indexOf("What these skills can be useful for") < 0) fails.push("missing-useful-for");
     if (about.indexOf("often helps with") < 0 && about.indexOf("Often helps with") < 0) fails.push("missing-often-helps");
     if (document.querySelectorAll("#profile .skill-about").length < 4) fails.push("skill-about-blocks");
@@ -4187,7 +4182,10 @@
             if (!/Memory/.test(text)) fails.push("no-memory");
             if (!/Speed/.test(text)) fails.push("no-speed");
             if (!/Social Read/.test(text)) fails.push("no-social-bar");
-            if (!/Beta norms/.test(text)) fails.push("no-beta");
+            if (document.getElementById("about").textContent.indexOf("Beta norms") < 0) fails.push("no-beta");
+            if (/Beta norms/.test(document.getElementById("profile").innerText)) fails.push("beta-on-profile");
+            if (!/Lodge Dinner/.test(document.getElementById("museum").textContent)) fails.push("no-dinner-card");
+            if (!/What skills are useful for/.test(document.getElementById("museum").textContent)) fails.push("no-useful-card");
             if (!/About scoring/.test(text)) fails.push("no-about");
             if (/How scored/.test(text)) fails.push("double-how-scored");
             if (/\bIQ\s*[:#]?\s*\d/i.test(text)) fails.push("iq-as-score");

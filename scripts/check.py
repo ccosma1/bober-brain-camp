@@ -52,6 +52,18 @@ if "Skill facets inside Brain Camp — not a clinical or certified IQ test." not
     fails.append("missing facet honesty line")
 if "What these skills can be useful for" not in html:
     fails.append("missing usefulness section")
+for i, line in enumerate(html.splitlines(), 1):
+    if ("TAP WHAT CHANGED" in line or "fill-the-gap" in line) and "fails.push" not in line and "mem-change" not in line:
+        fails.append(f"index.html:{i} memory change/gap copy still present")
+        break
+if "Lodge Dinner" not in html:
+    fails.append("missing Lodge Dinner museum card")
+if "What skills are useful for" not in html:
+    fails.append("missing museum useful-for card")
+if "assets/museum/useful.jpg" not in html:
+    fails.append("missing unique useful-for thumb")
+if "Beta norms (early). Assess bars stay separate. Social Read is practice only." in html.split('<div id="profile"')[1].split('<div id="museum"')[0]:
+    fails.append("beta-norms wall still on Profile")
 if "About this skill" not in html:
     fails.append("missing About this skill")
 if html.count("Often helps with") < 4:
