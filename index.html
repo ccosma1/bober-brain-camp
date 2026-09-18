@@ -346,6 +346,11 @@
     .mus-detail-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
     #mus-detail.locked .mus-detail-art img { filter: brightness(0); opacity: 0.45; }
     .bar-meta { margin: 4px 0 0; font-size: 12px; font-weight: 800; color: var(--ice); }
+    .facet-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 4px; min-height: 0; }
+    .facet-chip {
+      display: inline-block; border: 2px solid var(--ice); color: var(--ice);
+      border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800;
+    }
     .splash-copy .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
     #train-hub {
       z-index: 22; justify-content: flex-start; align-items: stretch;
@@ -548,6 +553,7 @@
       <div class="tip-card">
         <h2 id="sum-title">CAMP BLOCK DONE</h2>
         <p class="how" id="sum-line">0 / 12 correct</p>
+        <div class="facet-row" id="sum-facets"></div>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
         <button class="play" id="btn-to-profile" type="button">PROFILE</button>
       </div>
@@ -561,6 +567,7 @@
           <div class="bar-lab"><span>Reasoning</span><span id="reason-num">—</span></div>
           <div class="skill-bar" aria-label="Reasoning skill"><i id="reason-bar"></i></div>
           <p class="bar-meta" id="reason-meta">Not yet camped</p>
+          <div class="facet-row" id="reason-facets"></div>
         </div>
         <div class="bar-wrap">
           <div class="bar-lab"><span>Memory</span><span id="memory-num">—</span></div>
@@ -622,9 +629,10 @@
           <p class="how">Train does not feed Assess bars or cohort %.</p>
           <p class="how">Social Read is lodge-scenario practice — not an EQ score. It does not change Assess bars.</p>
           <p class="how">Bars are never averaged into one number.</p>
-          <p class="how"><b>Reasoning:</b> 12 items, 50s each. (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar.</p>
-          <p class="how"><b>Memory:</b> 10 trials. Study 1.8s per icon, 12s to tap. Starts at span 3; span rises after 3 correct at that span, drops after 2 wrong. Reverse is labeled at the start of a trial and never flips mid-item. (correct ÷ 10) × 85, plus leftover tap time on correct trials scaled to at most 15 then × (correct ÷ 10).</p>
-          <p class="how"><b>Speed:</b> 20 trials, 3.2s each. (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
+          <p class="how">Skill facets inside Brain Camp — not a clinical or certified IQ test.</p>
+          <p class="how"><b>Reasoning:</b> 12 items, 50s each, one of six camp forms (A–F). Families: Row March, Trio Deal, Snow Fade, Stack Add, Dam XOR, Rotate Lodge, Mirror Creek, Beaver Orbit. (correct ÷ 12) × 80, plus leftover time on correct items scaled to at most 20 then × (correct ÷ 12). Fast guessing cannot fill the bar. Optional facet tags (Visual Perception, Abstract Reasoning, Pattern Recognition, Spatial Orientation, Analytical Thinking) describe that run’s mix only — never averaged, never a credential.</p>
+          <p class="how"><b>Memory:</b> 10 trials from lodge tools, snow marks, dam posts, fish, and embers. Study 1.8s per icon, 12s to tap. Starts at span 3; span rises after 3 correct at that span, drops after 2 wrong. Reverse is labeled at the start of a trial and never flips mid-item. Some trials are fill-the-gap or tap-what-changed. (correct ÷ 10) × 85, plus leftover tap time on correct trials scaled to at most 15 then × (correct ÷ 10).</p>
+          <p class="how"><b>Speed:</b> 20 trials, 3.2s each. Templates mix odd-one-out (shape, color, count, tilt, pattern break, mark) plus match-target and twins. (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p class="how"><b>Social Read:</b> 10 lodge scenarios. Preferred choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6.</p>
           <p class="how">Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
@@ -748,19 +756,25 @@
   var choicesEl = document.getElementById("choices");
   var PRE = { total: 0, ready: 0, failed: 0, needFail: 0, done: false, blocked: true, bitmaps: {} };
 
-  function G(f, n, r, t, m) {
-    return { f: f, n: n == null ? 1 : n, r: r || 0, t: t || "wood", m: m || "none" };
+  function G(f, n, r, t, m, z, flip) {
+    return { f: f, n: n == null ? 1 : n, r: r || 0, t: t || "wood", m: m || "none", z: z == null ? 1 : z, flip: flip || 0 };
   }
   function U(a, b) {
-    return { f: "combo", a: a, b: b, n: 1, r: 0, t: "wood", m: "none" };
+    return { f: "combo", a: a, b: b, n: 1, r: 0, t: "wood", m: "none", z: 1, flip: 0 };
   }
   function gk(g) {
     if (!g) return "";
     if (g.f === "combo") return "combo|" + gk(g.a) + "|" + gk(g.b);
-    return [g.f, g.n, g.r, g.t, g.m].join(":");
+    return [g.f, g.n, g.r, g.t, g.m, g.z == null ? 1 : g.z, g.flip || 0].join(":");
   }
   function mk(id, band, eight, ans, d1, d2, d3) {
     return { id: id, band: band, cells: eight.concat([null]), ans: ans, distractors: [d1, d2, d3] };
+  }
+  function mkFam(id, band, family, facet, eight, ans, d1, d2, d3) {
+    var it = mk(id, band, eight, ans, d1, d2, d3);
+    it.family = family;
+    it.facet = facet;
+    return it;
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -864,12 +878,106 @@
     ctx.ellipse(x + s * 0.12, y - s * 0.22, s * 0.11, s * 0.13, 0, 0, Math.PI * 2);
     fillStroke(ctx, fill);
   }
+  function drawFish(ctx, x, y, s, fill) {
+    ctx.beginPath();
+    ctx.ellipse(x - s * 0.06, y, s * 0.32, s * 0.18, 0, 0, Math.PI * 2);
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.22, y);
+    ctx.lineTo(x + s * 0.46, y - s * 0.2);
+    ctx.lineTo(x + s * 0.46, y + s * 0.2);
+    ctx.closePath();
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.arc(x - s * 0.18, y - s * 0.04, Math.max(2, s * 0.045), 0, Math.PI * 2);
+    ctx.fillStyle = INK;
+    ctx.fill();
+  }
+  function drawEmber(ctx, x, y, s, fill) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.46);
+    ctx.quadraticCurveTo(x + s * 0.28, y - s * 0.08, x + s * 0.16, y + s * 0.28);
+    ctx.quadraticCurveTo(x, y + s * 0.42, x - s * 0.16, y + s * 0.28);
+    ctx.quadraticCurveTo(x - s * 0.28, y - s * 0.08, x, y - s * 0.46);
+    ctx.closePath();
+    fillStroke(ctx, fill);
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.18);
+    ctx.quadraticCurveTo(x + s * 0.1, y + s * 0.04, x, y + s * 0.2);
+    ctx.quadraticCurveTo(x - s * 0.1, y + s * 0.04, x, y - s * 0.18);
+    ctx.fillStyle = "#F5C400";
+    ctx.fill();
+  }
+  function drawPost(ctx, x, y, s, fill) {
+    roundRect(ctx, x - s * 0.14, y - s * 0.42, s * 0.28, s * 0.84, 5);
+    fillStroke(ctx, fill);
+    roundRect(ctx, x - s * 0.2, y - s * 0.08, s * 0.4, s * 0.12, 3);
+    fillStroke(ctx, "#5C3A1A");
+    roundRect(ctx, x - s * 0.2, y + s * 0.18, s * 0.4, s * 0.12, 3);
+    fillStroke(ctx, "#5C3A1A");
+  }
+  function drawTool(ctx, x, y, s, fill) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.5);
+    roundRect(ctx, -s * 0.08, -s * 0.08, s * 0.16, s * 0.5, 4);
+    fillStroke(ctx, "#5C3A1A");
+    ctx.beginPath();
+    ctx.arc(0, -s * 0.18, s * 0.22, 0, Math.PI * 2);
+    fillStroke(ctx, fill);
+    ctx.restore();
+  }
+  function drawFlake(ctx, x, y, s, fill) {
+    var r = s * 0.4, i;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = fill;
+    ctx.lineWidth = Math.max(3.5, s * 0.1);
+    ctx.lineCap = "round";
+    for (i = 0; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -r);
+      ctx.stroke();
+      ctx.rotate(Math.PI / 4);
+    }
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.12);
+    ctx.lineTo(s * 0.12, 0);
+    ctx.lineTo(0, s * 0.12);
+    ctx.lineTo(-s * 0.12, 0);
+    ctx.closePath();
+    fillStroke(ctx, fill);
+    ctx.restore();
+  }
+  function drawOrbit(ctx, x, y, s, fill, rot) {
+    drawLodge(ctx, x, y + s * 0.04, s * 0.52, fill);
+    var rad = s * 0.4;
+    var a = ((rot || 0) * Math.PI) / 180;
+    drawBober(ctx, x + Math.sin(a) * rad, y - Math.cos(a) * rad, s * 0.38, "#8B5A2B");
+  }
+  function drawEmpty(ctx, x, y, s) {
+    ctx.save();
+    ctx.setLineDash([6, 5]);
+    roundRect(ctx, x - s * 0.38, y - s * 0.38, s * 0.76, s * 0.76, 10);
+    ctx.strokeStyle = "#A8C4E8";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
 
-  function drawOne(ctx, fam, x, y, s, fill) {
+  function drawOne(ctx, fam, x, y, s, fill, rot) {
     if (fam === "stick") drawStick(ctx, x, y, s, fill);
     else if (fam === "dam") drawDam(ctx, x, y, s, fill);
     else if (fam === "snow") drawSnow(ctx, x, y, s, fill);
     else if (fam === "lodge") drawLodge(ctx, x, y, s, fill);
+    else if (fam === "fish") drawFish(ctx, x, y, s, fill);
+    else if (fam === "ember") drawEmber(ctx, x, y, s, fill);
+    else if (fam === "post") drawPost(ctx, x, y, s, fill);
+    else if (fam === "tool") drawTool(ctx, x, y, s, fill);
+    else if (fam === "flake") drawFlake(ctx, x, y, s, fill);
+    else if (fam === "orbit") drawOrbit(ctx, x, y, s, fill, rot);
+    else if (fam === "empty") drawEmpty(ctx, x, y, s);
     else drawBober(ctx, x, y, s, fill);
   }
 
@@ -900,15 +1008,23 @@
   function paintSimple(ctx, g, size) {
     var fill = TINT[g.t] || TINT.wood;
     var n = g.n || 1;
+    var z = g.z == null ? 1 : g.z;
     var pts = offsets(n);
-    var unit = n <= 1 ? size * 0.68 : size * 0.40;
+    var unit = (n <= 1 ? size * 0.68 : size * 0.40) * z;
     ctx.save();
     ctx.translate(size / 2, size / 2);
+    if (g.flip === 1) ctx.scale(-1, 1);
+    if (g.flip === 2) ctx.scale(1, -1);
+    if (g.f === "orbit" || g.f === "empty") {
+      drawOne(ctx, g.f, 0, 0, size * 0.72 * z, fill, g.r || 0);
+      ctx.restore();
+      return;
+    }
     ctx.rotate((g.r || 0) * Math.PI / 180);
     var i, p;
     for (i = 0; i < pts.length; i++) {
       p = pts[i];
-      drawOne(ctx, g.f, p[0] * size, p[1] * size, unit, fill);
+      drawOne(ctx, g.f, p[0] * size, p[1] * size, unit, fill, g.r || 0);
     }
     ctx.restore();
     if (g.m === "dot") {
@@ -953,140 +1069,210 @@
   }
 
   var S = "stick", D = "dam", N = "snow", L = "lodge", B = "bober";
+  var FISH = "fish", EMB = "ember", POST = "post", TOOL = "tool", FLAKE = "flake", ORB = "orbit";
   var W = "wood", C = "cream", I = "ice", M = "moss", Y = "gold";
+  var FAM_ROW = "Row March", FAM_TRIO = "Trio Deal", FAM_SNOW = "Snow Fade", FAM_STACK = "Stack Add";
+  var FAM_XOR = "Dam XOR", FAM_ROT = "Rotate Lodge", FAM_MIRROR = "Mirror Creek", FAM_ORBIT = "Beaver Orbit";
+  var FACET_PAT = "Pattern Recognition", FACET_VIS = "Visual Perception", FACET_AN = "Analytical Thinking";
+  var FACET_ABS = "Abstract Reasoning", FACET_SP = "Spatial Orientation";
+  var FORM_NAMES = ["A", "B", "C", "D", "E", "F"];
+  var WEEK_MS = 7 * 24 * 3600 * 1000;
+  var CAMP_FAMS = [S, D, N, L, B, FISH, EMB, POST, TOOL, FLAKE];
+  var TINTS = [W, C, I, Y, M];
 
+
+  function uniqD(ans, list) {
+    var k = gk(ans), out = [], seen = {};
+    seen[k] = 1;
+    list.forEach(function (d) {
+      var dk = gk(d);
+      if (!dk || seen[dk]) return;
+      seen[dk] = 1;
+      out.push(d);
+    });
+    while (out.length < 3) {
+      var filler = G(FLAKE, 1, 45, M);
+      if (!seen[gk(filler)]) { out.push(filler); seen[gk(filler)] = 1; }
+      else out.push(G(POST, 1, 15 * out.length, Y));
+    }
+    return out.slice(0, 3);
+  }
+  function buildReasonPool() {
+    var items = [], n = 0;
+    function add(band, family, facet, eight, ans, d1, d2, d3) {
+      n += 1;
+      var ds = uniqD(ans, [d1, d2, d3]);
+      items.push(mkFam("R" + n, band, family, facet, eight, ans, ds[0], ds[1], ds[2]));
+    }
+    var i, f, t, a, b, c, other, eight, ans;
+    var marchF = [S, D, N, L, B, FISH, EMB, POST, TOOL, FLAKE, S, D];
+    for (i = 0; i < 12; i++) {
+      f = marchF[i]; t = TINTS[i % TINTS.length]; other = marchF[(i + 3) % marchF.length];
+      if (i % 3 === 0) {
+        eight = [G(f,1,0,t), G(f,2,0,t), G(f,3,0,t), G(f,1,0,t), G(f,2,0,t), G(f,3,0,t), G(f,1,0,t), G(f,2,0,t)];
+        ans = G(f,3,0,t);
+        add(1, FAM_ROW, FACET_PAT, eight, ans, G(f,2,0,t), G(f,1,0,t), G(other,3,0,t));
+      } else if (i % 3 === 1) {
+        eight = [G(f,1,0,t), G(f,1,45,t), G(f,1,90,t), G(f,1,0,t), G(f,1,45,t), G(f,1,90,t), G(f,1,0,t), G(f,1,45,t)];
+        ans = G(f,1,90,t);
+        add(1, FAM_ROW, FACET_PAT, eight, ans, G(f,1,0,t), G(f,1,135,t), G(other,1,90,t));
+      } else {
+        eight = [G(f,1,0,t,"none"), G(f,1,0,t,"dot"), G(f,1,0,t,"ring"), G(f,1,0,t,"none"), G(f,1,0,t,"dot"), G(f,1,0,t,"ring"), G(f,1,0,t,"none"), G(f,1,0,t,"dot")];
+        ans = G(f,1,0,t,"ring");
+        add(1, FAM_ROW, FACET_PAT, eight, ans, G(f,1,0,t,"none"), G(f,1,0,t,"dot"), G(other,1,0,t,"ring"));
+      }
+    }
+    var trioSets = [
+      [S, D, N], [L, B, FISH], [EMB, POST, TOOL], [FLAKE, S, L],
+      [D, FISH, EMB], [POST, N, B], [TOOL, S, D], [FISH, L, POST],
+      [N, EMB, TOOL], [B, FLAKE, D], [S, POST, FISH], [L, EMB, N]
+    ];
+    for (i = 0; i < 12; i++) {
+      a = trioSets[i][0]; b = trioSets[i][1]; c = trioSets[i][2]; t = TINTS[i % TINTS.length];
+      eight = [G(a,1,0,t), G(b,1,0,t), G(c,1,0,t), G(b,1,0,t), G(c,1,0,t), G(a,1,0,t), G(c,1,0,t), G(a,1,0,t)];
+      ans = G(b,1,0,t);
+      add(1, FAM_TRIO, FACET_PAT, eight, ans, G(a,1,0,t), G(c,1,0,t), G(FLAKE,1,0,t));
+    }
+    var fadeF = [N, FLAKE, S, D, EMB, FISH, L, B, POST, TOOL, N, S];
+    for (i = 0; i < 12; i++) {
+      f = fadeF[i]; t = TINTS[i % TINTS.length]; other = fadeF[(i + 1) % fadeF.length];
+      if (i % 2 === 0) {
+        eight = [G(f,1,0,t,null,0.52), G(f,1,0,t,null,0.78), G(f,1,0,t,null,1.08), G(f,1,0,t,null,0.52), G(f,1,0,t,null,0.78), G(f,1,0,t,null,1.08), G(f,1,0,t,null,0.52), G(f,1,0,t,null,0.78)];
+        ans = G(f,1,0,t,null,1.08);
+        add(1, FAM_SNOW, FACET_VIS, eight, ans, G(f,1,0,t,null,0.78), G(f,1,0,t,null,0.52), G(other,1,0,t,null,1.08));
+      } else {
+        eight = [G(f,1,0,W), G(f,1,0,C), G(f,1,0,I), G(f,1,0,W), G(f,1,0,C), G(f,1,0,I), G(f,1,0,W), G(f,1,0,C)];
+        ans = G(f,1,0,I);
+        add(1, FAM_SNOW, FACET_VIS, eight, ans, G(f,1,0,W), G(f,1,0,Y), G(other,1,0,I));
+      }
+    }
+    var stackPairs = [
+      [S, D], [N, L], [B, FISH], [EMB, POST], [TOOL, S], [FLAKE, D],
+      [FISH, N], [POST, L], [TOOL, B], [EMB, S], [FLAKE, FISH], [D, POST]
+    ];
+    for (i = 0; i < 12; i++) {
+      a = G(stackPairs[i][0], 1, 0, TINTS[i % 5]); b = G(stackPairs[i][1], 1, 0, TINTS[(i + 1) % 5]);
+      eight = [a, b, U(a, b), a, b, U(a, b), a, b];
+      ans = U(a, b);
+      add(2, FAM_STACK, FACET_AN, eight, ans, a, b, U(b, a));
+    }
+    function xorG(ga, gb) {
+      if (ga.f === gb.f) return G(FLAKE, 1, 0, I);
+      return U(ga, gb);
+    }
+    var xorPairs = [
+      [S, N], [D, L], [B, FISH], [EMB, TOOL], [POST, FLAKE], [S, FISH],
+      [N, EMB], [L, POST], [D, TOOL], [B, FLAKE], [FISH, POST], [S, EMB]
+    ];
+    for (i = 0; i < 12; i++) {
+      a = G(xorPairs[i][0], 1, 0, TINTS[i % 5]); b = G(xorPairs[i][1], 1, 0, TINTS[(i + 2) % 5]);
+      eight = [a, b, xorG(a, b), a, b, xorG(a, b), a, b];
+      ans = xorG(a, b);
+      add(i < 6 ? 2 : 3, FAM_XOR, FACET_ABS, eight, ans, a, b, G(xorPairs[i][0], 2, 0, W));
+    }
+    var rotF = [L, TOOL, B, FISH, POST, EMB, S, D, N, FLAKE, L, TOOL];
+    for (i = 0; i < 12; i++) {
+      f = rotF[i]; t = TINTS[i % 5];
+      eight = [G(f,1,0,t), G(f,1,90,t), G(f,1,180,t), G(f,1,90,t), G(f,1,180,t), G(f,1,270,t), G(f,1,180,t), G(f,1,270,t)];
+      ans = G(f,1,0,t);
+      add(3, FAM_ROT, FACET_SP, eight, ans, G(f,1,90,t), G(f,1,45,t), G(rotF[(i + 1) % 12], 1, 0, t));
+    }
+    var mirF = [B, FISH, L, TOOL, POST, EMB, S, D, N, FLAKE, B, FISH];
+    for (i = 0; i < 12; i++) {
+      f = mirF[i]; t = TINTS[i % 5];
+      var left = G(f, 1, 25, t), mid = G(N, 1, 0, I), right = G(f, 1, 25, t, "none", 1, 1);
+      eight = [left, mid, right, left, mid, right, left, mid];
+      ans = right;
+      add(3, FAM_MIRROR, FACET_SP, eight, ans, left, G(f, 1, 25, t, "none", 1, 0), G(mirF[(i + 1) % 12], 1, 25, t, "none", 1, 1));
+    }
+    for (i = 0; i < 12; i++) {
+      t = TINTS[i % 5];
+      eight = [G(ORB,1,0,t), G(ORB,1,90,t), G(ORB,1,180,t), G(ORB,1,90,t), G(ORB,1,180,t), G(ORB,1,270,t), G(ORB,1,180,t), G(ORB,1,270,t)];
+      ans = G(ORB,1,0,t);
+      add(3, FAM_ORBIT, FACET_SP, eight, ans, G(ORB,1,90,t), G(ORB,1,45,t), G(B,1,0,t));
+    }
+    return items;
+  }
+  function assignForms(items) {
+    var forms = { A: [], B: [], C: [], D: [], E: [], F: [] };
+    var byFam = {}, famOrder = [];
+    items.forEach(function (it) {
+      if (!it.family) return;
+      if (!byFam[it.family]) { byFam[it.family] = []; famOrder.push(it.family); }
+      byFam[it.family].push(it);
+    });
+    famOrder.forEach(function (fam, fi) {
+      var list = byFam[fam], i, name, k;
+      for (i = 0; i < 9 && i < list.length; i++) {
+        name = FORM_NAMES[(fi + i) % 6];
+        if (forms[name].length >= 12) {
+          for (k = 0; k < 6; k++) {
+            name = FORM_NAMES[(fi + i + k) % 6];
+            if (forms[name].length < 12) break;
+          }
+        }
+        if (forms[name].length >= 12) continue;
+        list[i].form = name;
+        forms[name].push(list[i]);
+      }
+    });
+    return forms;
+  }
   var PRACTICE = [
-    mk("P1", 0,
+    mkFam("P1", 0, FAM_ROW, FACET_PAT,
       [G(S,1), G(S,2), G(S,3), G(S,1), G(S,2), G(S,3), G(S,1), G(S,2)],
       G(S,3), G(S,1), G(S,2), G(D,3)),
-    mk("P2", 0,
-      [G(D,1,0), G(D,1,45), G(D,1,90), G(D,1,0), G(D,1,45), G(D,1,90), G(D,1,0), G(D,1,45)],
-      G(D,1,90), G(D,1,0), G(D,1,45), G(D,1,135)),
-    mk("P3", 0,
-      [G(N,1,0,W), G(N,1,0,C), G(N,1,0,I), G(N,1,0,W), G(N,1,0,C), G(N,1,0,I), G(N,1,0,W), G(N,1,0,C)],
-      G(N,1,0,I), G(N,1,0,W), G(N,1,0,Y), G(S,1,0,I))
-  ];
-
-  // Reasoning pool ≥24. Form A / Form B are non-overlapping 12s. Adaptive lite within a form.
-  var REASON_POOL = [
-    mk("E1", 1,
-      [G(L,1), G(L,2), G(L,3), G(L,1), G(L,2), G(L,3), G(L,1), G(L,2)],
-      G(L,3), G(L,1), G(L,2), G(S,3)),
-    mk("E2", 1,
-      [G(B,1,0,W), G(B,1,0,C), G(B,1,0,Y), G(B,1,0,W), G(B,1,0,C), G(B,1,0,Y), G(B,1,0,W), G(B,1,0,C)],
-      G(B,1,0,Y), G(B,1,0,W), G(B,1,0,I), G(L,1,0,Y)),
-    mk("E3", 1,
-      [G(S,1,0), G(S,1,45), G(S,1,90), G(S,1,0), G(S,1,45), G(S,1,90), G(S,1,0), G(S,1,45)],
-      G(S,1,90), G(S,1,0), G(S,1,135), G(S,1,45)),
-    mk("E4", 1,
-      [G(S,1), G(S,1), G(S,1), G(D,1), G(D,1), G(D,1), G(N,1), G(N,1)],
-      G(N,1), G(S,1), G(D,1), G(L,1)),
-    mk("E5", 1,
+    mkFam("P2", 0, FAM_TRIO, FACET_PAT,
       [G(S,1), G(D,1), G(N,1), G(D,1), G(N,1), G(S,1), G(N,1), G(S,1)],
       G(D,1), G(S,1), G(N,1), G(L,1)),
-    mk("E6", 1,
-      [G(D,1), G(D,2), G(D,3), G(D,1), G(D,2), G(D,3), G(D,1), G(D,2)],
-      G(D,3), G(D,1), G(D,2), G(B,3)),
-    mk("E7", 1,
-      [G(B,1), G(B,1), G(B,1), G(B,2), G(B,2), G(B,2), G(B,3), G(B,3)],
-      G(B,3), G(B,1), G(B,2), G(S,3)),
-    mk("E8", 1,
-      [G(S,1,0,W), G(S,1,0,I), G(S,1,0,Y), G(S,1,0,W), G(S,1,0,I), G(S,1,0,Y), G(S,1,0,W), G(S,1,0,I)],
-      G(S,1,0,Y), G(S,1,0,W), G(S,1,0,C), G(N,1,0,Y)),
-
-    mk("M1", 2,
-      [G(S,1,0), G(S,1,45), G(S,1,90), G(D,1,0), G(D,1,45), G(D,1,90), G(L,1,0), G(L,1,45)],
-      G(L,1,90), G(L,1,0), G(S,1,90), G(L,1,45)),
-    mk("M2", 2,
-      [G(S,1,0), G(S,1,45), G(S,1,90), G(S,2,0), G(S,2,45), G(S,2,90), G(S,3,0), G(S,3,45)],
-      G(S,3,90), G(S,3,0), G(S,2,90), G(D,3,90)),
-    mk("M3", 2,
-      [G(S,1,0,W), G(D,1,0,W), G(N,1,0,W), G(S,1,0,I), G(D,1,0,I), G(N,1,0,I), G(S,1,0,Y), G(D,1,0,Y)],
-      G(N,1,0,Y), G(S,1,0,Y), G(N,1,0,W), G(L,1,0,Y)),
-    mk("M4", 2,
-      [G(S,1), G(S,1), G(S,2), G(S,1), G(S,2), G(S,3), G(S,2), G(S,1)],
-      G(S,3), G(S,1), G(S,2), G(D,3)),
-    mk("M5", 2,
-      [G(S,1), G(D,1), U(G(S,1), G(D,1)), G(N,1), G(L,1), U(G(N,1), G(L,1)), G(B,1), G(S,1)],
-      U(G(B,1), G(S,1)), U(G(B,1), G(D,1)), G(B,1), G(S,1)),
-    mk("M6", 2,
-      [G(N,1,0,W), G(N,1,0,I), G(N,1,0,Y), G(L,1,0,W), G(L,1,0,I), G(L,1,0,Y), G(D,1,0,W), G(D,1,0,I)],
-      G(D,1,0,Y), G(D,1,0,W), G(N,1,0,Y), G(B,1,0,Y)),
-    mk("M7", 2,
-      [G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot")],
-      G(B,1,0,W,"ring"), G(B,1,0,W,"none"), G(B,1,0,W,"dot"), G(S,1,0,W,"ring")),
-    mk("M8", 2,
-      [G(S,2,45), G(D,2,45), G(N,2,45), G(S,2,45), G(D,2,45), G(N,2,45), G(S,2,45), G(D,2,45)],
-      G(N,2,45), G(S,2,45), G(L,2,45), G(N,1,45)),
-
-    mk("H1", 3,
-      [G(S,1,0), G(D,1,45), G(N,1,90), G(D,1,0), G(N,1,45), G(S,1,90), G(N,1,0), G(S,1,45)],
-      G(D,1,90), G(S,1,90), G(D,1,0), G(N,1,45)),
-    mk("H2", 3,
-      [G(S,1), G(S,2), G(S,3), G(S,2), G(S,2), G(S,2), G(S,3), G(S,1)],
-      G(S,2), G(S,1), G(S,3), G(D,2)),
-    mk("H3", 3,
-      [G(L,1), G(N,1), U(G(L,1), G(N,1)), G(D,1), G(B,1), U(G(D,1), G(B,1)), G(S,1), G(N,1)],
-      U(G(S,1), G(N,1)), U(G(S,1), G(L,1)), G(S,1), G(N,1)),
-    mk("H4", 3,
-      [G(S,1,0,W), G(S,2,0,I), G(S,3,0,Y), G(D,1,0,I), G(D,2,0,Y), G(D,3,0,W), G(L,1,0,Y), G(L,2,0,W)],
-      G(L,3,0,I), G(L,3,0,Y), G(L,3,0,W), G(S,3,0,I)),
-    mk("H5", 3,
-      [G(B,1,0), G(B,2,45), G(B,3,90), G(B,1,135), G(B,2,0), G(B,3,45), G(B,1,90), G(B,2,135)],
-      G(B,3,0), G(B,3,90), G(B,1,0), G(S,3,0)),
-    mk("H6", 3,
-      [U(G(S,1), G(D,1)), G(S,1), G(D,1), U(G(N,1), G(L,1)), G(N,1), G(L,1), U(G(B,1), G(S,1)), G(B,1)],
-      G(S,1), G(B,1), U(G(B,1), G(S,1)), G(D,1)),
-    mk("H7", 3,
-      [G(S,1,0,W,"none"), G(D,1,0,W,"dot"), G(N,1,0,W,"ring"), G(D,1,0,W,"none"), G(N,1,0,W,"dot"), G(S,1,0,W,"ring"), G(N,1,0,W,"none"), G(S,1,0,W,"dot")],
-      G(D,1,0,W,"ring"), G(S,1,0,W,"ring"), G(D,1,0,W,"dot"), G(L,1,0,W,"ring")),
-    mk("H8", 3,
-      [G(S,1,0), G(D,2,45), G(N,3,90), G(D,1,0), G(N,2,45), G(S,3,90), G(N,1,0), G(S,2,45)],
-      G(D,3,90), G(S,3,90), G(D,3,0), G(N,3,90))
+    mkFam("P3", 0, FAM_SNOW, FACET_VIS,
+      [G(N,1,0,W,null,0.52), G(N,1,0,W,null,0.78), G(N,1,0,W,null,1.08), G(N,1,0,W,null,0.52), G(N,1,0,W,null,0.78), G(N,1,0,W,null,1.08), G(N,1,0,W,null,0.52), G(N,1,0,W,null,0.78)],
+      G(N,1,0,W,null,1.08), G(N,1,0,W,null,0.52), G(N,1,0,Y,null,1.08), G(S,1,0,W,null,1.08))
   ];
-
+  var REASON_POOL = buildReasonPool();
   REASON_POOL.forEach(function (it) {
     it.distractors = it.distractors.filter(Boolean);
     while (it.distractors.length < 3) it.distractors.push(G(L, 1, 135, M));
   });
-  var FORM_A = REASON_POOL.filter(function (it) {
-    return /^(E[1-4]|M[1-4]|H[1-4])$/.test(it.id);
-  });
-  var FORM_B = REASON_POOL.filter(function (it) {
-    return /^(E[5-8]|M[5-8]|H[5-8])$/.test(it.id);
-  });
-  FORM_A.forEach(function (it) { it.form = "A"; });
-  FORM_B.forEach(function (it) { it.form = "B"; });
+  var FORMS = assignForms(REASON_POOL);
+  var FORM_A = FORMS.A, FORM_B = FORMS.B, FORM_C = FORMS.C, FORM_D = FORMS.D, FORM_E = FORMS.E, FORM_F = FORMS.F;
 
-  var MEM_ICONS = [
-    G(S, 1, 0, W), G(D, 1, 0, W), G(N, 1, 0, I), G(L, 1, 0, Y), G(B, 1, 0, W),
-    G(S, 1, 90, Y), G(N, 1, 0, Y), G(D, 1, 0, C)
+
+  var MEM_PACKS = [
+    { name: "tools", icons: [G(TOOL,1,0,W), G(TOOL,1,40,Y), G(TOOL,1,-20,C), G(S,1,90,W), G(TOOL,1,0,M), G(S,1,0,Y)] },
+    { name: "snow", icons: [G(N,1,0,I), G(FLAKE,1,0,C), G(N,1,0,Y), G(FLAKE,1,22,I), G(N,1,0,W), G(FLAKE,1,0,M)] },
+    { name: "posts", icons: [G(POST,1,0,W), G(POST,1,0,C), G(D,1,0,W), G(POST,1,0,Y), G(D,1,0,C), G(POST,1,0,M)] },
+    { name: "fish", icons: [G(FISH,1,0,I), G(FISH,1,20,M), G(FISH,1,-15,C), G(FISH,1,0,Y), G(B,1,0,W), G(FISH,1,35,W)] },
+    { name: "embers", icons: [G(EMB,1,0,Y), G(EMB,1,0,W), G(EMB,1,18,Y), G(EMB,1,0,M), G(L,1,0,Y), G(EMB,1,-12,W)] }
   ];
+  var MEM_ICONS = [];
+  MEM_PACKS.forEach(function (p) { p.icons.forEach(function (g) { MEM_ICONS.push(g); }); });
 
+  function memPad(seq, packIcons) {
+    var pad = [], icons = packIcons || MEM_ICONS;
+    seq.forEach(function (g) {
+      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+    });
+    icons.forEach(function (g) {
+      if (pad.length >= Math.max(4, seq.length + 1)) return;
+      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+    });
+    MEM_ICONS.forEach(function (g) {
+      if (pad.length >= 4) return;
+      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
+    });
+    return pad;
+  }
   function makeMemTrial(span, reverse, id, studyEach, respond) {
     span = Math.max(2, Math.min(MEM_SPAN_MAX, span || MEM_SPAN_START));
     var start = Math.floor(Math.random() * MEM_ICONS.length);
     var step = 1 + (start % 3);
-    var seq = [];
-    var i, ic;
-    for (i = 0; i < span; i++) {
-      ic = MEM_ICONS[(start + i * step) % MEM_ICONS.length];
-      seq.push(ic);
-    }
-    var pad = [];
-    seq.forEach(function (g) {
-      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
-    });
-    MEM_ICONS.forEach(function (g) {
-      if (pad.length >= Math.max(4, span + 1)) return;
-      if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
-    });
+    var seq = [], i;
+    for (i = 0; i < span; i++) seq.push(MEM_ICONS[(start + i * step) % MEM_ICONS.length]);
     return {
       id: id || ("MX" + span + (reverse ? "r" : "f") + "-" + start),
-      span: span,
-      reverse: !!reverse,
-      seq: seq,
-      pad: pad,
+      span: span, reverse: !!reverse, kind: reverse ? "reverse" : "forward",
+      seq: seq, pad: memPad(seq),
       studyEach: studyEach == null ? MEM_STUDY : studyEach,
       respond: respond == null ? MEM_PROBE : respond
     };
@@ -1112,82 +1298,95 @@
     }
   }
   function buildMemoryPool() {
-    var items = [];
-    var n = 0;
-    function add(span, reverse, practice) {
+    var items = [], n = 0, kinds = ["forward", "reverse", "gap", "change"];
+    var spans = [3,3,3,3,4,4,4,5,5,6,7,3];
+    function add(pack, span, kind, practice) {
       n += 1;
-      var it = makeMemTrial(span, reverse, (practice ? "MP" : "MX") + n + "s" + span + (reverse ? "r" : "f"), MEM_STUDY, MEM_PROBE);
-      it.practice = !!practice;
+      var icons = pack.icons;
+      var seq = [], i, idx;
+      for (i = 0; i < span; i++) seq.push(icons[(n + i * 2) % icons.length]);
+      var it = {
+        id: (practice ? "MP" : "MX") + n + "s" + span + kind.charAt(0) + pack.name.slice(0, 2),
+        span: span, reverse: kind === "reverse", kind: kind, pack: pack.name,
+        seq: seq, pad: memPad(seq, icons),
+        studyEach: MEM_STUDY, respond: MEM_PROBE, practice: !!practice
+      };
+      if (kind === "gap") {
+        it.gapAt = 1 % span;
+        it.missing = seq[it.gapAt];
+      }
+      if (kind === "change") {
+        idx = Math.min(span - 1, 1);
+        it.changeAt = idx;
+        it.changedGlyph = icons[(n + 5) % icons.length];
+        if (gk(it.changedGlyph) === gk(seq[idx])) it.changedGlyph = icons[(n + 3) % icons.length];
+        it.changedSeq = seq.slice();
+        it.changedSeq[idx] = it.changedGlyph;
+        if (!it.pad.some(function (x) { return gk(x) === gk(it.changedGlyph); })) it.pad.push(it.changedGlyph);
+      }
       items.push(it);
     }
-    add(3, false, true);
-    add(3, false, true);
-    var spans = [3,3,3,3,3,3,4,4,4,4,4,4,5,5,3,3,4,4,5,3,3,4,5,3,4,3,5,4,3,4];
-    var revs  = [0,0,0,0,0,0,1,1,0,0,1,1,0,1,1,0,1,0,1,1,0,0,0,1,1,0,0,1,0,1];
-    for (var i = 0; i < 30; i++) add(spans[i], !!revs[i], false);
+    add(MEM_PACKS[0], 3, "forward", true);
+    add(MEM_PACKS[3], 3, "forward", true);
+    var p, k;
+    for (p = 0; p < MEM_PACKS.length; p++) {
+      for (k = 0; k < 12; k++) add(MEM_PACKS[p], spans[k], kinds[k % kinds.length], false);
+    }
     return items;
   }
   var MEM_ALL = buildMemoryPool();
   var MEM_PRACTICE = MEM_ALL.filter(function (it) { return it.practice; });
   var MEM_POOL = MEM_ALL.filter(function (it) { return !it.practice; });
 
+  var SPEED_TEMPLATES = ["odd-shape", "odd-color", "odd-count", "odd-tilt", "odd-pattern", "match", "twin", "odd-mark"];
   function buildSpeedPool() {
-    var items = [];
-    var id = 0;
-    var fams = [S, D, N, L, B];
-    var tints = [W, C, I, Y, M];
-    function push(kind, tiles, ans, limit, prompt, extra) {
+    var items = [], id = 0;
+    var fams = CAMP_FAMS;
+    function push(template, kind, tiles, ans, prompt, extra) {
       id += 1;
       items.push({
-        id: "SP" + id,
-        kind: kind,
-        tiles: tiles,
-        ans: ans,
-        target: extra || null,
-        limit: limit,
-        prompt: prompt,
-        practice: false
+        id: "SP" + id, kind: kind, template: template, tiles: tiles, ans: ans,
+        target: extra || null, limit: SPD_LIMIT, prompt: prompt, practice: false
       });
     }
-    var i, j, f, o, t, tn, tiles, ans, tgt;
+    var i, j, f, o, t, tn, tiles, tgt, twin;
     for (i = 0; i < fams.length; i++) {
       f = fams[i]; o = fams[(i + 1) % fams.length];
-      push("odd", [G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), SPD_LIMIT, "TAP THE ODD ONE");
+      push("odd-shape", "odd", [G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), "TAP THE ODD SHAPE");
     }
     for (i = 0; i < fams.length; i++) {
       f = fams[i];
-      for (j = 0; j < tints.length; j++) {
-        t = tints[j]; tn = tints[(j + 1) % tints.length];
-        push("odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tn)], G(f,1,0,tn), SPD_LIMIT, "TAP THE ODD ONE");
+      for (j = 0; j < TINTS.length; j++) {
+        t = TINTS[j]; tn = TINTS[(j + 1) % TINTS.length];
+        push("odd-color", "odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tn)], G(f,1,0,tn), "TAP THE ODD COLOR");
       }
     }
     for (i = 0; i < fams.length; i++) {
-      f = fams[i];
-      push("odd", [G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90), SPD_LIMIT, "TAP THE ODD ONE");
-      push("odd", [G(f,1,45), G(f,1,45), G(f,1,45), G(f,1,0)], G(f,1,0), SPD_LIMIT, "TAP THE ODD ONE");
-      push("odd", [G(f,1), G(f,1), G(f,1), G(f,2)], G(f,2), SPD_LIMIT, "TAP THE ODD ONE");
-      push("odd", [G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1), SPD_LIMIT, "TAP THE ODD ONE");
+      f = fams[i]; t = TINTS[i % TINTS.length];
+      push("odd-count", "odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,2,0,t)], G(f,2,0,t), "TAP THE ODD COUNT");
+      push("odd-count", "odd", [G(f,2,0,t), G(f,2,0,t), G(f,2,0,t), G(f,1,0,t)], G(f,1,0,t), "TAP THE ODD COUNT");
+      push("odd-tilt", "odd", [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,90,t)], G(f,1,90,t), "TAP THE TILTED ONE");
+      push("odd-tilt", "odd", [G(f,1,45,t), G(f,1,45,t), G(f,1,45,t), G(f,1,0,t)], G(f,1,0,t), "TAP THE TILTED ONE");
+      push("odd-pattern", "odd", [G(f,1,0,t,"none"), G(f,1,0,t,"none"), G(f,1,0,t,"none"), G(f,1,0,t,"dot")], G(f,1,0,t,"dot"), "TAP THE PATTERN BREAK");
+      push("odd-mark", "odd", [G(f,1,0,t,"none"), G(f,1,0,t,"none"), G(f,1,0,t,"none"), G(f,1,0,t,"ring")], G(f,1,0,t,"ring"), "TAP THE MARKED ONE");
+      twin = G(f, 1, 0, t);
+      push("twin", "odd", [twin, twin, G(fams[(i + 2) % fams.length], 1, 0, t), G(f, 2, 0, t)], twin, "TAP A TWIN");
     }
     for (i = 0; i < fams.length; i++) {
-      for (j = 0; j < tints.length; j++) {
-        f = fams[i]; t = tints[j];
+      for (j = 0; j < TINTS.length; j++) {
+        f = fams[i]; t = TINTS[j];
         tgt = G(f, 1, 0, t);
-        tiles = [tgt, G(f, 1, 0, tints[(j + 1) % tints.length]), G(fams[(i + 2) % fams.length], 1, 0, t), G(f, 2, 0, t)];
-        push("match", tiles, tgt, SPD_LIMIT, "MATCH THIS", tgt);
+        tiles = [tgt, G(f, 1, 0, TINTS[(j + 1) % TINTS.length]), G(fams[(i + 2) % fams.length], 1, 0, t), G(f, 2, 0, t)];
+        push("match", "match", tiles, tgt, "MATCH THIS", tgt);
       }
     }
     var practice = [];
     for (i = 0; i < 5; i++) {
       f = fams[i]; o = fams[(i + 2) % fams.length];
       practice.push({
-        id: "SPP" + (i + 1),
-        kind: "odd",
-        tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
-        ans: G(o,1),
-        target: null,
-        limit: SPD_LIMIT,
-        prompt: "TAP THE ODD ONE",
-        practice: true
+        id: "SPP" + (i + 1), kind: "odd", template: "odd-shape",
+        tiles: [G(f,1), G(f,1), G(f,1), G(o,1)], ans: G(o,1), target: null,
+        limit: SPD_LIMIT, prompt: "TAP THE ODD SHAPE", practice: true
       });
     }
     return { practice: practice, pool: items };
@@ -1197,50 +1396,46 @@
   var SPEED_POOL = SPEED_BUILT.pool;
 
   function buildTrainPattern() {
-    var items = [], n = 0, fams = [S, D, N, L, B], tints = [W, C, I, Y];
-    function odd(tiles, ans) {
+    var items = [], n = 0, fams = [S, D, N, L, B, FISH, EMB, POST], tints = [W, C, I, Y];
+    function odd(tiles, ans, family) {
       n += 1;
-      items.push({ id: "TWP" + n, kind: "odd", tiles: tiles, ans: ans, limit: 6, prompt: "TAP THE ODD ONE" });
+      items.push({ id: "TWP" + n, kind: "odd", family: family || FAM_TRIO, tiles: tiles, ans: ans, limit: 6, prompt: "TAP THE ODD ONE" });
     }
     var i, f, o, t;
     for (i = 0; i < fams.length; i++) {
       f = fams[i]; o = fams[(i + 2) % fams.length];
-      odd([G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1));
-      odd([G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1));
+      odd([G(f,1), G(f,1), G(f,1), G(o,1)], G(o,1), FAM_TRIO);
+      odd([G(f,2), G(f,2), G(f,2), G(f,1)], G(f,1), FAM_ROW);
       t = tints[i % tints.length];
-      odd([G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tints[(i + 1) % tints.length])], G(f,1,0,tints[(i + 1) % tints.length]));
-      odd([G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90));
+      odd([G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(f,1,0,tints[(i + 1) % tints.length])], G(f,1,0,tints[(i + 1) % tints.length]), FAM_SNOW);
+      odd([G(f,1,0), G(f,1,0), G(f,1,0), G(f,1,90)], G(f,1,90), FAM_ROT);
     }
     return items;
   }
   function buildTrainMemory() {
     var items = [], n = 0;
-    function add(span) {
+    function add(span, packI) {
+      var pack = MEM_PACKS[packI % MEM_PACKS.length];
       var seq = [], i;
-      for (i = 0; i < span; i++) seq.push(MEM_ICONS[(n + i * 2) % MEM_ICONS.length]);
-      var pad = seq.slice();
-      MEM_ICONS.forEach(function (g) {
-        if (pad.length >= 4) return;
-        if (!pad.some(function (x) { return gk(x) === gk(g); })) pad.push(g);
-      });
+      for (i = 0; i < span; i++) seq.push(pack.icons[(n + i) % pack.icons.length]);
       n += 1;
-      items.push({ id: "TWM" + n, span: span, reverse: false, seq: seq, pad: pad, studyEach: TRAIN_MEM_STUDY, respond: TRAIN_MEM_PROBE });
+      items.push({ id: "TWM" + n, span: span, reverse: false, kind: "forward", pack: pack.name, seq: seq, pad: memPad(seq, pack.icons), studyEach: TRAIN_MEM_STUDY, respond: TRAIN_MEM_PROBE });
     }
     var k;
-    for (k = 0; k < 12; k++) add(2);
-    for (k = 0; k < 10; k++) add(3);
+    for (k = 0; k < 12; k++) add(2, k);
+    for (k = 0; k < 10; k++) add(3, k);
     return items;
   }
   function buildTrainSpeed() {
-    var items = [], n = 0, fams = [S, D, N, L, B];
-    var i, f, o;
+    var items = [], n = 0, fams = [S, D, N, L, B, FISH, EMB, POST];
+    var i, f, o, t;
     for (i = 0; i < 24; i++) {
-      f = fams[i % fams.length]; o = fams[(i + 1) % fams.length];
+      f = fams[i % fams.length]; o = fams[(i + 1) % fams.length]; t = TINTS[i % TINTS.length];
       n += 1;
       items.push({
-        id: "TWS" + n, kind: "odd",
-        tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
-        ans: G(o,1), limit: TRAIN_SPD_LIMIT, prompt: "TAP THE ODD ONE"
+        id: "TWS" + n, kind: "odd", template: SPEED_TEMPLATES[i % SPEED_TEMPLATES.length],
+        tiles: [G(f,1,0,t), G(f,1,0,t), G(f,1,0,t), G(o,1,0,t)],
+        ans: G(o,1,0,t), limit: TRAIN_SPD_LIMIT, prompt: "TAP THE ODD ONE"
       });
     }
     return items;
@@ -1670,10 +1865,12 @@
       it.distractors.forEach(function (d) { if (gk(d) === ans) ok = false; });
       if (it.distractors.length !== 3) ok = false;
     });
-    if (REASON_POOL.length < 24) ok = false;
-    if (FORM_A.length !== 12 || FORM_B.length !== 12) ok = false;
-    if (MEM_POOL.length < 30) ok = false;
-    if (SPEED_POOL.length < 60) ok = false;
+    if (REASON_POOL.length < 72) ok = false;
+    if (FORM_NAMES.some(function (n) { return !FORMS[n] || FORMS[n].length !== 12; })) ok = false;
+    if (MEM_POOL.length < 60) ok = false;
+    if (SPEED_POOL.length < 100) ok = false;
+    if (MEM_PACKS.length < 5) ok = false;
+    if (SPEED_TEMPLATES.length < 8) ok = false;
     if (TRAIN_PATTERN.length < 20 || TRAIN_MEMORY.length < 20 || TRAIN_SPEED.length < 20) ok = false;
     if (TRIVIA.length < 80) ok = false;
     if (SOCIAL.length < 40) ok = false;
@@ -1833,9 +2030,9 @@
 
   function emptySave() {
     return {
-      reasoning: null, rCorrect: 0, rTotal: 12, rPct: null, rForm: null,
-      memory: null, mCorrect: 0, mTotal: 10, mPct: null,
-      speed: null, sCorrect: 0, sTotal: 20, sPct: null,
+      reasoning: null, rCorrect: 0, rTotal: 12, rPct: null, rForm: null, rFacets: [], rFormHist: [],
+      memory: null, mCorrect: 0, mTotal: 10, mPct: null, memSeen: [],
+      speed: null, sCorrect: 0, sTotal: 20, sPct: null, spdSeen: [],
       social: null, soCorrect: 0, soTotal: 10, soPct: null,
       musStick: false, musTwig: false, musEmber: false, musWord: false,
       at: 0
@@ -1853,8 +2050,12 @@
         p.rTotal = s.rTotal || s.total || 12;
         p.rPct = s.rPct != null ? s.rPct : s.pct;
         p.rForm = s.rForm || "A";
+        p.rFacets = s.rFacets || [];
         p.musStick = true;
       }
+      p.rFormHist = s.rFormHist || [];
+      p.memSeen = s.memSeen || [];
+      p.spdSeen = s.spdSeen || [];
       if (typeof s.memory === "number") {
         p.memory = s.memory; p.mCorrect = s.mCorrect || 0; p.mTotal = s.mTotal || 10; p.mPct = s.mPct;
         p.musTwig = true;
@@ -1889,7 +2090,7 @@
 
   function itemById(id) {
     if (!id) return null;
-    var lists = [PRACTICE, FORM_A, FORM_B, MEM_PRACTICE, MEM_POOL, SPEED_PRACTICE, SPEED_POOL];
+    var lists = [PRACTICE, REASON_POOL, MEM_PRACTICE, MEM_POOL, SPEED_PRACTICE, SPEED_POOL];
     var i, j, list;
     for (i = 0; i < lists.length; i++) {
       list = lists[i];
@@ -2180,7 +2381,7 @@
   }
   function tickTimer() {
     if (!run || (mode !== "practice" && mode !== "assess")) return;
-    if (run.phase === "study" || run.phase === "banner") return;
+    if (run.phase === "study" || run.phase === "banner" || run.phase === "flash") return;
     var r = remainNow();
     var chip = document.getElementById("chip-time");
     chip.textContent = fmtTime(r, run.limit);
@@ -2263,7 +2464,7 @@
 
   function showSpanBanner(it, then) {
     var ban = document.getElementById("span-banner");
-    ban.textContent = (it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
+    ban.textContent = (it.kind === "gap" ? "GAP · " : it.kind === "change" ? "CHANGED · " : it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
     ban.classList.remove("hidden");
     document.getElementById("chip-time").textContent = "SPAN " + it.span;
     document.getElementById("time-fill").style.transform = "scaleX(1)";
@@ -2281,14 +2482,22 @@
       run.studyI = 0;
     }
     run.limit = it.respond;
-    var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
-    run.want = want.map(gk);
+    if (it.kind === "gap") run.want = [gk(it.missing || it.seq[it.gapAt || 0])];
+    else if (it.kind === "change") run.want = [gk(it.changedGlyph)];
+    else {
+      var want = it.reverse ? it.seq.slice().reverse() : it.seq.slice();
+      run.want = want.map(gk);
+    }
     hudFor();
     document.getElementById("chip-time").textContent = "WATCH";
     document.getElementById("time-fill").style.transform = "scaleX(1)";
-    setPrompt(it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", it.reverse);
+    setPrompt(it.kind === "gap" ? "TAP THE MISSING ICON" : it.kind === "change" ? "WATCH, then tap what changed" : it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", !!it.reverse && it.kind !== "gap" && it.kind !== "change");
     if (resume && run.phase === "study") {
       stepStudy();
+      return;
+    }
+    if (resume && run.phase === "flash") {
+      beginMemFlash();
       return;
     }
     if (resume && run.phase === "respond") {
@@ -2307,15 +2516,39 @@
     if (!run || !run.cur || run.phase !== "study") return;
     var it = run.cur;
     if (run.studyI >= it.seq.length) {
+      if (it.kind === "change" && it.changedSeq) { beginMemFlash(); return; }
       beginMemRespond();
       return;
     }
     var box = document.getElementById("mem-study");
     box.classList.remove("hidden");
     box.innerHTML = "";
-    box.appendChild(tileCopy(it.seq[run.studyI]));
+    var show = it.seq[run.studyI];
+    if (it.kind === "gap" && run.studyI === it.gapAt) show = G("empty");
+    box.appendChild(tileCopy(show));
     run.studyI += 1;
     studyTimer = setTimeout(stepStudy, it.studyEach * 1000);
+  }
+  function beginMemFlash() {
+    if (!run || !run.cur) return;
+    run.phase = "flash";
+    run.studyI = 0;
+    stepFlash();
+  }
+  function stepFlash() {
+    if (!run || !run.cur || run.phase !== "flash") return;
+    var it = run.cur;
+    var seq = it.changedSeq || it.seq;
+    if (run.studyI >= seq.length) {
+      beginMemRespond();
+      return;
+    }
+    var box = document.getElementById("mem-study");
+    box.classList.remove("hidden");
+    box.innerHTML = "";
+    box.appendChild(tileCopy(seq[run.studyI]));
+    run.studyI += 1;
+    studyTimer = setTimeout(stepFlash, it.studyEach * 1000);
   }
 
   function beginMemRespond() {
@@ -2334,7 +2567,7 @@
       b.addEventListener("click", function () { tapMem(g, b); });
       padEl.appendChild(b);
     });
-    setPrompt(run.cur.reverse ? "TAP BACKWARD" : "TAP THE ORDER", run.cur.reverse);
+    setPrompt(run.cur.kind === "gap" ? "TAP THE MISSING ICON" : run.cur.kind === "change" ? "TAP WHAT CHANGED" : run.cur.reverse ? "TAP BACKWARD" : "TAP THE ORDER", !!run.cur.reverse && run.cur.kind !== "gap" && run.cur.kind !== "change");
     startTimer();
     snapshotRun();
   }
@@ -2414,11 +2647,7 @@
 
   function nextAssessItem() {
     if (run.track === "reason") return pickFromBand();
-    if (run.track === "memory") {
-      var reverse = false;
-      if (mode === "assess" && run.i >= 3) reverse = (run.i % 3 === 2);
-      return makeMemTrial(run.span || MEM_SPAN_START, reverse, "MX" + (run.i + 1) + "s" + (run.span || MEM_SPAN_START) + (reverse ? "r" : "f"), MEM_STUDY, MEM_PROBE);
-    }
+    if (run.track === "memory") return pickMemItem();
     var pool = run.formPool.filter(function (it) { return !run.used[it.id]; });
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -2430,7 +2659,7 @@
     var meta = document.getElementById("confirm-meta");
     if (run.track === "memory") meta.textContent = "Assess is 10 trials · study 1.8s per icon · 12s to tap · start span 3. Stay on this page.";
     else if (run.track === "speed") meta.textContent = "Assess is 20 short trials · 3.2s each. Stay on this page.";
-    else meta.textContent = "Assess is 12 items · 50s each · no pause. Stay on this page.";
+    else meta.textContent = "Assess is 12 items · 50s each · one camp form · no pause. Stay on this page.";
     showOverlay("confirm");
     snapshotRun();
   }
@@ -2456,12 +2685,12 @@
     } else if (track === "speed") {
       practiceList = SPEED_PRACTICE.slice();
       totalN = 5;
-      formPool = shuffle(SPEED_POOL).slice();
+      formPool = pickSpeedSet();
     } else {
       practiceList = PRACTICE.slice();
       totalN = PRACTICE_N;
       formName = nextReasonForm();
-      formPool = formName === "B" ? FORM_B.slice() : FORM_A.slice();
+      formPool = ((FORMS && FORMS[formName]) || FORM_A).slice();
     }
     run = {
       track: track, i: 0, used: {}, band: 2, corrStreak: 0, wrongStreak: 0,
@@ -2474,10 +2703,91 @@
     updateLeave();
   }
 
+  function recentIdSet(key) {
+    var s = loadSave();
+    var list = s[key] || [];
+    var now = Date.now(), set = {};
+    list.forEach(function (h) {
+      if (now - (h.at || 0) < WEEK_MS) set[h.id || h.name] = 1;
+    });
+    return set;
+  }
   function nextReasonForm() {
     var s = loadSave();
-    if (typeof s.reasoning !== "number") return "A";
-    return s.rForm === "B" ? "A" : "B";
+    var hist = s.rFormHist || [];
+    var now = Date.now();
+    var recent = {};
+    hist.forEach(function (h) {
+      if (h && h.name && now - (h.at || 0) < WEEK_MS) recent[h.name] = 1;
+    });
+    var i, name;
+    for (i = 0; i < FORM_NAMES.length; i++) {
+      name = FORM_NAMES[i];
+      if (!recent[name] && FORMS[name] && FORMS[name].length === 12) return name;
+    }
+    var oldest = null;
+    hist.forEach(function (h) {
+      if (h && h.name && (!oldest || (h.at || 0) < (oldest.at || 0))) oldest = h;
+    });
+    if (oldest && FORMS[oldest.name] && FORMS[oldest.name].length === 12) return oldest.name;
+    return "A";
+  }
+  function pickSpeedSet() {
+    var recent = recentIdSet("spdSeen");
+    var byT = {}, out = [], i, t, list, rest;
+    SPEED_TEMPLATES.forEach(function (name) { byT[name] = []; });
+    SPEED_POOL.forEach(function (it) {
+      t = it.template || "odd-shape";
+      if (!byT[t]) byT[t] = [];
+      byT[t].push(it);
+    });
+    shuffle(SPEED_TEMPLATES.slice()).forEach(function (name) {
+      list = shuffle(byT[name] || []).sort(function (a, b) {
+        return (recent[a.id] ? 1 : 0) - (recent[b.id] ? 1 : 0);
+      });
+      if (list[0]) out.push(list[0]);
+    });
+    rest = shuffle(SPEED_POOL.filter(function (it) {
+      return out.indexOf(it) < 0 && !recent[it.id];
+    }));
+    if (rest.length < SPD_ASSESS_N - out.length) {
+      rest = shuffle(SPEED_POOL.filter(function (it) { return out.indexOf(it) < 0; }));
+    }
+    for (i = 0; out.length < SPD_ASSESS_N && i < rest.length; i++) out.push(rest[i]);
+    return out;
+  }
+  function pickMemItem() {
+    var span = run.span || MEM_SPAN_START;
+    var recent = recentIdSet("memSeen");
+    var wantRev = mode === "assess" && run.i >= 3 && (run.i % 3 === 2);
+    function cand(pred) {
+      return MEM_POOL.filter(function (it) { return !run.used[it.id] && pred(it); });
+    }
+    var pool = cand(function (it) { return it.span === span && !!it.reverse === wantRev && !recent[it.id]; });
+    if (!pool.length) pool = cand(function (it) { return it.span === span && !recent[it.id]; });
+    if (!pool.length) pool = cand(function (it) { return it.span === span; });
+    if (!pool.length) pool = cand(function () { return true; });
+    if (!pool.length) return makeMemTrial(span, wantRev, "MX" + (run.i + 1), MEM_STUDY, MEM_PROBE);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function facetsFromRun(r) {
+    var set = {}, out = [];
+    Object.keys((r && r.used) || {}).forEach(function (id) {
+      var it = itemById(id);
+      if (it && it.facet && !set[it.facet]) { set[it.facet] = 1; out.push(it.facet); }
+    });
+    return out;
+  }
+  function paintFacets(rowId, facets) {
+    var row = document.getElementById(rowId);
+    if (!row) return;
+    row.innerHTML = "";
+    (facets || []).forEach(function (name) {
+      var s = document.createElement("span");
+      s.className = "facet-chip";
+      s.textContent = name;
+      row.appendChild(s);
+    });
   }
 
   function beginAssess() {
@@ -2490,6 +2800,10 @@
     run.used = {}; run.band = 2; run.corrStreak = 0; run.wrongStreak = 0;
     run.span = MEM_SPAN_START; run.spanOk = 0; run.spanBad = 0;
     run.totalN = run.track === "memory" ? MEM_ASSESS_N : run.track === "speed" ? SPD_ASSESS_N : ASSESS_N;
+    if (run.track === "reason" && run.formName) {
+      var hist0 = (loadSave().rFormHist || []).concat([{ name: run.formName, at: Date.now() }]);
+      patchSave({ rFormHist: hist0.slice(-12), rForm: run.formName });
+    }
     var it = nextAssessItem();
     present(it);
     updateLeave();
@@ -2515,15 +2829,24 @@
       pct = percentile(sc.index, SEED.reason);
       patch = {
         reasoning: sc.index, rCorrect: run.ok, rTotal: ASSESS_N, rPct: pct,
-        rForm: run.formName || "A", musStick: true
+        rForm: run.formName || "A", rFacets: facetsFromRun(run), musStick: true
       };
+      var hist = (loadSave().rFormHist || []).concat([{ name: run.formName || "A", at: Date.now() }]);
+      patch.rFormHist = hist.slice(-12);
       title = "PATTERN BLOCK DONE";
+    }
+    if (run.track === "memory") {
+      patch.memSeen = (loadSave().memSeen || []).concat(Object.keys(run.used || {}).map(function (id) { return { id: id, at: Date.now() }; })).slice(-80);
+    }
+    if (run.track === "speed") {
+      patch.spdSeen = (loadSave().spdSeen || []).concat((run.formPool || []).map(function (it) { return { id: it.id, at: Date.now() }; })).slice(-80);
     }
     run.result = patch;
     patchSave(patch);
     clearRunSave();
     document.getElementById("sum-title").textContent = title;
     document.getElementById("sum-line").textContent = run.ok + " / " + run.totalN + " correct";
+    paintFacets("sum-facets", run.track === "reason" ? (patch.rFacets || []) : []);
     mode = "summary";
     setMenu(true);
     showOverlay("summary");
@@ -2541,6 +2864,7 @@
   function showProfile() {
     var p = loadSave();
     fillBar("reason-num", "reason-bar", "reason-meta", p.reasoning, p.rCorrect, p.rTotal, p.rPct);
+    paintFacets("reason-facets", p.rFacets || []);
     fillBar("memory-num", "memory-bar", "memory-meta", p.memory, p.mCorrect, p.mTotal, p.mPct);
     fillBar("speed-num", "speed-bar", "speed-meta", p.speed, p.sCorrect, p.sTotal, p.sPct);
     var soHas = typeof p.social === "number";
@@ -3367,10 +3691,43 @@
   function selfTest() {
     var fails = [];
     if (!validatePool()) fails.push("pool");
-    if (REASON_POOL.length < 24) fails.push("pool-size");
-    if (FORM_A.length !== 12 || FORM_B.length !== 12) fails.push("forms");
-    if (MEM_POOL.length < 30) fails.push("mem-pool");
-    if (SPEED_POOL.length < 60) fails.push("spd-pool");
+    if (REASON_POOL.length < 72) fails.push("pool-size " + REASON_POOL.length);
+    FORM_NAMES.forEach(function (n) {
+      if (!FORMS[n] || FORMS[n].length !== 12) fails.push("form-" + n);
+    });
+    var formIds = {};
+    FORM_NAMES.forEach(function (n) {
+      (FORMS[n] || []).forEach(function (it) {
+        if (formIds[it.id]) fails.push("form-overlap " + it.id);
+        formIds[it.id] = n;
+      });
+    });
+    var fams = {};
+    REASON_POOL.forEach(function (it) { if (it.family) fams[it.family] = (fams[it.family] || 0) + 1; });
+    [FAM_ROW, FAM_TRIO, FAM_SNOW, FAM_STACK, FAM_XOR, FAM_ROT, FAM_MIRROR, FAM_ORBIT].forEach(function (f) {
+      if (!fams[f]) fails.push("fam-" + f);
+    });
+    FORM_NAMES.forEach(function (n) {
+      var seenF = {};
+      (FORMS[n] || []).forEach(function (it) { if (it.family) seenF[it.family] = 1; });
+      if (Object.keys(seenF).length < 4) fails.push("form-families-" + n);
+    });
+    var hard = REASON_POOL.filter(function (it) { return it.band === 3; });
+    var spat = hard.filter(function (it) { return it.family === FAM_ROT || it.family === FAM_MIRROR || it.family === FAM_ORBIT; });
+    if (!hard.length || spat.length < hard.length * 0.4) fails.push("hard-spatial");
+    var easy = REASON_POOL.filter(function (it) { return it.band === 1; });
+    var st = easy.filter(function (it) { return it.family === FAM_SNOW || it.family === FAM_TRIO; });
+    if (!easy.length || st.length < easy.length * 0.25) fails.push("easy-mix");
+    if (MEM_POOL.length < 60) fails.push("mem-pool");
+    if (MEM_PACKS.length < 5) fails.push("mem-packs");
+    if (SPEED_POOL.length < 100) fails.push("spd-pool");
+    if (SPEED_TEMPLATES.length < 8) fails.push("spd-templates");
+    var trainIds = {};
+    TRAIN_PATTERN.concat(TRAIN_MEMORY).concat(TRAIN_SPEED).forEach(function (it) { trainIds[it.id] = 1; });
+    PRACTICE.concat(REASON_POOL).concat(MEM_POOL).concat(SPEED_POOL).forEach(function (it) {
+      if (trainIds[it.id]) fails.push("train-overlap " + it.id);
+    });
+    if (SPD_LIMIT !== 3.2) fails.push("spd-timer");
     if (TRAIN_PATTERN.length < 20) fails.push("train-pattern");
     if (TRAIN_MEMORY.length < 20) fails.push("train-memory");
     if (TRAIN_SPEED.length < 20) fails.push("train-speed");
@@ -3400,6 +3757,9 @@
     if (mash.index > 35) fails.push("speed-mash " + mash.index);
     var about = document.getElementById("about").textContent;
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
+    if (about.indexOf("not a clinical or certified IQ test") < 0) fails.push("missing-facets-honesty");
+    if (/Raven|WAIS|SPM|RPM|Mensa/i.test(about)) fails.push("brand-test-name");
+    if (/Raven|WAIS|SPM|RPM|Mensa/i.test(document.body.innerText.replace(/selfTest[\s\S]*$/, ""))) fails.push("brand-in-ui");
     if (ordinal(1) !== "1st" || ordinal(2) !== "2nd" || ordinal(3) !== "3rd" || ordinal(23) !== "23rd" || ordinal(11) !== "11th") fails.push("ordinal");
     if (/intelligence quotient/i.test(document.body.innerText)) fails.push("iq-words");
     if (/ADHD|autism|you might have/i.test(document.body.innerText)) fails.push("diagnosis");
@@ -3414,6 +3774,14 @@
     percentile: percentile,
     FORM_A: FORM_A,
     FORM_B: FORM_B,
+    FORM_C: FORM_C,
+    FORM_D: FORM_D,
+    FORM_E: FORM_E,
+    FORM_F: FORM_F,
+    FORMS: FORMS,
+    REASON_POOL: REASON_POOL,
+    MEM_PACKS: MEM_PACKS,
+    SPEED_TEMPLATES: SPEED_TEMPLATES,
     PRACTICE: PRACTICE,
     MEM_POOL: MEM_POOL,
     SPEED_POOL: SPEED_POOL,
@@ -3430,7 +3798,8 @@
     SOCIAL: SOCIAL,
     voidCurrent: function () { endItem(false, 0, "away"); },
     getMode: function () { return mode; },
-    getRun: function () { return run; }
+    getRun: function () { return run; },
+    nextReasonForm: nextReasonForm
   };
 
   function runPlaytest() {

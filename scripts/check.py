@@ -21,6 +21,8 @@ allowed_iq = (
     "Not an official IQ score.",
     "not an IQ number",
     "not an IQ score",
+    "Skill facets inside Brain Camp — not a clinical or certified IQ test.",
+    "not a clinical or certified IQ test",
 )
 for path, text in (("index.html", html), ("README.md", readme)):
     for i, line in enumerate(text.splitlines(), 1):
@@ -37,8 +39,21 @@ for path, text in (("index.html", html), ("README.md", readme)):
                 continue
             fails.append(f"{path}:{i} unexpected IQ line: {stripped[:120]}")
 
-if html.count('mk("') < 27:
-    fails.append("item pool too small")
+if "Row March" not in html or "Beaver Orbit" not in html:
+    fails.append("missing reasoning families")
+if "FORM_NAMES" not in html or "FORM_F" not in html:
+    fails.append("missing forms A-F")
+if "MEM_PACKS" not in html:
+    fails.append("missing memory packs")
+if "SPEED_TEMPLATES" not in html:
+    fails.append("missing speed templates")
+if "Skill facets inside Brain Camp — not a clinical or certified IQ test." not in html:
+    fails.append("missing facet honesty line")
+if re.search(r"\b(Raven|WAIS|SPM|RPM|Mensa)\b", html):
+    for i, line in enumerate(html.splitlines(), 1):
+        if re.search(r"\b(Raven|WAIS|SPM|RPM|Mensa)\b", line) and "fails.push" not in line and "brand-" not in line:
+            fails.append(f"index.html:{i} brand test name in UI")
+            break
 if "SEED" not in html or "mean: 52" not in html:
     fails.append("missing seed norms")
 if "beta seed norms — replace when real cohort exists" not in html:
