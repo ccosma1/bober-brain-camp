@@ -93,6 +93,12 @@ if "MEM_STUDY = 1.8" not in html or "MEM_PROBE = 12" not in html:
     fails.append("memory study/probe timers")
 if "SPD_LIMIT = 3.2" not in html:
     fails.append("speed timer must be 3.2s")
+if re.search(r"\bvar SPD_LIMIT\s*=\s*(3\.84|4(\.0)?)\b", html):
+    fails.append("SPD_LIMIT still 3.84 or 4")
+if re.search(r"limit:\s*3\.84", html):
+    fails.append("hardcoded 3.84 speed practice limit")
+if "run.limit = SPD_LIMIT" not in html:
+    fails.append("presentSpeed must pin SPD_LIMIT")
 if "TEACH_DWELL = 2500" not in html:
     fails.append("missing teach dwell")
 if 'id="btn-trivia"' in html:

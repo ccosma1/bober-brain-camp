@@ -1185,7 +1185,7 @@
         tiles: [G(f,1), G(f,1), G(f,1), G(o,1)],
         ans: G(o,1),
         target: null,
-        limit: 3.84,
+        limit: SPD_LIMIT,
         prompt: "TAP THE ODD ONE",
         practice: true
       });
@@ -2081,7 +2081,8 @@
 
   function fmtTime(sec, limit) {
     sec = Math.max(0, sec || 0);
-    if (limit != null && limit <= 10) {
+    // Short Speed trials: tenths. Never ceil 3.2 into 0:04 / 4s.
+    if ((limit != null && limit <= 10) || (limit == null && sec <= 10)) {
       return sec.toFixed(1) + "s";
     }
     var whole = Math.max(0, Math.ceil(sec - 1e-6));
@@ -2164,6 +2165,8 @@
     run.t0 = performance.now();
     if (run.track === "reason") {
       run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
+    } else if (run.track === "speed") {
+      run.limit = SPD_LIMIT;
     }
     tickTimer();
   }
@@ -2349,9 +2352,9 @@
   function presentSpeed(it) {
     hidePlayBits();
     run.phase = "choice";
-    run.limit = it.limit || SPD_LIMIT;
+    run.limit = SPD_LIMIT;
     hudFor();
-    document.getElementById("chip-time").textContent = fmtTime(run.limit, run.limit);
+    document.getElementById("chip-time").textContent = fmtTime(SPD_LIMIT, SPD_LIMIT);
     setPrompt(it.prompt || "TAP THE ODD ONE", false);
     if (it.kind === "match" && it.target) {
       var tgt = document.getElementById("speed-target");
@@ -3381,10 +3384,14 @@
     if (T_ASSESS !== 50) fails.push("reason-timer");
     if (fmtTime(50, 50) !== "0:50") fails.push("fmt-50 " + fmtTime(50, 50));
     if (fmtTime(3.2, 3.2) !== "3.2s") fails.push("fmt-speed " + fmtTime(3.2, 3.2));
-    if (fmtTime(3.2, 3.2) === "0:04") fails.push("speed-ceil-lie");
+    if (fmtTime(3.2) !== "3.2s") fails.push("fmt-speed-narg " + fmtTime(3.2));
+    if (fmtTime(3.2, 3.2) === "0:04" || fmtTime(3.2) === "0:04") fails.push("speed-ceil-lie");
     if (MEM_STUDY !== 1.8 || MEM_PROBE !== 12) fails.push("mem-timer");
     if (SPD_LIMIT !== 3.2) fails.push("spd-timer");
     if (TRAIN_SPD_LIMIT < SPD_LIMIT) fails.push("train-speed-harder");
+    if (SPEED_PRACTICE.some(function (it) { return it.limit !== SPD_LIMIT; })) fails.push("spd-practice-limit");
+    if (SPEED_POOL.some(function (it) { return it.limit !== SPD_LIMIT; })) fails.push("spd-pool-limit");
+    if (TRAIN_SPEED.some(function (it) { return it.limit < SPD_LIMIT; })) fails.push("train-spd-harder");
     var guess = scoreReason(3, [50, 50, 50]);
     if (guess.index > 30) fails.push("guess-cap " + guess.index);
     var maxed = scoreReason(12, [50,50,50,50,50,50,50,50,50,50,50,50]);
@@ -3410,6 +3417,9 @@
     PRACTICE: PRACTICE,
     MEM_POOL: MEM_POOL,
     SPEED_POOL: SPEED_POOL,
+    SPEED_PRACTICE: SPEED_PRACTICE,
+    SPD_LIMIT: SPD_LIMIT,
+    TRAIN_SPD_LIMIT: TRAIN_SPD_LIMIT,
     validatePool: validatePool,
     selfTest: selfTest,
     DISC: DISC,
