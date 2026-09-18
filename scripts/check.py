@@ -81,6 +81,14 @@ if "Double Ask" not in html or "Guest Gift" not in html:
     fails.append("missing new Social Read stories")
 if "T_ASSESS = 50" not in html:
     fails.append("reasoning timer must be 50s")
+if "T_PRACTICE = 50" not in html:
+    fails.append("reasoning practice timer must be 50s not 60")
+if 'id="chip-time">1:00' in html:
+    fails.append("HUD default still 1:00")
+if 'textContent = "Social "' not in html and "Social \" +" not in html:
+    fails.append("social chip should use short Social n/n")
+if "#1a1028ee" in html:
+    fails.append("span banner still washed overlay")
 if "MEM_STUDY = 1.8" not in html or "MEM_PROBE = 12" not in html:
     fails.append("memory study/probe timers")
 if "SPD_LIMIT = 3.2" not in html:

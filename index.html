@@ -72,6 +72,9 @@
       border-radius: 999px; padding: 4px 8px; font-weight: 800; font-size: 12px;
       line-height: 1.25; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis;
     }
+    .chip.item {
+      text-align: center; overflow: visible; text-overflow: clip; letter-spacing: 0;
+    }
     .chip.mode {
       font-size: 13px; letter-spacing: 0.08em; color: var(--yellow); font-weight: 900;
     }
@@ -79,7 +82,10 @@
       font-size: 14px; letter-spacing: 0.1em; background: var(--yellow); color: var(--ink);
       border-color: var(--ink);
     }
-    .chip.time { min-width: 52px; text-align: center; justify-self: end; }
+    .chip.time {
+      min-width: 3.4em; text-align: center; justify-self: end;
+      font-variant-numeric: tabular-nums; letter-spacing: 0;
+    }
     .chip.time.low { border-color: var(--danger); color: var(--danger); }
     #time-bar {
       height: 8px; margin-top: 6px; border: 2px solid var(--cream);
@@ -182,7 +188,6 @@
     .play:disabled { opacity: 0.4; cursor: default; filter: grayscale(0.45); box-shadow: none; }
     .play.ghost { background: #1A1028; color: var(--cream); border-color: var(--cream); box-shadow: 0 4px 0 #0006; }
     .play.soon { opacity: 0.45; cursor: default; font-size: 13px; min-height: 40px; min-width: 0; padding: 8px 10px; }
-    .chip.item { text-align: center; }
     .end-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; }
     .ghost-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
     .holder { margin: 8px 0 0; font-size: 13px; font-weight: 800; color: var(--cream); text-shadow: 0 2px 6px #000; }
@@ -218,11 +223,16 @@
     #about-inner .how { font-size: 13px; }
     #about-inner .play { display: block; margin: 10px auto 0; }
     #last-chip { margin: 0 0 8px; font-size: 13px; font-weight: 800; color: var(--yellow); text-shadow: 0 2px 6px #000; }
+    @media (max-width: 400px) {
+      .chip.mode.practice { font-size: 12px; letter-spacing: 0.04em; padding: 4px 6px; }
+      .chip.item { font-size: 12px; }
+      .chip.time { min-width: 3.2em; font-size: 12px; }
+    }
     @media (max-width: 360px) {
       .matrix { gap: 5px; }
       .choices { gap: 8px; }
       .choices button { min-height: 76px; padding: 6px; }
-      .chip.mode.practice { font-size: 13px; }
+      .chip.mode.practice { font-size: 12px; }
     }
     @media (max-width: 320px) {
       /* Keep 3 columns so the matrix still reads; shrink gutters instead of a 2×3 wrap. */
@@ -438,8 +448,10 @@
     #span-banner {
       position: absolute; inset: 0; z-index: 14;
       display: flex; align-items: center; justify-content: center;
-      background: #1a1028ee; color: var(--yellow); font-size: clamp(28px, 8vw, 42px);
-      font-weight: 900; letter-spacing: 0.08em; text-align: center; padding: 16px;
+      background: #1A1028; color: #F5C400; font-size: clamp(30px, 9vw, 44px);
+      font-weight: 900; letter-spacing: 0.1em; text-align: center; padding: 20px;
+      text-shadow: 0 3px 0 #000, 0 0 18px #F5C400aa;
+      box-shadow: inset 0 0 0 6px #F5C400;
     }
   </style>
 </head>
@@ -450,7 +462,7 @@
       <div class="hud-row">
         <div class="chip mode" id="chip-mode">PRACTICE</div>
         <div class="chip item" id="chip-item">Item 1/3</div>
-        <div class="chip time" id="chip-time">1:00</div>
+        <div class="chip time" id="chip-time">0:50</div>
       </div>
       <div id="time-bar" aria-hidden="true"><i id="time-fill"></i></div>
     </div>
@@ -696,7 +708,7 @@
   var PRACTICE_N = 3;
   var MEM_ASSESS_N = 10;
   var SPD_ASSESS_N = 20;
-  var T_PRACTICE = 60;
+  var T_PRACTICE = 50;
   var T_ASSESS = 50;
   var MEM_STUDY = 1.8;
   var MEM_PROBE = 12;
@@ -2067,9 +2079,13 @@
     updateLeave();
   }
 
-  function fmtTime(sec) {
-    sec = Math.max(0, Math.ceil(sec));
-    var m = Math.floor(sec / 60), s = sec % 60;
+  function fmtTime(sec, limit) {
+    sec = Math.max(0, sec || 0);
+    if (limit != null && limit <= 10) {
+      return sec.toFixed(1) + "s";
+    }
+    var whole = Math.max(0, Math.ceil(sec - 1e-6));
+    var m = Math.floor(whole / 60), s = whole % 60;
     return m + ":" + (s < 10 ? "0" : "") + s;
   }
 
@@ -2132,7 +2148,7 @@
       chip.textContent = "PRACTICE";
       chip.classList.add("practice");
       var n = social ? social.pool.length : SOCIAL_N;
-      document.getElementById("chip-item").textContent = "Social Read " + ((social && social.i) + 1) + "/" + n;
+      document.getElementById("chip-item").textContent = "Social " + ((social && social.i) + 1) + "/" + n;
       document.getElementById("chip-time").textContent = "Lodge";
       return;
     }
@@ -2164,8 +2180,8 @@
     if (run.phase === "study" || run.phase === "banner") return;
     var r = remainNow();
     var chip = document.getElementById("chip-time");
-    chip.textContent = fmtTime(r);
-    chip.classList.toggle("low", r <= 8);
+    chip.textContent = fmtTime(r, run.limit);
+    chip.classList.toggle("low", run.limit <= 10 ? r <= 1.2 : r <= 8);
     document.getElementById("time-fill").style.transform = "scaleX(" + (run.limit ? (r / run.limit) : 0) + ")";
     if (r <= 0) {
       endItem(false, 0, "time");
@@ -2238,6 +2254,7 @@
     run.phase = "choice";
     run.limit = mode === "practice" ? T_PRACTICE : T_ASSESS;
     hudFor();
+    document.getElementById("chip-time").textContent = fmtTime(run.limit, run.limit);
     startTimer();
   }
 
@@ -2334,6 +2351,7 @@
     run.phase = "choice";
     run.limit = it.limit || SPD_LIMIT;
     hudFor();
+    document.getElementById("chip-time").textContent = fmtTime(run.limit, run.limit);
     setPrompt(it.prompt || "TAP THE ODD ONE", false);
     if (it.kind === "match" && it.target) {
       var tgt = document.getElementById("speed-target");
@@ -2846,7 +2864,7 @@
   function trainTick() {
     if (mode !== "train" || !train || train.paused || !train.t0) return;
     var r = Math.max(0, train.limit - (performance.now() - train.t0) / 1000);
-    document.getElementById("chip-time").textContent = fmtTime(r);
+    document.getElementById("chip-time").textContent = fmtTime(r, train.limit);
     document.getElementById("time-fill").style.transform = "scaleX(" + (train.limit ? r / train.limit : 0) + ")";
     if (r <= 0) {
       trainPick(false, null, null, "Time. Try the next one.");
@@ -3283,6 +3301,8 @@
       }
     } else if (/\bmemory=1\b/.test(location.search)) {
       beginPractice("memory");
+    } else if (/\bspeed=1\b/.test(location.search)) {
+      beginPractice("speed");
     } else if (/\babout=1\b/.test(location.search)) {
       goSplash();
       openAbout();
@@ -3359,6 +3379,9 @@
       if (!cats[c]) fails.push("trivia-cat-" + c);
     });
     if (T_ASSESS !== 50) fails.push("reason-timer");
+    if (fmtTime(50, 50) !== "0:50") fails.push("fmt-50 " + fmtTime(50, 50));
+    if (fmtTime(3.2, 3.2) !== "3.2s") fails.push("fmt-speed " + fmtTime(3.2, 3.2));
+    if (fmtTime(3.2, 3.2) === "0:04") fails.push("speed-ceil-lie");
     if (MEM_STUDY !== 1.8 || MEM_PROBE !== 12) fails.push("mem-timer");
     if (SPD_LIMIT !== 3.2) fails.push("spd-timer");
     if (TRAIN_SPD_LIMIT < SPD_LIMIT) fails.push("train-speed-harder");
@@ -3392,6 +3415,7 @@
     DISC: DISC,
     SEED: SEED,
     ordinal: ordinal,
+    fmtTime: fmtTime,
     TRIVIA: TRIVIA,
     SOCIAL: SOCIAL,
     voidCurrent: function () { endItem(false, 0, "away"); },
