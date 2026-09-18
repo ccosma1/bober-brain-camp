@@ -58,10 +58,21 @@ for i, line in enumerate(html.splitlines(), 1):
         break
 if "Lodge Dinner" not in html:
     fails.append("missing Lodge Dinner museum card")
-if "assets/teach/quantum.jpg" not in html or "assets/teach/steam.jpg" not in html:
-    fails.append("missing trivia teach graphs")
-if "Quantum Step" not in html or "Thermo · Steam" not in html or "Snow Insulates" not in html:
-    fails.append("missing museum teach-graph cards")
+if "function teachArtSrc" not in html:
+    fails.append("missing teachArtSrc")
+if "assets/teach/" not in html:
+    fails.append("missing teach asset path")
+import hashlib
+tq_jpgs = list((ROOT / "assets" / "teach").glob("TQ*.jpg"))
+if len(tq_jpgs) < 84:
+    fails.append(f"need 84 unique TQ stills, have {len(tq_jpgs)}")
+hashes = {}
+for f in tq_jpgs:
+    h = hashlib.md5(f.read_bytes()).hexdigest()
+    hashes.setdefault(h, []).append(f.name)
+dups = [v for v in hashes.values() if len(v) > 1]
+if dups:
+    fails.append("duplicate teach bytes " + ",".join(dups[0][:4]))
 if "What skills are useful for" not in html:
     fails.append("missing museum useful-for card")
 if "assets/museum/useful.jpg" not in html:

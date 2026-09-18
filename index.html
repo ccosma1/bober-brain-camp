@@ -3329,20 +3329,9 @@
       trainTick();
     }, MEM_ARM_MS);
   }
-  var TEACH_ART = {
-    Quantum: "assets/teach/quantum.jpg",
-    Math: "assets/teach/dam.jpg",
-    Thermo: "assets/teach/steam.jpg",
-    History: "assets/teach/history.jpg",
-    Lodge: "assets/teach/lodge.jpg",
-    Patterns: "assets/teach/patterns.jpg",
-    "Camp life": "assets/teach/camplife.jpg"
-  };
   function teachArtSrc(it) {
-    var blob = ((it && it.q) || "") + " " + ((it && it.teach) || "");
-    if (/snow|insulat|drift|fluffy|frost/i.test(blob)) return "assets/teach/snow.jpg";
-    if (it && it.cat === "Thermo" && /evapor|kettle|steam|boil|conduction/i.test(blob)) return "assets/teach/steam.jpg";
-    return TEACH_ART[(it && it.cat) || ""] || "assets/teach/camplife.jpg";
+    if (!it || !it.id) return "assets/teach/TQ01.jpg";
+    return "assets/teach/" + it.id + ".jpg";
   }
   function presentTrainTrivia(it) {
     hidePlayBits();
@@ -3616,86 +3605,6 @@
       body: "Reasoning: spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.\n\nVisual Perception: noticing small visual differences. Often helps with design, detail checks, charts or maps.\nAbstract Reasoning: fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.\nPattern Recognition: finding order in noise. Often helps with forecasting, code or rhythm, spotting trends.\nSpatial Orientation: rotating objects in space. Often helps with navigation, building, packing.\nAnalytical Thinking: breaking a problem into parts. Often helps with planning and stepwise fixes.\n\nMemory: holding and replaying a short sequence. Often helps with multi-step instructions, mental notes, procedures.\n\nSpeed: fast, accurate simple decisions on a short clock. Often helps with quick checks when time is tight.\n\nSocial Read: practice choosing a kind-effective lodge response. Often helps with teamwork and noticing needs."
     },
     {
-      id: "qstep",
-      name: "Quantum Step",
-      tag: "Teach graph",
-      thumb: "assets/teach/quantum.jpg",
-      lock: function () { return false; },
-      tease: "Bober hops the bunks — energy comes in packets.",
-      unlock: "Always unlocked.",
-      body: "A lantern crumb of light, then a hop between bunks. Energy likes cups, not a smooth pour. Same still as the Trivia teach for Quantum."
-    },
-    {
-      id: "steam",
-      name: "Thermo · Steam",
-      tag: "Teach graph",
-      thumb: "assets/teach/steam.jpg",
-      lock: function () { return false; },
-      tease: "Kettle steam: heat on the move.",
-      unlock: "Always unlocked.",
-      body: "The jumpy molecules leave the pot as steam. What stays is cooler. Same still as the Trivia teach for Thermo."
-    },
-    {
-      id: "snowhat",
-      name: "Snow Insulates",
-      tag: "Teach graph",
-      thumb: "assets/teach/snow.jpg",
-      lock: function () { return false; },
-      tease: "A fluffy snow hat traps still air.",
-      unlock: "Always unlocked.",
-      body: "Pockets of air in the drift slow the leak. Stomp it into ice and you ruin the coat. Same still as the Trivia snow teach."
-    },
-    {
-      id: "dammath",
-      name: "Dam Math",
-      tag: "Teach graph",
-      thumb: "assets/teach/dam.jpg",
-      lock: function () { return false; },
-      tease: "Perimeter sticks: count the ring.",
-      unlock: "Always unlocked.",
-      body: "Walk the oval. Each stick is a count. Math on the water. Same still as the Trivia Math teach."
-    },
-    {
-      id: "histfire",
-      name: "History Fire",
-      tag: "Teach graph",
-      thumb: "assets/teach/history.jpg",
-      lock: function () { return false; },
-      tease: "True hinges, funny delivery.",
-      unlock: "Always unlocked.",
-      body: "Campfire history night. Real people, real tricks, lodge jokes. Same still as the Trivia History teach."
-    },
-    {
-      id: "slate",
-      name: "Pattern Slate",
-      tag: "Teach graph",
-      thumb: "assets/teach/patterns.jpg",
-      lock: function () { return false; },
-      tease: "Eight marks, one hole.",
-      unlock: "Always unlocked.",
-      body: "Read the eight. Fill the ninth. Same still as the Trivia Patterns teach."
-    },
-    {
-      id: "mudseal",
-      name: "Lodge Weave",
-      tag: "Teach graph",
-      thumb: "assets/teach/lodge.jpg",
-      lock: function () { return false; },
-      tease: "Mud is mortar. Water wants holes.",
-      unlock: "Always unlocked.",
-      body: "Pack the weave. Repeat after every flood gossip. Same still as the Trivia Lodge teach."
-    },
-    {
-      id: "shortround",
-      name: "Camp Life",
-      tag: "Teach graph",
-      thumb: "assets/teach/camplife.jpg",
-      lock: function () { return false; },
-      tease: "Short rounds, then the fire.",
-      unlock: "Always unlocked.",
-      body: "A holder made a camp. Play, then go back to the fire. Same still as the Trivia Camp life teach."
-    },
-    {
       id: "stick",
       name: "Pattern Stick",
       tag: "Lodge tool",
@@ -3745,7 +3654,18 @@
       unlock: "Unlocked after Social Read practice.",
       body: "A wooden speech-bubble plaque. Lodge talk. Finish a Social Read to keep it on the shelf."
     }
-  ];
+  ].concat(TRIVIA.map(function (it) {
+    return {
+      id: "tg-" + it.id,
+      name: it.id + " · " + it.cat,
+      tag: "Teach graph",
+      thumb: "assets/teach/" + it.id + ".jpg",
+      lock: function () { return false; },
+      tease: it.q,
+      unlock: "Trivia teach still — unique to this question.",
+      body: it.teach
+    };
+  }));
 
   function renderMuseum() {
     var grid = document.getElementById("museum-grid");
@@ -4012,9 +3932,10 @@
     loadImg("assets/icons/icon-192.png", false);
     loadImg("assets/museum/how.jpg", false);
     loadImg("assets/museum/useful.jpg", false);
-    ["quantum", "steam", "snow", "dam", "history", "patterns", "lodge", "camplife"].forEach(function (n) {
-      loadImg("assets/teach/" + n + ".jpg", false);
-    });
+    var ti;
+    for (ti = 1; ti <= 84; ti++) {
+      loadImg("assets/teach/TQ" + (ti < 10 ? "0" : "") + ti + ".jpg", false);
+    }
     loadImg("assets/museum/stick.jpg", false);
     loadImg("assets/museum/twig.jpg", false);
     loadImg("assets/museum/ember.jpg", false);
@@ -4114,8 +4035,15 @@
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
     if (about.indexOf("not a clinical or certified IQ test") < 0) fails.push("missing-facets-honesty");
     if (about.indexOf("Beta norms") < 0) fails.push("about-beta");
-    if (MUS_CARDS.length < 14) fails.push("museum-thin");
-    if (typeof teachArtSrc !== "function" || !TEACH_ART.Quantum) fails.push("teach-art");
+    if (MUS_CARDS.length < 90) fails.push("museum-thin");
+    var artSeen = {};
+    TRIVIA.forEach(function (it) {
+      var a = teachArtSrc(it);
+      if (artSeen[a]) fails.push("dup-teach-art " + it.id);
+      artSeen[a] = 1;
+      if (a !== "assets/teach/" + it.id + ".jpg") fails.push("teach-src " + it.id);
+    });
+    if (teachArtSrc({ id: "TQ47" }) === teachArtSrc({ id: "TQ84" })) fails.push("franklin-campfire");
     if (about.indexOf("What these skills can be useful for") < 0) fails.push("missing-useful-for");
     if (about.indexOf("often helps with") < 0 && about.indexOf("Often helps with") < 0) fails.push("missing-often-helps");
     if (document.querySelectorAll("#profile .skill-about").length < 4) fails.push("skill-about-blocks");
@@ -4161,6 +4089,7 @@
     getMode: function () { return mode; },
     getRun: function () { return run; },
     nextReasonForm: nextReasonForm,
+    teachArtSrc: teachArtSrc,
     tapMem: tapMem,
     submitMem: submitMem
   };
