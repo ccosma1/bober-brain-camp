@@ -23,6 +23,7 @@ allowed_iq = (
     "not an IQ score",
     "Skill facets inside Brain Camp — not a clinical or certified IQ test.",
     "not a clinical or certified IQ test",
+    "not a clinical score, not an IQ number, not certified.",
 )
 for path, text in (("index.html", html), ("README.md", readme)):
     for i, line in enumerate(text.splitlines(), 1):
@@ -49,6 +50,17 @@ if "SPEED_TEMPLATES" not in html:
     fails.append("missing speed templates")
 if "Skill facets inside Brain Camp — not a clinical or certified IQ test." not in html:
     fails.append("missing facet honesty line")
+if "What these skills can be useful for" not in html:
+    fails.append("missing usefulness section")
+if "About this skill" not in html:
+    fails.append("missing About this skill")
+if html.count("Often helps with") < 4:
+    fails.append("missing often-helps copy")
+if re.search(r"\bADHD\b", html):
+    for i, line in enumerate(html.splitlines(), 1):
+        if re.search(r"\bADHD\b", line) and "fails.push" not in line:
+            fails.append(f"index.html:{i} ADHD in UI")
+            break
 if re.search(r"\b(Raven|WAIS|SPM|RPM|Mensa)\b", html):
     for i, line in enumerate(html.splitlines(), 1):
         if re.search(r"\b(Raven|WAIS|SPM|RPM|Mensa)\b", line) and "fails.push" not in line and "brand-" not in line:

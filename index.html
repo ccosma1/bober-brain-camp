@@ -363,6 +363,30 @@
       min-width: 0; overflow: hidden;
     }
     #profile .facet-row:empty { display: none; }
+    .skill-about {
+      margin: 4px 0 0; width: 100%;
+      border: 2px solid #5C3A1A; border-radius: 10px;
+      background: #1A1028; text-align: left;
+    }
+    .skill-about > summary {
+      list-style: none; cursor: pointer;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
+      color: var(--ice); padding: 6px 8px; text-align: center;
+    }
+    .skill-about > summary::-webkit-details-marker { display: none; }
+    .skill-about[open] > summary { color: var(--yellow); }
+    .skill-about .about-body {
+      padding: 0 8px 8px;
+      font-size: 12px; font-weight: 700; line-height: 1.35;
+      color: var(--cream);
+    }
+    .skill-about .about-body p { margin: 0 0 6px; }
+    .skill-about .about-body p:last-child { margin-bottom: 0; }
+    .facet-tip { font-size: 11px; color: var(--ice); }
+    #profile .facet-chip {
+      appearance: none; font-family: inherit; cursor: pointer;
+      background: transparent;
+    }
     #mem-shield {
       position: absolute; inset: 0; z-index: 12;
       background: transparent;
@@ -602,21 +626,57 @@
           <div class="skill-bar" aria-label="Reasoning skill"><i id="reason-bar"></i></div>
           <p class="bar-meta" id="reason-meta">Not yet camped</p>
           <div class="facet-row" id="reason-facets"></div>
+          <details class="skill-about hidden" id="facet-about">
+            <summary>Facets this run</summary>
+            <div class="about-body" id="facet-about-body"></div>
+          </details>
+          <details class="skill-about">
+            <summary>About this skill</summary>
+            <div class="about-body">
+              <p><b>What it is.</b> Spotting rules in new shapes and patterns — no school facts required. Read the dam, not the textbook.</p>
+              <p><b>Often helps with.</b> Learning a new system fast, debugging odd problems, strategy games, and spotting structure in a messy pile of info.</p>
+              <p class="facet-tip">A camp snapshot vs Brain Camp players — not a job badge and not a clinical score.</p>
+            </div>
+          </details>
         </div>
         <div class="bar-wrap">
           <div class="bar-lab"><span>Memory</span><span id="memory-num">—</span></div>
           <div class="skill-bar" aria-label="Memory skill"><i id="memory-bar"></i></div>
           <p class="bar-meta" id="memory-meta">Not yet camped</p>
+          <details class="skill-about">
+            <summary>About this skill</summary>
+            <div class="about-body">
+              <p><b>What it is.</b> Holding and replaying a short sequence accurately — Twig’s “don’t drop the third stick” drill.</p>
+              <p><b>Often helps with.</b> Following multi-step instructions, mental notes, learning a procedure, and keeping a plan in mind while you act.</p>
+              <p class="facet-tip">Short-term camp practice, not a chart of how you remember in life.</p>
+            </div>
+          </details>
         </div>
         <div class="bar-wrap">
           <div class="bar-lab"><span>Speed</span><span id="speed-num">—</span></div>
           <div class="skill-bar" aria-label="Speed skill"><i id="speed-bar"></i></div>
           <p class="bar-meta" id="speed-meta">Not yet camped</p>
+          <details class="skill-about">
+            <summary>About this skill</summary>
+            <div class="about-body">
+              <p><b>What it is.</b> Fast, accurate simple decisions under a short clock.</p>
+              <p><b>Often helps with.</b> Quick checks, sorting signal from noise when time is tight, and staying sharp on repetitive scan tasks.</p>
+              <p class="facet-tip">A short lodge timer — not a claim about sport, health, or how you live off the ice.</p>
+            </div>
+          </details>
         </div>
         <div class="bar-wrap">
           <div class="bar-lab"><span>Social Read</span><span id="social-num">—</span></div>
           <div class="skill-bar" aria-label="Social Read practice"><i id="social-bar"></i></div>
           <p class="bar-meta" id="social-meta">Not yet camped</p>
+          <details class="skill-about">
+            <summary>About this skill</summary>
+            <div class="about-body">
+              <p><b>What it is.</b> Practice reading lodge situations and choosing a kind, effective response.</p>
+              <p><b>Often helps with.</b> Everyday teamwork, cooling a flare-up, and noticing what someone else needs.</p>
+              <p class="facet-tip">Practice only — not an EQ score and not a personality type.</p>
+            </div>
+          </details>
         </div>
         <p class="bar-meta">Beta norms (early). Assess bars stay separate. Social Read is practice only.</p>
         <p class="hub-link"><button type="button" class="text-link" data-about>About scoring</button></p>
@@ -669,6 +729,18 @@
           <p class="how"><b>Speed:</b> 20 trials, 3.2s each. Templates mix odd-one-out (shape, color, count, tilt, pattern break, mark) plus match-target and twins. (correct ÷ 20) × 90, plus leftover time on correct trials scaled to at most 10 then × (correct ÷ 20). Mash-tapping cannot max.</p>
           <p class="how"><b>Social Read:</b> 10 lodge scenarios. Preferred choice × 8 (max 80). Other choices still count 2. Consistency bonus: +20 if 7+ preferred, +10 if 5–6.</p>
           <p class="how">Each index is rounded, 0–100. Cohort lines use beta seed norms until a real camp cohort exists.</p>
+          <p class="how"><b>What these skills can be useful for</b></p>
+          <p class="how">Soft “often helps with” notes. Camp indices and Brain Camp percentiles only — not a clinical score, not an IQ number, not certified.</p>
+          <p class="how"><b>Reasoning:</b> spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.</p>
+          <p class="how"><b>Visual Perception:</b> noticing small visual differences. Often helps with design, detail checks, reading charts or maps.</p>
+          <p class="how"><b>Abstract Reasoning:</b> fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.</p>
+          <p class="how"><b>Pattern Recognition:</b> finding order in noise. Often helps with forecasting, code or rhythm, spotting trends.</p>
+          <p class="how"><b>Spatial Orientation:</b> rotating and relating objects in space. Often helps with navigation, building, packing, geometry-ish tasks.</p>
+          <p class="how"><b>Analytical Thinking:</b> breaking a problem into parts. Often helps with planning, decisions from evidence, stepwise fixes.</p>
+          <p class="how"><b>Memory:</b> holding and replaying a short sequence. Often helps with multi-step instructions, mental notes, procedures, keeping a plan while you act.</p>
+          <p class="how"><b>Speed:</b> fast, accurate simple decisions on a short clock. Often helps with quick checks and sorting signal from noise when time is tight. Not a claim about sport or health.</p>
+          <p class="how"><b>Social Read:</b> practice choosing a kind-effective lodge response. Often helps with teamwork, cooling a flare-up, noticing needs. Practice only — not an EQ score, not a personality type.</p>
+          <p class="how">None of this proves a job, a clinic chart, or a type. Play for fun, not credentials.</p>
           <button class="play ghost" id="about-back" type="button">Back</button>
         </div>
       </div>
@@ -1111,6 +1183,13 @@
   var FAM_XOR = "Dam XOR", FAM_ROT = "Rotate Lodge", FAM_MIRROR = "Mirror Creek", FAM_ORBIT = "Beaver Orbit";
   var FACET_PAT = "Pattern Recognition", FACET_VIS = "Visual Perception", FACET_AN = "Analytical Thinking";
   var FACET_ABS = "Abstract Reasoning", FACET_SP = "Spatial Orientation";
+  var FACET_TIPS = {
+    "Visual Perception": "Noticing small visual differences. Often helps with design, detail checks, and reading charts or maps.",
+    "Abstract Reasoning": "Fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.",
+    "Pattern Recognition": "Finding order in noise. Often helps with forecasting, code or rhythm, and spotting trends.",
+    "Spatial Orientation": "Rotating and relating objects in space. Often helps with navigation, building, packing, and geometry-ish tasks.",
+    "Analytical Thinking": "Breaking a problem into parts. Often helps with planning, decisions from evidence, and stepwise fixes."
+  };
   var FORM_NAMES = ["A", "B", "C", "D", "E", "F"];
   var WEEK_MS = 7 * 24 * 3600 * 1000;
   var CAMP_FAMS = [S, D, N, L, B, FISH, EMB, POST, TOOL, FLAKE];
@@ -2884,12 +2963,46 @@
     if (!row) return;
     row.innerHTML = "";
     (facets || []).forEach(function (name) {
-      var s = document.createElement("span");
+      var s = document.createElement(rowId === "reason-facets" ? "button" : "span");
       s.className = "facet-chip";
       s.textContent = name;
+      if (rowId === "reason-facets") {
+        s.type = "button";
+        s.addEventListener("click", function () {
+          var box = document.getElementById("facet-about");
+          if (box) { box.classList.remove("hidden"); box.open = true; }
+        });
+      }
       row.appendChild(s);
     });
     row.style.display = (facets && facets.length) ? "" : "none";
+    if (rowId === "reason-facets") paintFacetAbout(facets);
+  }
+  function paintFacetAbout(facets) {
+    var box = document.getElementById("facet-about");
+    var body = document.getElementById("facet-about-body");
+    if (!box || !body) return;
+    body.innerHTML = "";
+    if (!facets || !facets.length) {
+      box.classList.add("hidden");
+      box.open = false;
+      return;
+    }
+    box.classList.remove("hidden");
+    box.open = false;
+    facets.forEach(function (name) {
+      var p = document.createElement("p");
+      p.className = "facet-tip";
+      var b = document.createElement("b");
+      b.textContent = name + ". ";
+      p.appendChild(b);
+      p.appendChild(document.createTextNode(FACET_TIPS[name] || "Often helps with camp puzzles in this mix."));
+      body.appendChild(p);
+    });
+    var note = document.createElement("p");
+    note.className = "facet-tip";
+    note.textContent = "This run’s mix only. Often helps with — never proof of a job or a type.";
+    body.appendChild(note);
   }
 
   function beginAssess() {
@@ -3909,6 +4022,9 @@
     var about = document.getElementById("about").textContent;
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
     if (about.indexOf("not a clinical or certified IQ test") < 0) fails.push("missing-facets-honesty");
+    if (about.indexOf("What these skills can be useful for") < 0) fails.push("missing-useful-for");
+    if (about.indexOf("often helps with") < 0 && about.indexOf("Often helps with") < 0) fails.push("missing-often-helps");
+    if (document.querySelectorAll("#profile .skill-about").length < 4) fails.push("skill-about-blocks");
     if (/Raven|WAIS|SPM|RPM|Mensa/i.test(about)) fails.push("brand-test-name");
     if (/Raven|WAIS|SPM|RPM|Mensa/i.test(document.body.innerText.replace(/selfTest[\s\S]*$/, ""))) fails.push("brand-in-ui");
     if (ordinal(1) !== "1st" || ordinal(2) !== "2nd" || ordinal(3) !== "3rd" || ordinal(23) !== "23rd" || ordinal(11) !== "11th") fails.push("ordinal");
