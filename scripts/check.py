@@ -58,6 +58,10 @@ for i, line in enumerate(html.splitlines(), 1):
         break
 if "Lodge Dinner" not in html:
     fails.append("missing Lodge Dinner museum card")
+if "assets/teach/quantum.jpg" not in html or "assets/teach/steam.jpg" not in html:
+    fails.append("missing trivia teach graphs")
+if "Quantum Step" not in html or "Thermo · Steam" not in html or "Snow Insulates" not in html:
+    fails.append("missing museum teach-graph cards")
 if "What skills are useful for" not in html:
     fails.append("missing museum useful-for card")
 if "assets/museum/useful.jpg" not in html:

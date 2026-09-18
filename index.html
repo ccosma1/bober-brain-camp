@@ -454,6 +454,14 @@
       text-align: center; box-shadow: 0 6px 18px #0007; pointer-events: none;
     }
     #train-fb.bad { border-color: var(--danger); }
+    #trivia-illu.teach-art, #trivia-illu {
+      width: 100%; max-width: 340px; margin: 0 auto;
+      aspect-ratio: 16 / 9; max-height: min(28vh, 180px);
+      border-radius: 14px; overflow: hidden;
+      border: 3px solid var(--wood); background: #1A1028;
+      flex: 0 0 auto; box-shadow: 0 3px 0 var(--wood);
+    }
+    #trivia-illu img { width: 100%; height: 100%; object-fit: cover; display: block; }
     #trivia-q { margin: 0 8px; font-weight: 800; font-size: 16px; line-height: 1.35; text-align: center; color: var(--cream); }
     #trivia-choices { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-width: 340px; margin: 0 auto; flex: 1 1 auto; overflow: auto; min-height: 0; align-content: start; grid-auto-rows: min-content; }
     #trivia-choices button {
@@ -552,7 +560,7 @@
       <div id="mem-shield" class="hidden"></div>
       <div id="speed-target" class="cell big hidden"></div>
       <div id="speed-grid" class="speed-grid hidden"></div>
-      <div id="trivia-illu" class="cell big hidden"></div>
+      <div id="trivia-illu" class="teach-art hidden"><img id="trivia-graph" alt="" /></div>
       <p id="trivia-q" class="hidden"></p>
       <div id="trivia-choices" class="hidden"></div>
       <div id="trivia-dock" class="hidden">
@@ -650,7 +658,7 @@
             <div class="about-body">
               <p><b>What it is.</b> Spotting rules in new shapes and patterns — no school facts required. Read the dam, not the textbook.</p>
               <p><b>Often helps with.</b> Learning a new system fast, debugging odd problems, strategy games, and spotting structure in a messy pile of info.</p>
-              <p class="facet-tip">A camp snapshot vs Brain Camp players — not a job badge and not a clinical score.</p>
+              <p class="facet-tip">A camp snapshot vs Brain Camp players.</p>
             </div>
           </details>
         </div>
@@ -689,7 +697,7 @@
             <div class="about-body">
               <p><b>What it is.</b> Practice reading lodge situations and choosing a kind, effective response.</p>
               <p><b>Often helps with.</b> Everyday teamwork, cooling a flare-up, and noticing what someone else needs.</p>
-              <p class="facet-tip">Practice only — not an EQ score and not a personality type.</p>
+              <p class="facet-tip">Practice only — lodge scenes, not a type label.</p>
             </div>
           </details>
         </div>
@@ -1568,14 +1576,14 @@
     { id: "TQ05", cat: "Quantum", q: "Light in the double-slit tale acts like…", choices: ["Waves that interfere, even when sent one photon at a time", "Only a rock, never a ripple", "A tax form", "A diagnosis"], ans: 0, teach: "Send photons one at a time and an interference pattern still builds. Each packet seems to explore both slits unless you watch which path. Peeking kills the pretty bands. Camp rule: nosy lodges collapse the fun." },
     { id: "TQ06", cat: "Quantum", q: "Planck’s big lodge rule is that energy often comes in…", choices: ["Packets, not a perfectly smooth pour", "Infinite soup with no cups", "Only ice cubes", "Wallet fees"], ans: 0, teach: "E = h f. Energy of a wave is tied to frequency in packets. You cannot pour a half-photon like watered stew. The universe uses cups. Bober wanted a ladle; Planck brought thimbles." },
     { id: "TQ07", cat: "Quantum", q: "Quantum tunneling is when a particle…", choices: ["Shows up past a barrier it should not classically climb", "Digs a beaver canal with a shovel", "Pays a toll", "Waits for spring thaw only"], ans: 0, teach: "Classically the wall is too high. Quantum-wise there is a small chance to appear on the other side. Not a magic shovel. Just a leak in certainty. Twig calls it cheating. Physics calls it Tuesday." },
-    { id: "TQ08", cat: "Quantum", q: "The uncertainty idea says you cannot perfectly know both…", choices: ["Position and momentum at once", "Tea temperature and mug color", "Who chopped and who posed", "A clinic chart of a person"], ans: 0, teach: "Sharpen where it is, and how it is moving gets fuzzy, and the other way around. Not because your eyes are bad. The pair will not sit still for a clinic chart. Lodge: you can pin the fish or the splash, not both as gospel." },
-    { id: "TQ09", cat: "Quantum", q: "A qubit is different from a regular bit because it can be…", choices: ["0, 1, or a mix of both until measured", "Only 0, like a closed dam", "Only 1, like a lit ember", "A medical diagnosis"], ans: 0, teach: "A bit is a stick: yes or no. A qubit can lean both ways until you look. Measurement snaps it to a camp. Do not write it on a clinical form. It is a puzzle coin, not a person." },
+    { id: "TQ08", cat: "Quantum", q: "The uncertainty idea says you cannot perfectly know both…", choices: ["Position and momentum at once", "Tea temperature and mug color", "Who chopped and who posed", "A clinic chart of a person"], ans: 0, teach: "Sharpen where it is, and how it is moving gets fuzzy, and the other way around. Not because your eyes are bad. Lodge: you can pin the fish or the splash, not both as gospel." },
+    { id: "TQ09", cat: "Quantum", q: "A qubit is different from a regular bit because it can be…", choices: ["0, 1, or a mix of both until measured", "Only 0, like a closed dam", "Only 1, like a lit ember", "A medical diagnosis"], ans: 0, teach: "A bit is a stick: yes or no. A qubit can lean both ways until you look. Measurement snaps it to a camp. It is a puzzle coin until you look." },
     { id: "TQ10", cat: "Quantum", q: "The ground state of an atom is…", choices: ["Its lowest energy sitting-spot", "A muddy floor in the lodge", "A wallet address", "A panic attack"], ans: 0, teach: "Electrons prefer the cheapest bunk. That lowest allowed energy is the ground state. Heat or light can kick them upstairs. They fall back and often spit a photon like a spark from wet wood." },
     { id: "TQ11", cat: "Quantum", q: "Wave–particle duality means light can…", choices: ["Act like a ripple or like a pellet, depending on the test", "Only ever be soup", "Only ever be a rock", "Diagnose a camper"], ans: 0, teach: "Run a wave experiment, you get ripples. Run a particle experiment, you get hits. Same light, different lodge games. The test you pick is part of the answer. Bober wanted one story. Nature shrugged." },
     { id: "TQ12", cat: "Quantum", q: "If you do not measure a quantum coin mid-flip, the honest camp line is…", choices: ["It is not secretly already heads in a tiny drawer", "It hid the answer in the sap jug", "A doctor already knows", "The wallet knows"], ans: 0, teach: "The mix is real in the math until a measurement. It is not a coin under a mug. Superposition is not shyness. Looking is a physical poke, not gossip." },
     { id: "TQ13", cat: "Math", q: "A square’s perimeter is…", choices: ["Four times one side", "Side times side", "Half a side", "Always 180"], ans: 0, teach: "Walk the fence: four equal sides. Perimeter is the walk, area is the floor. Twig counted posts and forgot the last wall once. The lodge laughed. Four times the side. Then go eat." },
     { id: "TQ14", cat: "Math", q: "Twig lays a 3-by-4 rectangle of logs. How many logs if one sits in each cell?", choices: ["12", "7", "34", "9"], ans: 0, teach: "Three rows of four. Multiply. 3 × 4 = 12. Adding 3 + 4 is a different chore. Area of a 3-by-4 grid is twelve bunks. Twig still tries to add when hungry." },
-    { id: "TQ15", cat: "Math", q: "Half of 10 camp biscuits is…", choices: ["5", "2", "8", "20"], ans: 0, teach: "Half means split into two equal piles. Ten split fair is five and five. Not a clinical half-life. Just biscuits. Puddle will still ask who got the bigger crumb." },
+    { id: "TQ15", cat: "Math", q: "Half of 10 camp biscuits is…", choices: ["5", "2", "8", "20"], ans: 0, teach: "Half means split into two equal piles. Ten split fair is five and five. Just biscuits. Puddle will still ask who got the bigger crumb." },
     { id: "TQ16", cat: "Math", q: "A straight line measures…", choices: ["180 degrees", "90 degrees", "360 degrees", "0 degrees always"], ans: 0, teach: "A flat lodge floor is a 180° angle. Two right angles back to back make that line. 90° is a corner. 360° is a full spin until you face the same pine." },
     { id: "TQ17", cat: "Math", q: "A right angle is…", choices: ["90 degrees, like a square’s corner", "180 degrees, like a frozen lake", "45 degrees, like a polite nod", "360 degrees, like a dizzy kit"], ans: 0, teach: "The carpenter’s corner. Square tiles, door frames, honest crates. Not a vibe. A quarter-turn from a straight stick. Twig’s ‘almost square’ dam was 88° and leaked." },
     { id: "TQ18", cat: "Math", q: "Area of a 5-by-2 wood platform is…", choices: ["10", "7", "52", "25"], ans: 0, teach: "Length times width. 5 × 2 = 10. Perimeter would be 14 if you walked the edge. Area is the sleeping space. Count the planks, not the stroll." },
@@ -1595,7 +1603,7 @@
     { id: "TQ32", cat: "Thermo", q: "Conduction is heat moving by…", choices: ["Direct contact through a material", "Only empty space beams", "Gossip", "A diagnosis"], ans: 0, teach: "Hot pan, cold paw: that sting is conduction. Metals do it fast. Wood is slower, which is why handles exist. Lodge rule: the poker conducts. The stick-cup does you a kindness." },
     { id: "TQ33", cat: "Thermo", q: "A convection current in the lodge is mostly…", choices: ["Warm air rising, cooler air sliding in to replace it", "Heat hopping through a solid log with no air", "Light from the fire only", "A legal contract"], ans: 0, teach: "Fluids move the heat. Fire makes a plume. Cold creeps along the floor. Crack a high vent and a low vent and you get a chimney. One hole just sulks." },
     { id: "TQ34", cat: "Thermo", q: "You feel a fire from across the room mainly by…", choices: ["Radiation — infrared light, no need for a touching log", "The floor becoming soup instantly", "Sound waves of crackle", "Cohort percentile"], ans: 0, teach: "Radiation travels through air (and vacuum). Face the coals, your fur warms. Put a screen between and the glow is blocked. Convection is the plume. Radiation is the hug." },
-    { id: "TQ35", cat: "Thermo", q: "Sweat (or a wet pelt) cools you because evaporation…", choices: ["Carries away the fastest, most energetic molecules", "Adds heat from the moon", "Makes you denser than lead", "Is a clinical treatment claim"], ans: 0, teach: "Liquid to gas costs energy. The jumpy molecules leave. What stays is cooler. Wind helps. A sealed wet sock just stays wet. Physics, not a diagnosis." },
+    { id: "TQ35", cat: "Thermo", q: "Sweat (or a wet pelt) cools you because evaporation…", choices: ["Carries away the fastest, most energetic molecules", "Adds heat from the moon", "Makes you denser than lead", "Is a clinical treatment claim"], ans: 0, teach: "Liquid to gas costs energy. The jumpy molecules leave. What stays is cooler. Wind helps. A sealed wet sock just stays wet. The jumpy ones leave; what stays is cooler." },
     { id: "TQ36", cat: "Thermo", q: "Most solids, when heated, …", choices: ["Expand a little", "Shrink into coins", "Turn into skill-bar points", "Stop existing"], ans: 0, teach: "Atoms jiggle wider and take more space. Bridges need gaps. A stuck iron lid pops after warm water. Ice is the rude exception when it freezes — water expands, which is why ponds float a lid of ice." },
     { id: "TQ37", cat: "History", q: "Gutenberg’s press is famous for…", choices: ["Movable metal type that printed books by the pile", "Inventing the beaver dam", "The first steam kettle", "Clinical testing of campers"], ans: 0, teach: "Mid-1400s Europe. Reusable type, ink, press. Ideas stopped being copied one monk at a time. Campfire version: one carved letter, many pages. The lodge bulletin board got dangerous." },
     { id: "TQ38", cat: "History", q: "Newton’s three laws, camp-short, are about…", choices: ["Inertia, F = ma, and action–reaction pairs", "Only apples and hats", "How to score a person", "Wallet friction"], ans: 0, teach: "A sled stays put or keeps sliding unless a force nags it. Push harder on the same mass, it accelerates more. You shove the dam, the dam shoves you. Twig learned that with a too-big log." },
@@ -1617,34 +1625,34 @@
     { id: "TQ54", cat: "Lodge", q: "A beaver’s paddle tail helps with…", choices: ["Steering in water and warning slaps", "Holding a pen", "Mining coin", "Taking attendance"], ans: 0, teach: "Fat rudder, fat alarm. Slap the surface and the pond rings. Swim straight with a built-in oar. It is not a desk tool. Do not borrow it to sign forms." },
     { id: "TQ55", cat: "Lodge", q: "Mud on a dam is useful because it…", choices: ["Seals gaps between sticks", "Attracts tourists", "Raises a clinical score", "Cools a GPU"], ans: 0, teach: "Mud is mortar. Water wants holes. Beavers want fewer holes. Pack the weave. Repeat after every flood gossip. Tourism is optional. Seals are not." },
     { id: "TQ56", cat: "Lodge", q: "Kits in a lodge are…", choices: ["Young beavers", "Download packs", "Clinic samples", "Loot boxes"], ans: 0, teach: "Kids. In the dry room. They stay long, learn the pond, chew the curriculum. Not software. Not loot. If someone gacha-ed a kit we would leave the chat." },
-    { id: "TQ57", cat: "Lodge", q: "In Green Home stories, winter is something you…", choices: ["Hold and then end", "Buy with a wallet", "Diagnose", "Skip with a code"], ans: 0, teach: "Hold the fire. Then summer. Fan games, not a shop. No connect-wallet spring. The season is a story you finish with paws, not a coupon." },
-    { id: "TQ58", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears — and extra insulation", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "A snow hat. It can insulate if it stays fluffy. Then it melts. The mound looks like a frosted bun. That is weather, not a medical stamp." },
-    { id: "TQ59", cat: "Lodge", q: "Dam Defense, in this camp’s family of games, is about holding…", choices: ["The wooden dam", "A stock chart", "A clinic form", "A gacha roll"], ans: 0, teach: "Twin posts. Hold the flood. Fan game by a holder. No wallet. The wood is the plot. If a chart appears, you walked into the wrong clearing." },
-    { id: "TQ60", cat: "Lodge", q: "A camp slate with one missing square is for…", choices: ["Finding the missing tile", "Scoring a clinical number", "Connecting a wallet", "Reading a prescription"], ans: 0, teach: "Fill the hole. That is the puzzle. Eight clues, one answer. Not a diagnosis. Not a chain. Just a lodge mark that belongs." },
+    { id: "TQ57", cat: "Lodge", q: "In Green Home stories, winter is something you…", choices: ["Hold and then end", "Buy with a wallet", "Diagnose", "Skip with a code"], ans: 0, teach: "Hold the fire. Then summer. The season is a story you finish with paws." },
+    { id: "TQ58", cat: "Lodge", q: "Snow on lodge sticks in winter is…", choices: ["A hat the house wears — and extra insulation", "A bug in the art", "A clinical marker", "A paywall"], ans: 0, teach: "A snow hat. It can insulate if it stays fluffy. Then it melts. The mound looks like a frosted bun. That is weather." },
+    { id: "TQ59", cat: "Lodge", q: "Dam Defense, in this camp’s family of games, is about holding…", choices: ["The wooden dam", "A stock chart", "A clinic form", "A gacha roll"], ans: 0, teach: "Twin posts. Hold the flood. The wood is the plot." },
+    { id: "TQ60", cat: "Lodge", q: "A camp slate with one missing square is for…", choices: ["Finding the missing tile", "Scoring a clinical number", "Connecting a wallet", "Reading a prescription"], ans: 0, teach: "Fill the hole. That is the puzzle. Eight clues, one answer. Just a lodge mark that belongs." },
     { id: "TQ61", cat: "Patterns", q: "If a row shows 1 stick, then 2 sticks, the next is…", choices: ["3 sticks", "A snowflake", "Zero sticks", "A crown"], ans: 0, teach: "Count goes up by one. The rule is addition, not interior design. If snow appears, someone broke the family. Complete the walk. Then tap." },
     { id: "TQ62", cat: "Patterns", q: "Three brown logs and one ice burst. The odd one is…", choices: ["The ice burst", "All four equally", "The middle log", "There is no odd one"], ans: 0, teach: "Three match. One breaks the family. Odd-one-out is a lodge game, not a personality test. Tap the stranger. Leave the logs their dignity." },
     { id: "TQ63", cat: "Patterns", q: "A stick pointing right, then down, then left. Next points…", choices: ["Up", "Right again", "Into a circle", "Nowhere"], ans: 0, teach: "Quarter turns around the clock. Right, down, left, up. Then the dance repeats. If you jumped to a spiral, you invented a new camp. This slate did not." },
-    { id: "TQ64", cat: "Patterns", q: "Same lodge mark, three times, then a beaver. The beaver is…", choices: ["The odd tile", "The average", "A clinical score", "A wallet"], ans: 0, teach: "Odd-one-out. Family versus stranger. Averages are for biscuits. Wallets are for other websites. Tap the beaver and keep your streak kind." },
+    { id: "TQ64", cat: "Patterns", q: "Same lodge mark, three times, then a beaver. The beaver is…", choices: ["The odd tile", "The average", "A clinical score", "A wallet"], ans: 0, teach: "Odd-one-out. Family versus stranger. Averages are for biscuits. Tap the beaver and keep your streak kind." },
     { id: "TQ65", cat: "Patterns", q: "If every column is wood, cream, ice, the last cell of that rule is…", choices: ["Ice", "A random color", "Blank forever", "Gold only"], ans: 0, teach: "Finish the tint cycle. Wood, cream, ice — then the column is dressed. Random is how you fail a slate. Gold is a different holiday." },
     { id: "TQ66", cat: "Patterns", q: "Two tiles stacked in one cell usually means…", choices: ["Both marks together", "A broken save", "A clinic stamp", "A pause menu"], ans: 0, teach: "Union: you see both families. Read the stack as ‘and,’ not ‘error.’ The slate is honest. Your save file is fine. Keep looking at the other eight." },
-    { id: "TQ67", cat: "Patterns", q: "A gold ring around a tile is…", choices: ["An extra mark on the same family", "A medical stamp", "A paywall", "A skip"], ans: 0, teach: "Ring is just another lodge mark, like a hat on a stick. It is not a diagnosis and not a shop. Track which cells wear the ring. That is the rule." },
+    { id: "TQ67", cat: "Patterns", q: "A gold ring around a tile is…", choices: ["An extra mark on the same family", "A medical stamp", "A paywall", "A skip"], ans: 0, teach: "Ring is just another lodge mark, like a hat on a stick. Track which cells wear the ring. That is the rule." },
     { id: "TQ68", cat: "Patterns", q: "If left plus middle makes the right, 1 stick + 1 stick makes…", choices: ["2 sticks", "A dam log", "Snow", "Nothing"], ans: 0, teach: "Add the counts. The third cell is the sum, not a new species. 1 + 1 is 2 even at camp. If snow falls out, you added weather by mistake." },
     { id: "TQ69", cat: "Patterns", q: "Three snow bursts of growing size. Next is…", choices: ["The biggest burst", "A tiny stick", "A blank", "A crown"], ans: 0, teach: "Keep growing. Size is the story. A sudden stick is a plot twist the slate did not write. Pick the fat flake. Then go warm your paws." },
-    { id: "TQ70", cat: "Patterns", q: "A missing cell in the bottom-right of a 3×3 is asking you to…", choices: ["Complete the rule", "Guess a clinical score", "Leave the tab", "Pay XP"], ans: 0, teach: "Read the eight. Fill the ninth. Rules live in rows, columns, or both. Guessing a number about yourself is a different, banned game. This is tiles." },
+    { id: "TQ70", cat: "Patterns", q: "A missing cell in the bottom-right of a 3×3 is asking you to…", choices: ["Complete the rule", "Guess a clinical score", "Leave the tab", "Pay XP"], ans: 0, teach: "Read the eight. Fill the ninth. Rules live in rows, columns, or both. This is tiles." },
     { id: "TQ71", cat: "Patterns", q: "If every row has one stick, one dam, one snow, the last row needs…", choices: ["The family not yet used in that row", "Three sticks", "A random beaver", "A blank"], ans: 0, teach: "Each family once per row, like a fair chore chart. Sudoku energy, camp glyphs. Look which mark is missing. Plant it. Do not invent a fourth cousin." },
     { id: "TQ72", cat: "Patterns", q: "Four tiles, three match, one does not. You tap…", choices: ["The one that breaks the rule", "All four as fast as possible", "The prettiest", "None, and wait"], ans: 0, teach: "Odd-one-out. That is Speed and Train. Mashing all four is how you miss. Pretty is not a rule unless the slate said so. Tap the break." },
     { id: "TQ73", cat: "Camp life", q: "Best wood for a small campfire is…", choices: ["Dry sticks", "Wet moss only", "River stones", "Snowballs"], ans: 0, teach: "Dry first. Then a little more. Wet moss smokes you out of friendship. Stones can explode if river-wet and pocketed in coals. Snowballs are dessert for the flame, not fuel." },
     { id: "TQ74", cat: "Camp life", q: "If your boots are wet, you…", choices: ["Dry them by the fire — not in it", "Throw them in the pond", "Eat them", "Mail them"], ans: 0, teach: "Fire first, distance second. Steam them, do not roast them. Then socks. A melted boot is a sad sculpture. The pond already had its turn." },
-    { id: "TQ75", cat: "Camp life", q: "Green Home Games are…", choices: ["Fan games by a holder", "Official clinic tools", "Chain wallets", "Paid diagnoses"], ans: 0, teach: "Unofficial. Play for fun. No wallet, no gacha, no PvP ladder of doom. A holder made a camp. That is the whole license plate." },
-    { id: "TQ76", cat: "Camp life", q: "Train XP is for…", choices: ["Streaks and camp badges", "Raising Assess bars", "Buying cohort %", "Unlocking a clinic"], ans: 0, teach: "Cosmetics and streak. Not Assess. The Profile bars do not sip Train. If someone sells you otherwise, they are selling fog. Keep the badge. Keep the honesty." },
+    { id: "TQ75", cat: "Camp life", q: "Green Home Games are…", choices: ["Fan games by a holder", "Official clinic tools", "Chain wallets", "Paid diagnoses"], ans: 0, teach: "Unofficial. Play for fun. A holder made a camp. That is the whole license plate." },
+    { id: "TQ76", cat: "Camp life", q: "Train XP is for…", choices: ["Streaks and camp badges", "Raising Assess bars", "Buying cohort %", "Unlocking a clinic"], ans: 0, teach: "Cosmetics and streak. Not Assess. The Profile bars do not sip Train. Keep the badge." },
     { id: "TQ77", cat: "Camp life", q: "If you leave a Train drill to check the sky, Train should…", choices: ["Pause kindly", "Void the item as Assess does", "Erase your Profile", "Ban the device"], ans: 0, teach: "Train pauses. Assess does not. That split is the product. Practice is a friend. Snapshot is a timer. Do not mix the kettles." },
-    { id: "TQ78", cat: "Camp life", q: "Fan game by a holder means…", choices: ["Unofficial, made with love, no wallet", "Official medical software", "A listed token sale", "A school exam board"], ans: 0, teach: "Holder. Fan. Not the project team. Not a clinic. Not a ticker. If a connect-wallet button appears, you have left Brain Camp and entered a swamp." },
-    { id: "TQ79", cat: "Camp life", q: "A good Brain Camp round is…", choices: ["Short, then you stop", "An all-night official exam", "A paid diagnosis", "A PvP duel"], ans: 0, teach: "Short rounds. Play to improve, not to brand yourself. The disclaimer is not decoration. When the block is done, go to the fire. The slate will wait." },
-    { id: "TQ80", cat: "Camp life", q: "The right way to treat a wrong Train answer is…", choices: ["Read the teach line and go again", "Write it on a clinical chart", "Quit the camp forever", "Buy a higher bar"], ans: 0, teach: "Wrong answers teach. They do not brand you. Sit with the punchline until Next wakes up. Then try another. Streaks reset. People do not." },
-    { id: "TQ81", cat: "Camp life", q: "Social Read in this camp is…", choices: ["Lodge-scenario practice — not an EQ score", "An official EQ number", "A clinical empathy test", "A way to change Assess bars"], ans: 0, teach: "Ten scenes, soft feedback, Next when you have read it. Preferred choices bump a practice index. It never feeds Reasoning, Memory, or Speed. No EQ tattoo." },
-    { id: "TQ82", cat: "Camp life", q: "About scoring exists so you can…", choices: ["Read honesty plus the formulas in one popup", "Buy a better percentile", "Hide the disclaimer", "Average the bars into one official number"], ans: 0, teach: "One About scoring. Not a second How scored accordion. Formulas for the four indices, plus the fan-game disclaimer. Close it. Play. Do not worship the percent." },
+    { id: "TQ78", cat: "Camp life", q: "Fan game by a holder means…", choices: ["Unofficial, made with love, no wallet", "Official medical software", "A listed token sale", "A school exam board"], ans: 0, teach: "Holder. Fan. Not the project team. A camp made with love, then you go back to the fire." },
+    { id: "TQ79", cat: "Camp life", q: "A good Brain Camp round is…", choices: ["Short, then you stop", "An all-night official exam", "A paid diagnosis", "A PvP duel"], ans: 0, teach: "Short rounds. When the block is done, go to the fire. The slate will wait." },
+    { id: "TQ80", cat: "Camp life", q: "The right way to treat a wrong Train answer is…", choices: ["Read the teach line and go again", "Write it on a clinical chart", "Quit the camp forever", "Buy a higher bar"], ans: 0, teach: "Wrong answers teach. Sit with the punchline until Next wakes up. Then try another. Streaks reset. People do not." },
+    { id: "TQ81", cat: "Camp life", q: "Social Read in this camp is…", choices: ["Lodge-scenario practice — not an EQ score", "An official EQ number", "A clinical empathy test", "A way to change Assess bars"], ans: 0, teach: "Ten scenes, soft feedback, Next when you have read it. Preferred choices bump a practice index. It never feeds Reasoning, Memory, or Speed." },
+    { id: "TQ82", cat: "Camp life", q: "About scoring exists so you can…", choices: ["Read honesty plus the formulas in one popup", "Buy a better percentile", "Hide the disclaimer", "Average the bars into one official number"], ans: 0, teach: "One About scoring popup. Formulas for the four indices. Close it. Play. Do not worship the percent." },
     { id: "TQ83", cat: "Math", q: "A 2-by-2 of fat tiles in Speed is usually…", choices: ["Four choices, one tap", "A spreadsheet", "A brain scan", "Nine matrix cells"], ans: 0, teach: "Speed and some Train use a 2×2 pad. One odd or one match. Nine cells is the Reasoning slate. Do not fill a spreadsheet. Tap once like you mean it." },
-    { id: "TQ84", cat: "History", q: "A campfire history night is for…", choices: ["Real people and real tricks, told with lodge jokes", "Inventing medical claims", "Reading scraped official tests", "Selling tokens"], ans: 0, teach: "Gutenberg, Newton, Leeuwenhoek, Curie — true hinges, funny delivery. Accuracy first, punchline second. No scraped tests, no clinical claims, no diagnosing campers." },
+    { id: "TQ84", cat: "History", q: "A campfire history night is for…", choices: ["Real people and real tricks, told with lodge jokes", "Inventing medical claims", "Reading scraped official tests", "Selling tokens"], ans: 0, teach: "Gutenberg, Newton, Leeuwenhoek, Curie — true hinges, funny delivery. Accuracy first, punchline second." },
   ];
 
   var SOCIAL_N = 10;
@@ -2451,7 +2459,8 @@
     if (sub) { sub.disabled = true; sub.classList.add("hidden"); }
     document.getElementById("speed-target").innerHTML = "";
     document.getElementById("speed-grid").innerHTML = "";
-    document.getElementById("trivia-illu").innerHTML = "";
+    var tg = document.getElementById("trivia-graph");
+    if (tg) tg.removeAttribute("src");
     document.getElementById("trivia-q").textContent = "";
     document.getElementById("trivia-choices").innerHTML = "";
     document.getElementById("trivia-teach").textContent = "";
@@ -3056,7 +3065,7 @@
     document.getElementById("social-bar").style.width = soHas ? (p.social + "%") : "0%";
     document.getElementById("social-meta").textContent = soHas
       ? (p.soCorrect + " / " + (p.soTotal || 10) + " preferred · practice · lodge scenarios · vs Brain Camp players · " + ordinal(p.soPct) + " percentile")
-      : "Practice · lodge scenarios. Not an EQ score.";
+      : "Practice · lodge scenarios.";
     var retry = document.getElementById("btn-retry");
     retry.textContent = lastTrack === "memory" ? "RETRY MEMORY" : lastTrack === "speed" ? "RETRY SPEED" : "RETRY REASONING";
     mode = "profile";
@@ -3320,21 +3329,25 @@
       trainTick();
     }, MEM_ARM_MS);
   }
-  function triviaMark(cat) {
-    if (cat === "Quantum") return G(N, 1, 0, I);
-    if (cat === "Math") return G(S, 1, 45, Y);
-    if (cat === "Thermo") return G(D, 1, 0, W);
-    if (cat === "History") return G(L, 1, 0, Y);
-    if (cat === "Lodge") return G(L, 1, 0, W);
-    if (cat === "Patterns") return G(S, 1, 0, W);
-    return G(B, 1, 0, W);
+  var TEACH_ART = {
+    Quantum: "assets/teach/quantum.jpg",
+    Math: "assets/teach/dam.jpg",
+    Thermo: "assets/teach/steam.jpg",
+    History: "assets/teach/history.jpg",
+    Lodge: "assets/teach/lodge.jpg",
+    Patterns: "assets/teach/patterns.jpg",
+    "Camp life": "assets/teach/camplife.jpg"
+  };
+  function teachArtSrc(it) {
+    var blob = ((it && it.q) || "") + " " + ((it && it.teach) || "");
+    if (/snow|insulat|drift|fluffy|frost/i.test(blob)) return "assets/teach/snow.jpg";
+    if (it && it.cat === "Thermo" && /evapor|kettle|steam|boil|conduction/i.test(blob)) return "assets/teach/steam.jpg";
+    return TEACH_ART[(it && it.cat) || ""] || "assets/teach/camplife.jpg";
   }
   function presentTrainTrivia(it) {
     hidePlayBits();
     setPrompt((it.cat || "Camp") + " · PRACTICE ONLY", false);
-    var illu = document.getElementById("trivia-illu");
-    illu.classList.remove("hidden");
-    illu.appendChild(tileCopy(triviaMark(it.cat)));
+    document.getElementById("trivia-illu").classList.add("hidden");
     var q = document.getElementById("trivia-q");
     q.textContent = it.q;
     q.classList.remove("hidden");
@@ -3360,7 +3373,9 @@
     train.waiting = true;
     var it = train.cur;
     var ok = idx === it.ans;
-    document.getElementById("trivia-illu").classList.add("hidden");
+    var graph = document.getElementById("trivia-graph");
+    if (graph) graph.src = teachArtSrc(it);
+    document.getElementById("trivia-illu").classList.remove("hidden");
     Array.prototype.forEach.call(document.querySelectorAll("#trivia-choices button"), function (b) {
       b.disabled = true;
       var bi = parseInt(b.getAttribute("data-idx"), 10);
@@ -3505,7 +3520,7 @@
     document.getElementById("social-fb").classList.add("hidden");
     document.getElementById("social-next").classList.add("hidden");
     social.waiting = false;
-    setPrompt("PRACTICE — reading lodge situations. Not an EQ score.", false);
+    setPrompt("Read the lodge. Pick a kind, useful move.", false);
     hudFor();
     var box = document.getElementById("social-choices");
     box.innerHTML = "";
@@ -3563,7 +3578,7 @@
     social = null;
     clearRunSave();
     document.getElementById("sum-title").textContent = "SOCIAL READ DONE";
-    document.getElementById("sum-line").textContent = "Practice · lodge scenarios. Not an EQ score.";
+    document.getElementById("sum-line").textContent = "Practice · lodge scenarios.";
     mode = "summary";
     setMenu(true);
     showOverlay("summary");
@@ -3578,7 +3593,7 @@
       lock: function () { return false; },
       tease: "Beta norms, separate bars, not an IQ number.",
       unlock: "Always unlocked.",
-      body: "Beta norms (early). Assess bars stay separate. Social Read is practice only.\n\nFan game skill index — not a clinical or diagnostic test. Not an IQ score. Not certified.\n\nAssess = snapshot today. Practice does not feed Assess.\nCohort % = vs Brain Camp players (beta), rough not gospel.\nBars are never averaged into one number.\nTrain never feeds Assess bars.\nSocial Read is lodge-scenario practice — not an EQ score — and never changes Assess.\n\nFan game by a holder — play for fun, not credentials."
+      body: "Skill practice, not a clinical test.\n\nBeta norms (early). Assess bars stay separate. Social Read is practice only.\n\nFan game skill index — not a clinical or diagnostic test. Not an IQ score. Not certified.\n\nAssess = snapshot today. Practice does not feed Assess.\nCohort % = vs Brain Camp players (beta), rough not gospel.\nBars are never averaged into one number.\nTrain never feeds Assess bars.\nSocial Read is lodge-scenario practice — not an EQ score — and never changes Assess.\n\nFan game by a holder — play for fun, not credentials."
     },
     {
       id: "dinner",
@@ -3588,7 +3603,7 @@
       lock: function () { return false; },
       tease: "The camp table this lodge is built around.",
       unlock: "Always unlocked.",
-      body: "Supper light, puzzle boards, a square-headed host at the picnic table. This is the lodge dinner the camp sits on — a fan still, not a clinic plate. Pull up a bench. The stew is for looking, the boards are for play."
+      body: "Supper light, puzzle boards, a square-headed host at the picnic table. This is the lodge dinner the camp sits on — a fan still. Pull up a bench. The stew is for looking, the boards are for play."
     },
     {
       id: "useful",
@@ -3598,7 +3613,87 @@
       lock: function () { return false; },
       tease: "Soft “often helps with” notes for each bar.",
       unlock: "Always unlocked.",
-      body: "Camp snapshots vs Brain Camp players — not a clinical score, not an IQ number, not certified.\n\nReasoning: spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.\n\nVisual Perception: noticing small visual differences. Often helps with design, detail checks, charts or maps.\nAbstract Reasoning: fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.\nPattern Recognition: finding order in noise. Often helps with forecasting, code or rhythm, spotting trends.\nSpatial Orientation: rotating objects in space. Often helps with navigation, building, packing.\nAnalytical Thinking: breaking a problem into parts. Often helps with planning and stepwise fixes.\n\nMemory: holding and replaying a short sequence. Often helps with multi-step instructions, mental notes, procedures.\n\nSpeed: fast, accurate simple decisions on a short clock. Often helps with quick checks when time is tight. Not a claim about sport or health.\n\nSocial Read: practice choosing a kind-effective lodge response. Often helps with teamwork and noticing needs. Practice only — not an EQ score, not a personality type.\n\nNone of this proves a job, a clinic chart, or a type."
+      body: "Reasoning: spotting rules in new shapes without school facts. Often helps with learning new systems fast, debugging odd problems, strategy games, and finding structure in messy info.\n\nVisual Perception: noticing small visual differences. Often helps with design, detail checks, charts or maps.\nAbstract Reasoning: fluid logic on new rules. Often helps with novel problem-solving and a new tech learning curve.\nPattern Recognition: finding order in noise. Often helps with forecasting, code or rhythm, spotting trends.\nSpatial Orientation: rotating objects in space. Often helps with navigation, building, packing.\nAnalytical Thinking: breaking a problem into parts. Often helps with planning and stepwise fixes.\n\nMemory: holding and replaying a short sequence. Often helps with multi-step instructions, mental notes, procedures.\n\nSpeed: fast, accurate simple decisions on a short clock. Often helps with quick checks when time is tight.\n\nSocial Read: practice choosing a kind-effective lodge response. Often helps with teamwork and noticing needs."
+    },
+    {
+      id: "qstep",
+      name: "Quantum Step",
+      tag: "Teach graph",
+      thumb: "assets/teach/quantum.jpg",
+      lock: function () { return false; },
+      tease: "Bober hops the bunks — energy comes in packets.",
+      unlock: "Always unlocked.",
+      body: "A lantern crumb of light, then a hop between bunks. Energy likes cups, not a smooth pour. Same still as the Trivia teach for Quantum."
+    },
+    {
+      id: "steam",
+      name: "Thermo · Steam",
+      tag: "Teach graph",
+      thumb: "assets/teach/steam.jpg",
+      lock: function () { return false; },
+      tease: "Kettle steam: heat on the move.",
+      unlock: "Always unlocked.",
+      body: "The jumpy molecules leave the pot as steam. What stays is cooler. Same still as the Trivia teach for Thermo."
+    },
+    {
+      id: "snowhat",
+      name: "Snow Insulates",
+      tag: "Teach graph",
+      thumb: "assets/teach/snow.jpg",
+      lock: function () { return false; },
+      tease: "A fluffy snow hat traps still air.",
+      unlock: "Always unlocked.",
+      body: "Pockets of air in the drift slow the leak. Stomp it into ice and you ruin the coat. Same still as the Trivia snow teach."
+    },
+    {
+      id: "dammath",
+      name: "Dam Math",
+      tag: "Teach graph",
+      thumb: "assets/teach/dam.jpg",
+      lock: function () { return false; },
+      tease: "Perimeter sticks: count the ring.",
+      unlock: "Always unlocked.",
+      body: "Walk the oval. Each stick is a count. Math on the water. Same still as the Trivia Math teach."
+    },
+    {
+      id: "histfire",
+      name: "History Fire",
+      tag: "Teach graph",
+      thumb: "assets/teach/history.jpg",
+      lock: function () { return false; },
+      tease: "True hinges, funny delivery.",
+      unlock: "Always unlocked.",
+      body: "Campfire history night. Real people, real tricks, lodge jokes. Same still as the Trivia History teach."
+    },
+    {
+      id: "slate",
+      name: "Pattern Slate",
+      tag: "Teach graph",
+      thumb: "assets/teach/patterns.jpg",
+      lock: function () { return false; },
+      tease: "Eight marks, one hole.",
+      unlock: "Always unlocked.",
+      body: "Read the eight. Fill the ninth. Same still as the Trivia Patterns teach."
+    },
+    {
+      id: "mudseal",
+      name: "Lodge Weave",
+      tag: "Teach graph",
+      thumb: "assets/teach/lodge.jpg",
+      lock: function () { return false; },
+      tease: "Mud is mortar. Water wants holes.",
+      unlock: "Always unlocked.",
+      body: "Pack the weave. Repeat after every flood gossip. Same still as the Trivia Lodge teach."
+    },
+    {
+      id: "shortround",
+      name: "Camp Life",
+      tag: "Teach graph",
+      thumb: "assets/teach/camplife.jpg",
+      lock: function () { return false; },
+      tease: "Short rounds, then the fire.",
+      unlock: "Always unlocked.",
+      body: "A holder made a camp. Play, then go back to the fire. Same still as the Trivia Camp life teach."
     },
     {
       id: "stick",
@@ -3608,7 +3703,7 @@
       lock: function () { return !loadSave().musStick; },
       tease: "Unlock after a Reasoning Assess.",
       unlock: "Unlocked after a Reasoning Assess.",
-      body: "A camp stick with lodge marks. Used here as a Pattern tile — a puzzle glyph, not a clinic instrument. Finish a Reasoning Assess to keep it on the shelf."
+      body: "A camp stick with lodge marks. Used here as a Pattern tile — a puzzle glyph. Finish a Reasoning Assess to keep it on the shelf."
     },
     {
       id: "twig",
@@ -3648,7 +3743,7 @@
       lock: function () { return !loadSave().musWord; },
       tease: "Unlock after a Social Read.",
       unlock: "Unlocked after Social Read practice.",
-      body: "A wooden speech-bubble plaque. Lodge talk, not a clinic form. Social Read is practice — not an EQ score — and it never changes Assess bars."
+      body: "A wooden speech-bubble plaque. Lodge talk. Finish a Social Read to keep it on the shelf."
     }
   ];
 
@@ -3917,6 +4012,9 @@
     loadImg("assets/icons/icon-192.png", false);
     loadImg("assets/museum/how.jpg", false);
     loadImg("assets/museum/useful.jpg", false);
+    ["quantum", "steam", "snow", "dam", "history", "patterns", "lodge", "camplife"].forEach(function (n) {
+      loadImg("assets/teach/" + n + ".jpg", false);
+    });
     loadImg("assets/museum/stick.jpg", false);
     loadImg("assets/museum/twig.jpg", false);
     loadImg("assets/museum/ember.jpg", false);
@@ -4016,7 +4114,8 @@
     if (about.indexOf("not a clinical") < 0) fails.push("missing-disc");
     if (about.indexOf("not a clinical or certified IQ test") < 0) fails.push("missing-facets-honesty");
     if (about.indexOf("Beta norms") < 0) fails.push("about-beta");
-    if (MUS_CARDS.length < 8) fails.push("museum-thin");
+    if (MUS_CARDS.length < 14) fails.push("museum-thin");
+    if (typeof teachArtSrc !== "function" || !TEACH_ART.Quantum) fails.push("teach-art");
     if (about.indexOf("What these skills can be useful for") < 0) fails.push("missing-useful-for");
     if (about.indexOf("often helps with") < 0 && about.indexOf("Often helps with") < 0) fails.push("missing-often-helps");
     if (document.querySelectorAll("#profile .skill-about").length < 4) fails.push("skill-about-blocks");
