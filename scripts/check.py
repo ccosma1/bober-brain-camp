@@ -106,6 +106,10 @@ if "#1a1028ee" in html:
     fails.append("span banner still washed overlay")
 if "MEM_STUDY = 1.8" not in html or "MEM_PROBE = 12" not in html:
     fails.append("memory study/probe timers")
+if 'id="mem-submit"' not in html or 'id="mem-shield"' not in html or 'id="mem-ready"' not in html:
+    fails.append("memory study/ready/submit phases missing")
+if "MEM_ARM_MS" not in html or "beginMemReady" not in html:
+    fails.append("memory click-through arm missing")
 if "SPD_LIMIT = 3.2" not in html:
     fails.append("speed timer must be 3.2s")
 if re.search(r"\bvar SPD_LIMIT\s*=\s*(3\.84|4(\.0)?)\b", html):

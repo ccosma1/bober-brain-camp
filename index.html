@@ -351,6 +351,37 @@
       display: inline-block; border: 2px solid var(--ice); color: var(--ice);
       border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800;
     }
+    #profile .facet-row {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 4px; margin: 6px 0 0; width: 100%;
+    }
+    #profile .facet-chip {
+      flex: 0 0 calc(33.33% - 4px);
+      box-sizing: border-box; text-align: center;
+      font-size: 9px; line-height: 1.2; font-weight: 800;
+      padding: 4px 3px; white-space: normal;
+      min-width: 0; overflow: hidden;
+    }
+    #profile .facet-row:empty { display: none; }
+    #mem-shield {
+      position: absolute; inset: 0; z-index: 12;
+      background: transparent;
+    }
+    #mem-ready {
+      position: absolute; inset: 0; z-index: 13;
+      display: flex; align-items: center; justify-content: center;
+      background: #1A1028; color: #F5C400;
+      font-size: clamp(28px, 8vw, 40px); font-weight: 900;
+      letter-spacing: 0.12em; pointer-events: auto;
+    }
+    #span-banner { pointer-events: auto; }
+    #app.mem-watch #play { pointer-events: none; }
+    #app.mem-watch #btn-leave { pointer-events: auto; }
+    #mem-submit {
+      flex: 0 0 auto; min-height: 48px; width: 100%; max-width: 340px;
+      margin: 0 auto 4px; font-size: 18px;
+    }
+    #mem-submit:disabled { opacity: 0.45; cursor: default; filter: none; }
     .splash-copy .play.camp { font-size: 15px; min-height: 44px; min-width: 0; width: 100%; letter-spacing: 0.04em; padding: 10px 12px; }
     #train-hub {
       z-index: 22; justify-content: flex-start; align-items: stretch;
@@ -477,6 +508,9 @@
       <div class="choices" id="choices"></div>
       <div id="mem-study" class="cell big hidden"></div>
       <div id="mem-pad" class="mem-pad hidden"></div>
+      <button type="button" class="play hidden" id="mem-submit">Submit</button>
+      <div id="mem-ready" class="hidden">READY</div>
+      <div id="mem-shield" class="hidden"></div>
       <div id="speed-target" class="cell big hidden"></div>
       <div id="speed-grid" class="speed-grid hidden"></div>
       <div id="trivia-illu" class="cell big hidden"></div>
@@ -720,6 +754,8 @@
   var T_ASSESS = 50;
   var MEM_STUDY = 1.8;
   var MEM_PROBE = 12;
+  var MEM_READY = 450;
+  var MEM_ARM_MS = 280;
   var SPD_LIMIT = 3.2;
   var TRAIN_MEM_STUDY = 2.16;
   var TRAIN_MEM_PROBE = 14.4;
@@ -1950,6 +1986,7 @@
   var raf = 0;
   var awayTimer = 0;
   var studyTimer = 0;
+  var memArmAt = 0;
   var lastTrack = "reason";
   var train = null;
   var trainFbTimer = 0;
@@ -2143,7 +2180,7 @@
         taps: run.taps || [],
         phase: run.phase,
         totalN: run.totalN,
-        remain: (run.phase === "study" || run.phase === "banner") ? null : remainNow(),
+        remain: (run.phase === "study" || run.phase === "banner" || run.phase === "flash" || run.phase === "ready") ? null : remainNow(),
         want: run.want || null,
         studyI: run.studyI || 0,
         span: run.span || MEM_SPAN_START,
@@ -2178,7 +2215,7 @@
     run = null;
     train = null;
     social = null;
-    app.classList.remove("train");
+    app.classList.remove("train", "mem-watch");
     setTrackClass(null);
     setMenu(true);
     showOverlay("splash");
@@ -2322,13 +2359,16 @@
   }
 
   function hidePlayBits() {
-    ["matrix", "choices", "mem-study", "mem-pad", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices", "trivia-dock", "trivia-teach", "trivia-next", "span-banner", "social-box"].forEach(function (id) {
+    ["matrix", "choices", "mem-study", "mem-pad", "mem-ready", "mem-shield", "mem-submit", "speed-target", "speed-grid", "prompt", "trivia-illu", "trivia-q", "trivia-choices", "trivia-dock", "trivia-teach", "trivia-next", "span-banner", "social-box"].forEach(function (id) {
       document.getElementById(id).classList.add("hidden");
     });
     document.getElementById("matrix").innerHTML = "";
     document.getElementById("choices").innerHTML = "";
     document.getElementById("mem-study").innerHTML = "";
     document.getElementById("mem-pad").innerHTML = "";
+    app.classList.remove("mem-watch");
+    var sub = document.getElementById("mem-submit");
+    if (sub) { sub.disabled = true; sub.classList.add("hidden"); }
     document.getElementById("speed-target").innerHTML = "";
     document.getElementById("speed-grid").innerHTML = "";
     document.getElementById("trivia-illu").innerHTML = "";
@@ -2381,7 +2421,7 @@
   }
   function tickTimer() {
     if (!run || (mode !== "practice" && mode !== "assess")) return;
-    if (run.phase === "study" || run.phase === "banner" || run.phase === "flash") return;
+    if (run.phase === "study" || run.phase === "banner" || run.phase === "flash" || run.phase === "ready") return;
     var r = remainNow();
     var chip = document.getElementById("chip-time");
     chip.textContent = fmtTime(r, run.limit);
@@ -2462,13 +2502,20 @@
     startTimer();
   }
 
+  function setMemWatch(on) {
+    app.classList.toggle("mem-watch", !!on);
+    var shield = document.getElementById("mem-shield");
+    if (on) shield.classList.remove("hidden");
+    else shield.classList.add("hidden");
+  }
   function showSpanBanner(it, then) {
     var ban = document.getElementById("span-banner");
     ban.textContent = (it.kind === "gap" ? "GAP · " : it.kind === "change" ? "CHANGED · " : it.reverse ? "BACKWARD · " : "") + "SPAN " + it.span;
     ban.classList.remove("hidden");
     document.getElementById("chip-time").textContent = "SPAN " + it.span;
     document.getElementById("time-fill").style.transform = "scaleX(1)";
-    setPrompt(it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", it.reverse);
+    setPrompt("WATCH", false);
+    setMemWatch(true);
     clearTimeout(studyTimer);
     studyTimer = setTimeout(function () {
       ban.classList.add("hidden");
@@ -2477,11 +2524,13 @@
   }
   function presentMemory(it, resume) {
     hidePlayBits();
+    itemLocked = true;
+    memArmAt = 0;
     if (!resume) {
       run.taps = [];
       run.studyI = 0;
     }
-    run.limit = it.respond;
+    run.limit = it.respond == null ? MEM_PROBE : Math.max(MEM_PROBE, it.respond);
     if (it.kind === "gap") run.want = [gk(it.missing || it.seq[it.gapAt || 0])];
     else if (it.kind === "change") run.want = [gk(it.changedGlyph)];
     else {
@@ -2491,7 +2540,8 @@
     hudFor();
     document.getElementById("chip-time").textContent = "WATCH";
     document.getElementById("time-fill").style.transform = "scaleX(1)";
-    setPrompt(it.kind === "gap" ? "TAP THE MISSING ICON" : it.kind === "change" ? "WATCH, then tap what changed" : it.reverse ? "TAP BACKWARD — reverse order" : "WATCH, then tap the same order", !!it.reverse && it.kind !== "gap" && it.kind !== "change");
+    setPrompt("WATCH", false);
+    setMemWatch(true);
     if (resume && run.phase === "study") {
       stepStudy();
       return;
@@ -2500,8 +2550,8 @@
       beginMemFlash();
       return;
     }
-    if (resume && run.phase === "respond") {
-      beginMemRespond();
+    if (resume && (run.phase === "respond" || run.phase === "ready")) {
+      beginMemReady();
       return;
     }
     run.phase = "banner";
@@ -2517,7 +2567,7 @@
     var it = run.cur;
     if (run.studyI >= it.seq.length) {
       if (it.kind === "change" && it.changedSeq) { beginMemFlash(); return; }
-      beginMemRespond();
+      beginMemReady();
       return;
     }
     var box = document.getElementById("mem-study");
@@ -2540,7 +2590,7 @@
     var it = run.cur;
     var seq = it.changedSeq || it.seq;
     if (run.studyI >= seq.length) {
-      beginMemRespond();
+      beginMemReady();
       return;
     }
     var box = document.getElementById("mem-study");
@@ -2551,35 +2601,86 @@
     studyTimer = setTimeout(stepFlash, it.studyEach * 1000);
   }
 
+  function beginMemReady() {
+    if (!run || !run.cur) return;
+    run.phase = "ready";
+    itemLocked = true;
+    setMemWatch(true);
+    document.getElementById("mem-study").classList.add("hidden");
+    document.getElementById("mem-pad").classList.add("hidden");
+    document.getElementById("span-banner").classList.add("hidden");
+    document.getElementById("mem-ready").classList.remove("hidden");
+    document.getElementById("chip-time").textContent = "READY";
+    setPrompt("Get ready", false);
+    clearTimeout(studyTimer);
+    studyTimer = setTimeout(beginMemRespond, MEM_READY);
+    snapshotRun();
+  }
+
   function beginMemRespond() {
     if (!run || !run.cur) return;
     run.phase = "respond";
-    itemLocked = false;
+    itemLocked = true;
+    memArmAt = performance.now() + MEM_ARM_MS;
+    document.getElementById("mem-ready").classList.add("hidden");
     document.getElementById("mem-study").classList.add("hidden");
     var padEl = document.getElementById("mem-pad");
     padEl.classList.remove("hidden");
     padEl.innerHTML = "";
+    padEl.style.pointerEvents = "none";
     var pad = shuffle(run.cur.pad);
     pad.forEach(function (g) {
       var b = document.createElement("button");
       b.type = "button";
+      b.setAttribute("data-key", gk(g));
       b.appendChild(tileCopy(g));
-      b.addEventListener("click", function () { tapMem(g, b); });
+      b.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); });
+      b.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        tapMem(g, b);
+      });
       padEl.appendChild(b);
     });
-    setPrompt(run.cur.kind === "gap" ? "TAP THE MISSING ICON" : run.cur.kind === "change" ? "TAP WHAT CHANGED" : run.cur.reverse ? "TAP BACKWARD" : "TAP THE ORDER", !!run.cur.reverse && run.cur.kind !== "gap" && run.cur.kind !== "change");
-    startTimer();
+    var sub = document.getElementById("mem-submit");
+    sub.classList.remove("hidden");
+    sub.disabled = true;
+    setPrompt(run.cur.kind === "gap" ? "TAP THE MISSING ICON, then Submit" : run.cur.kind === "change" ? "TAP WHAT CHANGED, then Submit" : run.cur.reverse ? "TAP BACKWARD, then Submit" : "TAP THE ORDER, then Submit", !!run.cur.reverse && run.cur.kind !== "gap" && run.cur.kind !== "change");
     snapshotRun();
+    studyTimer = setTimeout(function () {
+      if (!run || run.phase !== "respond") return;
+      setMemWatch(false);
+      padEl.style.pointerEvents = "";
+      itemLocked = false;
+      startTimer();
+      snapshotRun();
+    }, MEM_ARM_MS);
   }
 
+  function memWantLen() {
+    return (run && run.want && run.want.length) ? run.want.length : 0;
+  }
+  function updateMemSubmit() {
+    var sub = document.getElementById("mem-submit");
+    if (!sub) return;
+    var need = memWantLen();
+    sub.disabled = !(run && run.phase === "respond" && !itemLocked && run.taps && need && run.taps.length >= need);
+  }
   function tapMem(g, btn) {
-    if (itemLocked || !run || run.phase !== "respond") return;
+    if (!run || run.phase !== "respond") return;
+    if (itemLocked || performance.now() < memArmAt) return;
     run.taps.push(gk(g));
     if (btn) btn.classList.add("picked");
-    if (run.taps.length >= run.want.length) {
-      var ok = run.taps.join("|") === run.want.join("|");
-      endItem(ok, remainNow(), "tap");
-    }
+    updateMemSubmit();
+    if (run.want.length >= 2 && run.taps.length >= run.want.length) submitMem();
+  }
+  function submitMem() {
+    if (!run || run.phase !== "respond") return;
+    if (itemLocked || performance.now() < memArmAt) return;
+    var need = memWantLen();
+    if (!need || run.taps.length < need) return;
+    var ok = run.taps.join("|") === run.want.join("|");
+    endItem(ok, remainNow(), "tap");
   }
 
   function presentSpeed(it) {
@@ -2788,6 +2889,7 @@
       s.textContent = name;
       row.appendChild(s);
     });
+    row.style.display = (facets && facets.length) ? "" : "none";
   }
 
   function beginAssess() {
@@ -2952,7 +3054,7 @@
   function openTrainHub(tab) {
     mode = "train-hub";
     train = null;
-    app.classList.remove("train");
+    app.classList.remove("train", "mem-watch");
     setMenu(true);
     setTrackClass(null);
     paintTrainHub();
@@ -3056,11 +3158,13 @@
   function presentTrainMemory(it) {
     hidePlayBits();
     train.phase = "banner";
+    train.locked = true;
     train.studyI = 0;
     train.taps = [];
     train.want = it.seq.map(gk);
-    setPrompt("WATCH, then tap the same order", false);
+    setPrompt("WATCH", false);
     document.getElementById("chip-time").textContent = "WATCH";
+    setMemWatch(true);
     showSpanBanner(it, function () {
       if (!train || mode !== "train") return;
       train.phase = "study";
@@ -3071,7 +3175,7 @@
     if (!train || mode !== "train" || train.phase !== "study") return;
     var it = train.cur;
     if (train.studyI >= it.seq.length) {
-      beginTrainMemPad();
+      beginTrainMemReady();
       return;
     }
     var box = document.getElementById("mem-study");
@@ -3081,21 +3185,42 @@
     train.studyI += 1;
     studyTimer = setTimeout(stepTrainStudy, it.studyEach * 1000);
   }
+  function beginTrainMemReady() {
+    if (!train) return;
+    train.phase = "ready";
+    train.locked = true;
+    setMemWatch(true);
+    document.getElementById("mem-study").classList.add("hidden");
+    document.getElementById("mem-pad").classList.add("hidden");
+    document.getElementById("mem-ready").classList.remove("hidden");
+    document.getElementById("chip-time").textContent = "READY";
+    setPrompt("Get ready", false);
+    clearTimeout(studyTimer);
+    studyTimer = setTimeout(beginTrainMemPad, MEM_READY);
+  }
   function beginTrainMemPad() {
+    if (!train) return;
     train.phase = "respond";
+    train.locked = true;
+    memArmAt = performance.now() + MEM_ARM_MS;
+    document.getElementById("mem-ready").classList.add("hidden");
     document.getElementById("mem-study").classList.add("hidden");
     var padEl = document.getElementById("mem-pad");
     padEl.classList.remove("hidden");
     padEl.innerHTML = "";
+    padEl.style.pointerEvents = "none";
     shuffle(train.cur.pad).forEach(function (g) {
       var b = document.createElement("button");
       b.type = "button";
       b.appendChild(tileCopy(g));
-      b.addEventListener("click", function () {
+      b.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
         if (mode !== "train" || train.locked || train.phase !== "respond") return;
+        if (performance.now() < memArmAt) return;
         train.taps.push(gk(g));
         b.classList.add("picked");
-        if (train.taps.length >= train.want.length) {
+        if (train.want.length >= 2 && train.taps.length >= train.want.length) {
           var ok = train.taps.join("|") === train.want.join("|");
           trainPick(ok, b, null, ok ? "Same order. Nice." : "Watch again — same order, not shuffled.");
         }
@@ -3103,9 +3228,15 @@
       padEl.appendChild(b);
     });
     setPrompt("TAP THE ORDER", false);
-    train.limit = train.cur.respond || 12;
-    train.t0 = performance.now();
-    trainTick();
+    train.limit = Math.max(TRAIN_MEM_PROBE, train.cur.respond || TRAIN_MEM_PROBE);
+    studyTimer = setTimeout(function () {
+      if (!train || train.phase !== "respond") return;
+      setMemWatch(false);
+      padEl.style.pointerEvents = "";
+      train.locked = false;
+      train.t0 = performance.now();
+      trainTick();
+    }, MEM_ARM_MS);
   }
   function triviaMark(cat) {
     if (cat === "Quantum") return G(N, 1, 0, I);
@@ -3474,7 +3605,7 @@
     if (!run || !run.cur) return;
     if (document.visibilityState !== "hidden") return;
     snapshotRun();
-    if (run.track !== "reason" && (run.phase === "study" || run.phase === "banner")) {
+    if (run.track !== "reason" && (run.phase === "study" || run.phase === "banner" || run.phase === "flash" || run.phase === "ready")) {
       endItem(false, 0, "away");
       return;
     }
@@ -3520,6 +3651,24 @@
   document.getElementById("btn-drill-speed").addEventListener("click", function () { beginTrain("speed"); });
   document.getElementById("btn-play-trivia").addEventListener("click", function () { beginTrain("trivia"); });
   document.getElementById("btn-train-hub-back").addEventListener("click", goSplash);
+  document.getElementById("mem-submit").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    submitMem();
+  });
+  function swallowPlayTap(ev) {
+    var watchRun = run && run.track === "memory" && (run.phase !== "respond" || itemLocked || performance.now() < memArmAt);
+    var watchTrain = mode === "train" && train && train.kind === "memory" && (train.phase !== "respond" || train.locked || performance.now() < memArmAt);
+    if (!watchRun && !watchTrain) return;
+    if (ev.target && (ev.target.id === "btn-leave" || (ev.target.closest && ev.target.closest("#btn-leave")))) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+  ["pointerdown", "click", "touchstart"].forEach(function (typ) {
+    document.getElementById("mem-shield").addEventListener(typ, swallowPlayTap, true);
+    document.getElementById("mem-ready").addEventListener(typ, swallowPlayTap, true);
+    document.getElementById("span-banner").addEventListener(typ, swallowPlayTap, true);
+  });
   document.getElementById("btn-leave").addEventListener("click", function (ev) {
     ev.preventDefault();
     ev.stopPropagation();
@@ -3744,6 +3893,8 @@
     if (fmtTime(3.2) !== "3.2s") fails.push("fmt-speed-narg " + fmtTime(3.2));
     if (fmtTime(3.2, 3.2) === "0:04" || fmtTime(3.2) === "0:04") fails.push("speed-ceil-lie");
     if (MEM_STUDY !== 1.8 || MEM_PROBE !== 12) fails.push("mem-timer");
+    if (MEM_READY < 300 || MEM_ARM_MS < 150) fails.push("mem-arm");
+    if (!document.getElementById("mem-submit") || !document.getElementById("mem-shield") || !document.getElementById("mem-ready")) fails.push("mem-phases");
     if (SPD_LIMIT !== 3.2) fails.push("spd-timer");
     if (TRAIN_SPD_LIMIT < SPD_LIMIT) fails.push("train-speed-harder");
     if (SPEED_PRACTICE.some(function (it) { return it.limit !== SPD_LIMIT; })) fails.push("spd-practice-limit");
@@ -3799,7 +3950,9 @@
     voidCurrent: function () { endItem(false, 0, "away"); },
     getMode: function () { return mode; },
     getRun: function () { return run; },
-    nextReasonForm: nextReasonForm
+    nextReasonForm: nextReasonForm,
+    tapMem: tapMem,
+    submitMem: submitMem
   };
 
   function runPlaytest() {
@@ -3864,13 +4017,15 @@
       }
       if (stage === "memory") {
         if (mode === "practice" || mode === "assess") {
-          if (run.phase === "study" || run.phase === "banner") { setTimeout(step, 400); return; }
-          if (run.phase === "respond" && !itemLocked) {
+          if (run.phase === "study" || run.phase === "banner" || run.phase === "flash" || run.phase === "ready") { setTimeout(step, 400); return; }
+          if (run.phase === "respond" && !itemLocked && performance.now() >= memArmAt) {
             var seq = run.want.slice();
             seq.forEach(function (key) {
               if (itemLocked) return;
               tapMem(findPadGlyph(null, key), document.querySelector("#mem-pad button"));
             });
+            var sub = document.getElementById("mem-submit");
+            if (sub && !sub.disabled && !sub.classList.contains("hidden")) sub.click();
             setTimeout(step, 280);
             return;
           }
